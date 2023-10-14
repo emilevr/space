@@ -3,6 +3,14 @@
 When contributing to this repository, please first discuss the change you wish to make via issue,
 email, or any other method with the owners of this repository before making a change.
 
+## General Guidelines
+
+- The Rust programming language is preferred for all code in this repository. A contribution that includes
+  code in any other language will only be accepted under extraordinary circumstances.
+- Performance is a primary goal of this project. Please ensure your code is fast and safe.
+- Please use descriptive variable names. Code is the best documentation.
+- Keep it simple.
+
 Please note we have a code of conduct, please follow it in all your interactions with the project.
 
 ## Pull Request Process
