@@ -7,40 +7,53 @@
 
 A fast disk space analyzer and cleaner powered by Rust! :vulcan_salute:
 
-This repository contains:
-- A command line interface (CLI) utility that can be used to visualize and manage disk space.
-- A Rust library that can be used to analyze disk space usage, in one or more directory trees. The library is not published to [crates.io](https://crates.io/), but may be at some point in the future.
-- A CLI build tool that takes care of Code Coverage and Benchmarks.
+## Description
+
+`space` is a Command Line Interface (CLI) utility that can be used to visualize and manage disk space.
 
 ## CLI
 
-The CLI utility analyzes and displays the *apparent size* of files in one or more directory trees. Two modes are supported:
+Two operating modes are supported:
 
-- A text user interface (TUI). This is the default mode.
-  ![TUI on Windows](docs/cli/tui-windows.png)
+:one: **Text User Interface (TUI)**
+  - Analyzes and displays the *apparent size* of files in one or more directory trees.
+  - Enables visual exploration of disk space usage.
+  - Files or directories may be deleted to free up disk space.
+  - All files are included and may be visually filtered based on relative size.
+  - This is the default mode.
+    ![TUI on Windows](docs/cli/tui-windows.png)
 
-- Non-interactive, read-only output to the terminal. This mode is used when the *--non-interactive* argument
-  is specified.
-  ![Non-Interactive](docs/cli/non-interactive-windows.png)
+:two: **Non-interactive, read-only output to the terminal**
+  - Outputs one or more directory trees to the terminal and then exits.
+  - Relative size filtering may be specified via command line parameters. The default is >= 1%. Use
+    `space --help` to see options.
+  - This mode is used when the *--non-interactive* argument is specified.
+    ![Non-Interactive](docs/cli/non-interactive-windows.png)
 
 > :information_source: The *apparent size* of a file is the size of the file content, which is typically less
 > than the actual space allocated as blocks on the disk. The larger the file, the less significant the
 > difference.
 
-Symbolic links are listed but not followed.
+### Limitations
 
-> **Yet another disk usage utility?**
+- Hard links are considered real files and their sizes will be included.
+- Symbolic links are listed but not followed.
+
+### Notes
+
+> **Yet another disk space usage utility?**
 >
-> You may have noticed that there are a fair number of disk usage utilities out there, written in many
+> You may have noticed that there are a fair number of disk space usage utilities out there, written in many
 > languages. So why make another one? Well, this kind of project is a great way to learn a new language and a
 > bunch of related stuff, like building and distributing applications for many platforms. It's also fun to write,
 > with some challenges around performance that provides an opportunity to give Rust's "Fearless Concurrency" a
 > spin. The implementation is straight forward and hasn't been optimized, yet it performs pretty well. Some
 > future features will make much greater use of concurrency.
 >
-> :information_source: Optimization and benchmarks against similar tools are on the [backlog](https://github.com/users/emilevr/projects/1).
+> :information_source: Optimization and benchmarks against similar tools are on the
+> [backlog](https://github.com/users/emilevr/projects/1).
 >
-> **Thoughts on Rust**
+> **Thoughts on Rust so far**
 >
 > Given that this is my first Rust project, what are my thoughts on Rust so far? Well, it's great to work
 > with a language that has no nulls, no exceptions, no garbage collection and the best tooling of any language I
@@ -61,16 +74,24 @@ Symbolic links are listed but not followed.
 >
 > **In conclusion**
 >
-> This has been such a good experience that I have decided to use Rust for all my future (suitable) side projects.
+> This has been such a good experience that I have decided to use Rust for all my future (suitable) side
+> projects.
 
 ## Getting started with this repo
 
+This repository contains:
+- A CLI utility.
+- A Rust library that can be used to analyze disk space. The library is not published to
+  [crates.io](https://crates.io/), but may be at some point in the future.
+- A CLI build tool that takes care of versioning, code coverage and benchmarks.
+
 ### Prerequisites
 
-- The [Rust toolchain](https://www.rust-lang.org/tools/install) must be installed.
+- The [Rust toolchain](https://www.rust-lang.org/tools/install) must be installed. See
+  [rust-toolchain.toml](./rust-toolchain.toml) for the currently supported version.
 - [Visual Studio Code](https://code.visualstudio.com/) is the recommended IDE. The recommended extensions are
   listed in the [.vscode/extensions.json](.vscode/extensions.json) file and Visual Studio Code should prompt
-  for installation.
+  for their installation automatically.
 
 ### Enabling Git hooks (once off)
 
@@ -103,7 +124,8 @@ Run `cargo test`.
 
 ### Code Coverage
 
-This repo contains a simple Rust build project that takes care of versioning, running code coverage and benchmark tasks.
+This repo contains a simple Rust build project that takes care of versioning, running code coverage and
+benchmark tasks.
 
 In order for code coverage to be generated, ensure you have installed *llvm-tools* via
 `rustup component add llvm-tools`.
@@ -141,7 +163,7 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 - Thanks to all the Rust library contributors out there, especially for those libs used by this project. Keep
   up the great work! See the relevant [Cargo.toml](./Cargo.toml) file dependencies.
-- Thanks to the many disk usage tool authors out there, written in Rust and other languages.
+- Thanks to the many disk space usage tool authors out there, written in Rust and other languages.
   Challenge accepted! :relaxed: The future benchmark section will acknowledge a few of these.
 - Thanks to [PurpleBooth](https://gist.github.com/PurpleBooth) for some
   [great repo templates](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2).
