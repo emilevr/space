@@ -6,8 +6,9 @@ on:
     paths-ignore:
       - '.git-hooks/**'
       - '.vscode/**'
-      - 'docs/**'
       - '**/*.md'
+      - 'coverage/**'
+      - 'docs/**'
 jobs:
   test:
     name: 'Test on ${{ matrix.runs-on }}'

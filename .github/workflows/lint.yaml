@@ -6,8 +6,9 @@ on:
     paths-ignore:
       - '.git-hooks/**'
       - '.vscode/**'
-      - 'docs/**'
       - '**/*.md'
+      - 'coverage/**'
+      - 'docs/**'
   workflow_call:
 jobs:
   test:
