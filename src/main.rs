@@ -36,7 +36,8 @@ r#"EXAMPLES:
     $ space path/to/file/or/dir
     $ space path/to/dir1 path/to/dir2
     $ space --size-threshold-percentage 5
-    $ space --size-format metric"#,
+    $ space --size-format binary
+    $ space --non-interactive"#,
     after_long_help =
 r#"EXAMPLES:
     Analyze and display current working directory in a Text User Interface (TUI):
@@ -52,7 +53,10 @@ r#"EXAMPLES:
     $ space --size-threshold-percentage 5
 
     Display file and directory sizes using binary units rather than the default metric units:
-    $ space --size-format binary"#,
+    $ space --size-format binary
+
+    Display non-interactive output then exit:
+    $ space --non-interactive"#,
     color = ColorChoice::Never,
 )]
 struct CliArgs {
