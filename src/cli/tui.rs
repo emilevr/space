@@ -779,8 +779,6 @@ r#"Before you are able to delete you have to accept the license terms once. Don'
         Line::default(),
         Line::from(Span::styled("MIT License",Style::default().add_modifier(Modifier::BOLD))),
         Line::default(),
-        Line::from(Span::raw("Copyright © 2023 Emile van Reenen")),
-        Line::default(),
         Line::from(vec![
             Span::raw(
 r#"THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
