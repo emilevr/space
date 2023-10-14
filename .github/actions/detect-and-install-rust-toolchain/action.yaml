@@ -4,7 +4,6 @@ description: >
 inputs:
   components:
       description: A Comma Separated Value (CSV) string with components to install, .e.g clippy,rustfmt
-      type: string
 runs:
   using: composite
   steps:

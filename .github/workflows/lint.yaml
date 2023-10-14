@@ -21,6 +21,14 @@ jobs:
         with:
           components: clippy,rustfmt
 
+      - name: Cache BuildIt
+        uses: actions/cache@v3
+        continue-on-error: true
+        with:
+          path: ./buildit/target
+          key: buildit-lint-${{ runner.os }}-${{ hashFiles('./buildit') }}
+          restore-keys: buildit-lint-${{ runner.os }}-${{ hashFiles('./buildit') }}
+
       - name: Check code formatting
         run: cargo fmt --manifest-path ./buildit/Cargo.toml -- --check
 
