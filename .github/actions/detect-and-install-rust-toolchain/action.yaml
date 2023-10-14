@@ -1,0 +1,17 @@
+name: Detect and install Rust toolchain
+description: >
+  Detects the version of Rust specified in the rust-toolchain.toml file and installs it.
+inputs:
+  components:
+      description: A Comma Separated Value (CSV) string with components to install, .e.g clippy,rustfmt
+      type: string
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/detect-rust-toolchain-version
+
+    - name: Install Rust toolchain ${{ env.RUST_TOOLCHAIN_VERSION }}
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        components: ${{ inputs.components }}
+        toolchain: ${{ env.RUST_TOOLCHAIN_VERSION }}

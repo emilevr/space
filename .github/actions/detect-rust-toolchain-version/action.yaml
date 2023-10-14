@@ -1,0 +1,12 @@
+name: Detect Rust toolchain version
+description: >
+  Detects the version of Rust specified in the rust-toolchain.toml file and sets the RUST_TOOLCHAIN_VERSION
+  environment variable accordingly.
+runs:
+  using: composite
+  steps:
+    - name: Detect Rust toolchain version
+      shell: pwsh
+      run: |
+        $version = (Select-String -Path ./rust-toolchain.toml -Pattern "^channel\s*=\s*`"\s*(\d+.\d+.\d+)").Matches.Groups[1].Value
+        Write-Host "RUST_TOOLCHAIN_VERSION=$version" >> "${env:GITHUB_ENV}"

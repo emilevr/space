@@ -1,0 +1,13 @@
+#!/bin/sh
+
+echo "👷 Running the post-checkout hook ..."
+
+HOOKS_DIR="./.git-hooks"
+echo "👷 Setting hooks directory to $HOOKS_DIR"
+git config core.hooksPath $HOOKS_DIR
+CONFIG_EXIT_CODE=$?
+if [ $CONFIG_EXIT_CODE -ne 0 ]; then
+    echo "❌ Unable to set hooks directory. Please run 'git config core.hooksPath $HOOKS_DIR' manually."
+else
+    echo "✔️ Set hooks directory successfully."
+fi

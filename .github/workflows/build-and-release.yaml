@@ -1,0 +1,158 @@
+name: build-and-release
+run-name: Build and release
+on:
+  push:
+    tags:
+      - '*.*.*'
+  workflow_dispatch:
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yaml
+  coverage:
+    uses: ./.github/workflows/coverage.yaml
+  benchmark:
+    uses: ./.github/workflows/benchmark.yaml
+  build-and-test:
+    name: '${{ matrix.target }}'
+    needs:
+      - benchmark
+      - coverage
+      - lint
+    runs-on: ${{ matrix.runs-on }}
+    outputs:
+      CALCULATED_VERSION: ${{ steps.version.outputs.CALCULATED_VERSION }}
+      IS_PRE_RELEASE: ${{ steps.version.outputs.IS_PRE_RELEASE }}
+      PREV_RELEASE_VERSION: ${{ steps.version.outputs.PREV_RELEASE_VERSION }}
+    strategy:
+      matrix:
+        include:
+          - id: linux
+            runs-on: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - id: macos
+            runs-on: macos-latest
+            target: x86_64-apple-darwin
+          - id: windows
+            runs-on: windows-latest
+            target: x86_64-pc-windows-msvc
+    env:
+      RUST_LOG: trace
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # We set a the fetch depth so we expect BuildIt to be able to find the previous version tag.
+          # A value of 0 will fetch all commits, but that is overkill.
+          fetch-depth: 1000
+
+      # We also need to fetch tags as by default no tags are fetched if fetch-depth above is greater than 0.
+      # Tags are used to calculate the next version number.
+      - name: Fetch tags
+        run: git fetch --tags origin
+
+      - uses: ./.github/actions/detect-and-install-rust-toolchain
+
+      - uses: ./.github/actions/run-all-tests
+
+      - uses: ./.github/actions/install-buildit
+
+      - name: Set the build version
+        id: version
+        run: buildit version
+
+      - name: Build binaries for packaging
+        run: cargo build --release
+
+      - name: Package for distribution (Linux and MacOS)
+        if: ${{ matrix.runs-on == 'ubuntu-latest' || matrix.runs-on == 'macos-latest' }}
+        run: |
+          BIN_FILE_PATH=./target/release/space
+          ARCHIVE_FILE_PATH=./artifacts/dist/space-${{ matrix.target }}.tar.gz
+
+          # Strip debug symbols
+          strip $BIN_FILE_PATH
+
+          mkdir -p ./artifacts/dist
+
+          # Compress
+          tar -czf $ARCHIVE_FILE_PATH $BIN_FILE_PATH
+
+          # Calculate hash
+          shasum -a 256 $ARCHIVE_FILE_PATH > ${ARCHIVE_FILE_PATH}.sha256
+
+      - name: Package for distribution (Windows)
+        if: ${{ matrix.runs-on == 'windows-latest' }}
+        run: |
+          $binFilePath = './target/release/space.exe'
+          $archiveFilePath = "./artifacts/dist/space-${{ matrix.target }}.zip"
+
+          New-Item -Type Directory -Path ./artifacts/dist -Force
+
+          $compress = @{
+            Path = $binFilePath
+            DestinationPath = $archiveFilePath
+            CompressionLevel = "Optimal"
+          }
+          Compress-Archive @compress
+
+          # Calculate hash
+          Get-FileHash -Path $archiveFilePath -Algorithm SHA256 | Select-Object -ExpandProperty Hash > "${archiveFilePath}.sha256"
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-${{ matrix.id }}
+          path: ./artifacts/dist
+
+  create-release:
+    name: Create release
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CALCULATED_VERSION: ${{ needs.build-and-test.outputs.CALCULATED_VERSION }}
+      IS_PRE_RELEASE: ${{ needs.build-and-test.outputs.IS_PRE_RELEASE }}
+      PREV_RELEASE_VERSION: ${{ needs.build-and-test.outputs.PREV_RELEASE_VERSION }}
+    permissions:
+      contents: write # Allow release creation
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # We set a the fetch depth so we expect minver_rs to be able to find the last version tag.
+          # A value of 0 will fetch all commits, but that is overkill.
+          fetch-depth: 1000
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Create release
+        shell: pwsh
+        run: |
+          $isPreReleaseVar = '${{ env.IS_PRE_RELEASE }}'
+          $prevReleaseVersion = '${{ env.PREV_RELEASE_VERSION }}'
+          $calculatedVersion = '${{ env.CALCULATED_VERSION }}'
+
+          Write-Host "IS_PRE_RELEASE = $isPreReleaseVar"
+          Write-Host "PREV_RELEASE_VERSION = $prevReleaseVersion"
+          Write-Host "CALCULATED_VERSION = $calculatedVersion"
+
+          $isPreRelease = $true
+          $preReleaseParam = '--prerelease'
+          if ($isPreReleaseVar -eq 'false') {
+            $isPreRelease = $false
+            $preReleaseParam = $null
+          }
+
+          $hasPrevReleaseVersion = -not [string]::IsNullOrWhiteSpace($prevReleaseVersion)
+          if ($hasPrevReleaseVersion) {
+            gh release create $calculatedVersion $preReleaseParam --generate-notes --latest --notes-start-tag $prevReleaseVersion --title $calculatedVersion
+          } else {
+            gh release create $calculatedVersion $preReleaseParam --notes 'First release' --title $calculatedVersion
+          }
+
+          $distributions = @('linux', 'macos', 'windows')
+          foreach ($distro in $distributions) {
+            $artifactsDir = "./dist-$distro"
+            if (Test-Path $artifactsDir) {
+              gh release upload $calculatedVersion $artifactsDir/*
+            }
+          }

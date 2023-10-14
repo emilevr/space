@@ -1,0 +1,16 @@
+name: Install BuildIt
+description: Installs the BuildIt CLI
+runs:
+  using: composite
+  steps:
+    - name: Cache BuildIt
+      uses: actions/cache@v3
+      continue-on-error: true
+      with:
+        path: ./buildit/target
+        key: buildit-${{ runner.os }}-${{ hashFiles('./buildit') }}
+        restore-keys: buildit-${{ runner.os }}-${{ hashFiles('./buildit') }}
+
+    - name: Install the BuildIt CLI
+      shell: pwsh
+      run: cargo install --path ./buildit
