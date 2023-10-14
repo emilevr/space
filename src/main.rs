@@ -1,7 +1,7 @@
-use anyhow::bail;
-use clap::Parser;
+use clap::{ColorChoice, Parser};
 use cli::cli_command::CliCommand;
 use cli::view_command::ViewCommand;
+use space_rs::SizeDisplayFormat;
 use std::env;
 use std::io::Write;
 use std::path::PathBuf;
@@ -19,40 +19,69 @@ mod test_utils;
 
 pub(crate) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Debug, Parser)]
-#[command(name = "space")]
-#[command(author, version, propagate_version = true)]
-#[command(about = r#"Space, the final frontier!
+#[derive(Clone, Debug, Parser)]
+#[clap(
+    name = "space",
+    version,
+    long_about =
+r#"Space, the final frontier! 🖖
 
-When run without any arguments 'space' will calculate the size of the current directory tree and display the results in the terminal.
-Use the '--gui' option to show the results in a desktop graphical user interface instead.
-\\//_"#, long_about = None)]
+Analyzes and displays the size of one or more directory trees.
+
+License: MIT [https://github.com/emilevr/space/blob/main/LICENSE]
+Copyright © 2023 Emile van Reenen [https://github.com/emilevr]"#,
+    after_help =
+r#"EXAMPLES:
+    $ space
+    $ space path/to/file/or/dir
+    $ space path/to/dir1 path/to/dir2
+    $ space --size-threshold-percentage 5
+    $ space --size-format metric"#,
+    after_long_help =
+r#"EXAMPLES:
+    Analyze and display current working directory in a Text User Interface (TUI):
+    $ space
+
+    Analyze and display a single directory or file:
+    $ space path/to/file/or/dir
+
+    Analyze and display multiple directories:
+    $ space path/to/dir1 path/to/dir2
+
+    Set the relative size display filter to >= 5%:
+    $ space --size-threshold-percentage 5
+
+    Display file and directory sizes using binary units rather than the default metric units:
+    $ space --size-format binary"#,
+    color = ColorChoice::Never,
+)]
 struct CliArgs {
-    #[command(subcommand)]
-    command: CommandArgs,
+    /// The path(s) to the target files or directories to view. If not supplied the current directory
+    /// will be used. Separate multiple paths using spaces.
+    #[arg(value_name = "TARGET PATH(S)", value_parser, num_args = 1.., value_delimiter = ' ')]
+    target_paths: Option<Vec<PathBuf>>,
+
+    /// The size threshold as a percentage of the total. Only items with a relative size greater or equal
+    /// to this percentage will be included.
+    #[arg(value_name = "PERCENTAGE", short = 's', long, default_value_t = DEFAULT_SIZE_THRESHOLD_PERCENTAGE, value_parser = clap::value_parser!(u8).range(0..=100))]
+    size_threshold_percentage: u8,
+
+    /// The format to use when a size value is displayed.
+    #[arg(short = 'f', long, value_enum, default_value_t = SizeDisplayFormat::Metric)]
+    size_format: SizeDisplayFormat,
+
+    /// If specified then only non-interactive output will be rendered.
+    #[arg(short = 'n', long)]
+    non_interactive: bool,
 }
 
 pub(crate) const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
 
 #[derive(Debug, Parser)]
 enum CommandArgs {
-    /// Shows the apparent disk usage of the specified directory tree(s). This is the default command.
+    /// Shows the apparent disk space usage of the specified directory tree(s). This is the default command.
     #[command()]
-    View {
-        /// The path(s) to the target files or directories to view. If not supplied the current directory
-        /// will be used. Separate multiple paths using spaces.
-        #[arg(value_name = "TARGET PATH(S)", value_parser, num_args = 1.., value_delimiter = ' ')]
-        target_paths: Option<Vec<PathBuf>>,
-
-        /// The size threshold as a percentage of the total. Only items with an apparent size greater or equal
-        /// to this percentage will be included.
-        #[arg(value_name = "PERCENTAGE", short = 's', long, default_value_t = DEFAULT_SIZE_THRESHOLD_PERCENTAGE, value_parser = clap::value_parser!(u8).range(0..=100))]
-        size_threshold_percentage: u8,
-
-        /// If specified then only non-interactive output will be rendered.
-        #[arg(short = 'n', long)]
-        non_interactive: bool,
-    },
+    View {},
 }
 
 pub fn main() -> anyhow::Result<()> {
@@ -69,38 +98,15 @@ pub(crate) fn run<W: Write>(args: Vec<String>, writer: &mut W) -> anyhow::Result
 }
 
 fn resolve_command(args: Vec<String>) -> Result<impl CliCommand, anyhow::Error> {
-    match parse_args(args)?.command {
-        CommandArgs::View {
-            target_paths,
-            size_threshold_percentage,
-            non_interactive,
-        } => Ok(ViewCommand::new(
-            target_paths,
-            None,
-            size_threshold_percentage,
-            non_interactive,
-        )),
-    }
+    let args = parse_args(args)?;
+    Ok(ViewCommand::new(
+        args.target_paths,
+        Some(args.size_format),
+        args.size_threshold_percentage,
+        args.non_interactive,
+    ))
 }
 
 fn parse_args(args: Vec<String>) -> Result<CliArgs, anyhow::Error> {
-    Ok(CliArgs::parse_from(ensure_default_command(args)?))
-}
-
-fn ensure_default_command(mut args: Vec<String>) -> Result<Vec<String>, anyhow::Error> {
-    match args.len() {
-        // No arguments supplied so default to the View command.
-        1 => args.push(ViewCommand::NAME.to_string()),
-
-        // Some argument specified. Check if any of the supported commands were specified as the first
-        // argument. If not, then insert it.
-        2.. => match args[1].as_str() {
-            ViewCommand::NAME => {}
-            _ => args.insert(1, ViewCommand::NAME.to_string()),
-        },
-
-        _ => bail!("Arguments are invalid!"),
-    }
-
-    Ok(args)
+    Ok(CliArgs::parse_from(args))
 }

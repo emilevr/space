@@ -4,8 +4,12 @@
 #[path = "./size_test.rs"]
 mod size_test;
 
+#[cfg(feature = "cli")]
+use clap::ValueEnum;
+
 /// The format to use when a size value is displayed.
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "cli", derive(ValueEnum))]
 pub enum SizeDisplayFormat {
     /// 1KB = 1000 bytes.
     Metric,

@@ -70,7 +70,7 @@ impl CliCommand for ViewCommand {
         let items = self.get_directory_items();
 
         let size_display_format = match &self.size_display_format {
-            Some(size_display_format) => size_display_format.clone(),
+            Some(size_display_format) => *size_display_format,
             _ => SizeDisplayFormat::Metric,
         };
 
@@ -100,8 +100,6 @@ impl CliCommand for ViewCommand {
 }
 
 impl ViewCommand {
-    pub const NAME: &str = "view";
-
     #[inline(always)]
     pub fn get_directory_items(&mut self) -> Vec<DirectoryItem> {
         self.trace_space()

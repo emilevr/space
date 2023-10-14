@@ -3,63 +3,27 @@ use crate::{
     parse_args, resolve_command, run,
     test_directory_utils::{create_test_directory_tree, delete_test_directory_tree},
     test_utils::TestOut,
-    CommandArgs,
 };
 use std::env;
 
 const BINARY_PATH: &str = "./space";
 
 #[test]
-fn parse_args_when_no_sub_command_specified_defaults_to_view_command() -> anyhow::Result<()> {
+fn parse_args_without_args_returns_args_with_no_target_paths() -> anyhow::Result<()> {
     // Arrange
-    let args = vec![BINARY_PATH.to_string()];
-
-    // Act
-    let cli_args = parse_args(args)?;
-
-    // Assert
-    match cli_args.command {
-        CommandArgs::View {
-            target_paths,
-            size_threshold_percentage,
-            non_interactive,
-        } => {
-            assert_eq!(None, target_paths);
-            assert_eq!(
-                1,
-                size_threshold_percentage,
-                "Expected size_threshold_percentage to be the default of {}.",
-                crate::DEFAULT_SIZE_THRESHOLD_PERCENTAGE
-            );
-            assert_eq!(
-                false, non_interactive,
-                "Expected the non-interactive filter to be None."
-            );
-        }
-    };
-
-    Ok(())
-}
-
-#[test]
-fn parse_args_given_view_command_without_args_returns_view_command() -> anyhow::Result<()> {
-    // Arrange
-    let args = vec![BINARY_PATH, "view"];
+    let args = vec![BINARY_PATH];
 
     // Act
     let cli_args = parse_args(args.iter().map(|arg| arg.to_string()).collect())?;
 
     // Assert
-    match cli_args.command {
-        CommandArgs::View { .. } => {}
-    };
+    assert_eq!(None, cli_args.target_paths);
 
     Ok(())
 }
 
 #[test]
-fn parse_args_given_view_command_non_interactive_returns_correct_view_command() -> anyhow::Result<()>
-{
+fn parse_args_given_non_interactive_returns_correct_args() -> anyhow::Result<()> {
     // Arrange
     let args = vec![BINARY_PATH, "view", "--non-interactive"];
 
@@ -67,13 +31,7 @@ fn parse_args_given_view_command_non_interactive_returns_correct_view_command() 
     let cli_args = parse_args(args.iter().map(|arg| arg.to_string()).collect())?;
 
     // Assert
-    match cli_args.command {
-        CommandArgs::View {
-            non_interactive, ..
-        } => {
-            assert_eq!(true, non_interactive);
-        }
-    };
+    assert_eq!(true, cli_args.non_interactive);
 
     Ok(())
 }
@@ -98,21 +56,6 @@ fn resolve_command_when_no_target_paths_specified_uses_current_dir() -> anyhow::
     );
 
     Ok(())
-}
-
-#[test]
-fn run_given_invalid_args_fails() {
-    // Arrange
-
-    // Act
-    let result = run(vec![], &mut TestOut::new());
-
-    // Assert
-    if let Err(err) = result {
-        assert!(err.to_string().contains("Arguments are invalid!"));
-    } else {
-        assert!(false, "Expected the result to be an error.");
-    }
 }
 
 #[test]
