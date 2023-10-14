@@ -1,0 +1,33 @@
+name: lint
+run-name: Lint
+on:
+  pull_request:
+  push:
+    paths-ignore:
+      - '.git-hooks/**'
+      - '.vscode/**'
+      - 'docs/**'
+      - '**/*.md'
+  workflow_call:
+jobs:
+  test:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/detect-and-install-rust-toolchain
+        with:
+          components: clippy,rustfmt
+
+      - name: Check code formatting
+        run: cargo fmt --manifest-path ./buildit/Cargo.toml -- --check
+
+      - name: Lint with Clippy
+        run: cargo clippy --no-deps
+
+      - name: Check code formatting (BuildIt)
+        run: cargo fmt -- --check
+
+      - name: Lint with Clippy (BuildIt)
+        run: cargo clippy --manifest-path ./buildit/Cargo.toml

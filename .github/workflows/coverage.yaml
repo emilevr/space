@@ -1,0 +1,63 @@
+name: coverage
+run-name: Code Coverage
+on:
+  - workflow_call
+  - workflow_dispatch
+jobs:
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/detect-and-install-rust-toolchain
+        with:
+          components: llvm-tools
+
+      - uses: ./.github/actions/install-buildit
+
+      - uses: ./.github/actions/install-tmux
+
+      - name: Download grcov for code coverage measurement and reporting
+        run: |
+            mkdir -p "${HOME}/.local/bin"
+            curl -sL https://github.com/mozilla/grcov/releases/download/v0.8.18/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf - -C "${HOME}/.local/bin"
+            echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Run all tests and code coverage
+        run: |
+            # Do not exit on first non-zero return code, as we want to do cleanup at the end.
+            set +e
+
+            # Start a tmux session named 'tests'.
+            tmux new-session -d -s tests -x 200 -y 20
+
+            # Send the command to run the tests with code coverage.
+            tmux send-keys -t tests 'buildit coverage --include-ignored ; tmux wait -S tests-finished' Enter
+
+            # Wait for the tests-finished signal.
+            tmux wait-for tests-finished
+
+            # Show the tmux session output including up to the last 1000 lines scrolled out of view.
+            tmux capture-pane -p -t tests -S -1000
+
+            # Check for all tests succeeded.
+            tmux capture-pane -p -t tests | grep 'Testing and Code Coverage completed successfully'
+            EXITCODE=$?
+
+            # Exit the tmux session.
+            tmux kill-session -t tests
+
+            # Now exit with the saved exit code.
+            exit $EXITCODE
+
+      # - name: Upload code coverage report
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: coverage-report-${{ matrix.id }}
+      #     path: ./coverage/html
+
+      # - name: Upload code coverage to codecov.io
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #       files: coverage/lcov

@@ -1,0 +1,28 @@
+name: benchmark
+run-name: Run benchmarks
+on:
+  - pull_request
+  - workflow_call
+  - workflow_dispatch
+jobs:
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/detect-and-install-rust-toolchain
+
+      - uses: ./.github/actions/install-buildit
+
+      - name: Cache tmp.sample
+        uses: actions/cache@v3
+        timeout-minutes: 1
+        continue-on-error: true
+        with:
+          path: ./tmp.sample
+          key: tmp.sample-${{ github.job }}-${{ runner.os }}
+          restore-keys: tmp.sample-${{ github.job }}-${{ runner.os }}
+
+      - name: Benchmark
+        run: buildit benchmark

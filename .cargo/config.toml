@@ -1,0 +1,2 @@
+[alias]
+buildit = "run --release --manifest-path ./buildit/Cargo.toml --"

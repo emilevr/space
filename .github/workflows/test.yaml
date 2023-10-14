@@ -1,0 +1,27 @@
+name: test
+run-name: Test
+on:
+  pull_request:
+  push:
+    paths-ignore:
+      - '.git-hooks/**'
+      - '.vscode/**'
+      - 'docs/**'
+      - '**/*.md'
+jobs:
+  test:
+    name: 'Test on ${{ matrix.runs-on }}'
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/detect-and-install-rust-toolchain
+
+      - uses: ./.github/actions/run-all-tests

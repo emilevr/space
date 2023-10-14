@@ -1,0 +1,54 @@
+[package]
+authors = ["Emile van Reenen <emile@van-reenen.com>"]
+categories = ["command-line-utilities", "filesystem"]
+description = "A fast Rust library for analyzing and cleaning disk space on your filesystem"
+documentation = "https://docs.rs/space-rs"
+edition = "2021"
+include = ["src", "Cargo.toml", "README.md", "LICENSE", "docs"]
+keywords = ["disk", "space", "usage"]
+license = "MIT"
+name = "space_rs"
+readme = "README.md"
+repository = "https://github.com/emilevr/space"
+rust-version = "1.70"
+version = "0.0.0"
+
+[lib]
+name = "space_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "space"
+path = "src/main.rs"
+required-features = ["cli"]
+
+[[bench]]
+name = "directory_item_build"
+harness = false
+
+[features]
+# Uncomment the "default = ..." below to include the nightly features in the build by default, and in the Rust
+# analyzer. If you do so then you will have to add "+nightly" to cargo commands, e.g. "cargo +nightly build".
+#default = ["cli", "nightly"]
+default = ["cli"]
+nightly = []
+cli = ["clap/derive", "crossterm", "dirs", "ratatui/all-widgets", "serde/derive", "serde_yaml"]
+
+[dependencies]
+anyhow = "^1.0.72"
+clap = { version = "^4.3.21", optional = true }
+crossterm = { version = "^0.27.0", optional = true }
+dirs = { version = "^5.0.1", optional = true }
+env_logger = "^0.10.0"
+log = "^0.4.20"
+ratatui = { version = "^0.23.0", features = ["all-widgets"], optional = true }
+rayon = "^1.7.0"
+serde = { version = "^1.0.188", features = ["derive"], optional = true }
+serde_yaml = { version = "^0.9.25", optional = true }
+unicode-segmentation = "^1.10.1"
+
+[dev-dependencies]
+criterion = "^0.5.1"
+regex = "^1.9.5"
+rstest = "^0.18.2"
+uuid = { version = "^1.4.1", features = ["v4"] }
