@@ -1,0 +1,64 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report! 🙏
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: |
+        Also tell us, what did you expect to happen? If applicable, add screenshots to help explain your problem.
+        > :bulb: You can attach files by dragging and dropping them on the text control below.
+      placeholder: Tell or show us what you see!
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: |
+        What version of `space` were you using when you observed the bug?
+        > :bulb: The version can be output via `space --version`
+      placeholder: e.g. 1.1.1
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Which operating system(s) did you observe the bug on?
+      multiple: true
+      options:
+        - MacOS
+        - Linux
+        - Windows
+        - Other
+  - type: input
+    id: operating-system-details
+    attributes:
+      label: Operating system details
+      description: Please provide any additional details about the relevant operating systems
+      placeholder: e.g. OS version, platform, runtime environment, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        Please copy and paste any relevant log output. This will be automatically formatted into code, so no
+        need for backticks.
+      render: Shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: >
+        By submitting this issue, you agree to follow our
+        [Code of Conduct](https://github.com/emilevr/space/blob/main/CONTRIBUTING.md#code-of-conduct)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
