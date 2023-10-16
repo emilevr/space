@@ -800,8 +800,6 @@ r#"By accepting, you agree to be bound by the terms of the MIT License. You can 
             Span::styled(ACCEPT_LICENSE_TERMS_KEY.to_string(), value_style),
             Span::raw("] to accept the license terms. Any other key to cancel."),
         ]),
-        Line::default(),
-        Line::from(vec![Span::raw(r#"\\//_"#)]),
     ];
 
     // Create the dialog content, without a block so we can measure the contents only.
