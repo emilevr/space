@@ -355,9 +355,16 @@ fn render_vertical_scrollbar<B: Backend>(
     area: &Rect,
     title_style: Style,
 ) {
+    // The content length must be the total number of rows minus the number of visible rows.
+    let content_length = if data.displayable_item_count > data.visible_height {
+        data.displayable_item_count - data.visible_height
+    } else {
+        data.displayable_item_count
+    };
+
     let mut vertical_scroll_state = ScrollbarState::default()
         .position(data.visible_offset as u16)
-        .content_length(data.displayable_item_count as u16)
+        .content_length(content_length as u16)
         .viewport_content_length(data.visible_height as u16);
 
     f.render_stateful_widget(
