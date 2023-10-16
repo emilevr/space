@@ -95,7 +95,10 @@ jobs:
           Compress-Archive @compress
 
           # Calculate hash
-          Get-FileHash -Path $archiveFilePath -Algorithm SHA256 | Select-Object -ExpandProperty Hash > "${archiveFilePath}.sha256"
+          Get-FileHash -Path $archiveFilePath -Algorithm SHA256 `
+            | Select-Object -ExpandProperty @{Label='Hash';Expression={$_.Hash.ToLower()}} `
+            | Select-Object -ExpandProperty Hash `
+            > "${archiveFilePath}.sha256"
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v3
