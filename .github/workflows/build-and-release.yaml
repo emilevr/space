@@ -96,7 +96,7 @@ jobs:
 
           # Calculate hash
           Get-FileHash -Path $archiveFilePath -Algorithm SHA256 `
-            | Select-Object -ExpandProperty @{Label='Hash';Expression={$_.Hash.ToLower()}} `
+            | Select-Object @{Label='Hash';Expression={$_.Hash.ToLower()}} `
             | Select-Object -ExpandProperty Hash `
             > "${archiveFilePath}.sha256"
 
