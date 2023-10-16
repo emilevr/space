@@ -1,0 +1,26 @@
+name: Other
+description: Anything else that is not a bug or a feature request
+labels: ["other"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to submit this! 🙏
+  - type: textarea
+    id: details
+    attributes:
+      label: Please provide the details
+      description: |
+        Clear and concise details that you want to share with us.
+        > :bulb: You can attach files by dragging and dropping them on the text control below.
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: >
+        By submitting this issue, you agree to follow our
+        [Code of Conduct](https://github.com/emilevr/space/blob/main/CONTRIBUTING.md#code-of-conduct)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
