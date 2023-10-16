@@ -10,6 +10,12 @@
         }
     },
     "bin": "space.exe",
+    "shortcuts": [
+        [
+            "space.exe",
+            "space"
+        ]
+    ],
     "checkver": "github",
     "autoupdate": {
         "architecture": {
