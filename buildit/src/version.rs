@@ -513,7 +513,7 @@ fn append_to_github_pipeline_file(
     file_env_var: &str,
     key: &str,
     value: &str,
-) -> Result<(), anyhow::Error> {
+) -> anyhow::Result<()> {
     let github_env_file_path = env::var(file_env_var).unwrap();
     let mut file = OpenOptions::new()
         .append(true)

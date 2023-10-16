@@ -5,7 +5,7 @@ use super::{
     tui,
     view_state::{self, ViewState},
 };
-use anyhow::bail;
+use anyhow::{bail, Context};
 use crossterm::{style::Print, QueueableCommand};
 use ratatui::prelude::*;
 use space_rs::{DirectoryItem, SizeDisplayFormat};
@@ -219,17 +219,21 @@ fn render_rows<W: Write>(
         )
         .collect();
 
-    view_state.item_tree.iter().for_each(|item| {
-        rendered_count += render_row(
-            item,
-            size_threshold_fraction,
-            &constraints,
-            width,
-            &view_state.size_display_format,
-            terminal.backend_mut(),
-        )
-        .unwrap();
-    });
+    view_state
+        .item_tree
+        .iter()
+        .try_for_each(|item| {
+            rendered_count += render_row(
+                item,
+                size_threshold_fraction,
+                &constraints,
+                width,
+                &view_state.size_display_format,
+                terminal.backend_mut(),
+            )?;
+            anyhow::Ok(())
+        })
+        .context("An error occurred while rendering a row!")?;
 
     terminal.flush()?;
 

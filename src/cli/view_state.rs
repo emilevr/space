@@ -305,10 +305,7 @@ impl ViewState {
                 }
                 Err(e) => {
                     // TODO: Push the error into some sort of error stream and expose in UI.
-                    error!(
-                        "Deletion failed: {}",
-                        e.to_string().chars().take(50).collect::<String>()
-                    );
+                    error!("Deletion of item failed: {}", e);
                 }
             }
         }
@@ -381,7 +378,7 @@ impl ViewState {
         let file_path = self
             .config_file_path
             .as_ref()
-            .expect("The default config file path was not set!");
+            .ok_or_else(|| anyhow::anyhow!("The default config file path was not set!"))?;
 
         let mut file = File::open(file_path)?;
         let mut yaml = String::new();
@@ -400,7 +397,7 @@ impl ViewState {
         let file_path = self
             .config_file_path
             .as_ref()
-            .expect("The default config file path was not set!");
+            .ok_or_else(|| anyhow::anyhow!("The default config file path was not set!"))?;
 
         let config = Config {
             accepted_license_terms: self.accepted_license_terms,

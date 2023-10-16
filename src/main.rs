@@ -1,6 +1,9 @@
+use anyhow::{anyhow, bail};
 use clap::{ColorChoice, Parser};
 use cli::cli_command::CliCommand;
 use cli::view_command::ViewCommand;
+use log::error;
+use simple_log::{log_level, LogConfigBuilder};
 use space_rs::SizeDisplayFormat;
 use std::env;
 use std::io::Write;
@@ -89,8 +92,33 @@ enum CommandArgs {
 }
 
 pub fn main() -> anyhow::Result<()> {
-    env_logger::init();
-    run(env::args().collect(), &mut std::io::stdout())?;
+    configure_logger()?;
+    if let Err(e) = run(env::args().collect(), &mut std::io::stdout()) {
+        error!("{}", e);
+        eprintln!("{}", e);
+        Err(e)
+    } else {
+        Ok(())
+    }
+}
+
+fn configure_logger() -> anyhow::Result<()> {
+    if let Some(home_dir) = dirs::home_dir() {
+        let level = env::var("SPACE_LOG_LEVEL").unwrap_or(log_level::WARN.to_string());
+        let config = LogConfigBuilder::builder()
+            .path(home_dir.join(".space").join("space.log").to_string_lossy())
+            .size(1)
+            .roll_count(5)
+            .time_format("%Y-%m-%dT%H:%M:%S.%f") //E.g:%H:%M:%S.%f
+            .level(level)
+            .output_file()
+            .build();
+
+        simple_log::new(config).map_err(|e| anyhow!("Unable to configure the logger! {}", e))?;
+    } else {
+        bail!("Could not determine the user's home directory!");
+    }
+
     Ok(())
 }
 
