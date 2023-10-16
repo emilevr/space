@@ -4,6 +4,7 @@
 [![Test](https://github.com/emilevr/space/actions/workflows/test.yaml/badge.svg)](https://github.com/emilevr/space/actions/test.yaml)
 [![Code Coverage](coverage/html/badges/flat.svg)](https://crates.io/crates/space)
 [![Benchmark](https://github.com/emilevr/space/actions/workflows/benchmark.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/benchmark.yaml)
+[![Release](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml)
 
 A fast disk space analyzer and cleaner powered by Rust! :vulcan_salute:
 
