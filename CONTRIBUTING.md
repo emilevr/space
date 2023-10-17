@@ -9,6 +9,8 @@ When contributing to this repository, please first discuss the change you wish t
   code in any other language will only be accepted under extraordinary circumstances.
 - Performance is a primary goal of this project. Please ensure your code is fast and safe.
 - Please use descriptive variable names. Code is the best documentation.
+- Please create tests in a *separate* file named <module-file-name>_test.rs, rather than directly in the
+  module file.
 - Keep it simple.
 
 > :exclamation: Please note we have a code of conduct, please follow it in all your interactions with the project.
@@ -24,8 +26,7 @@ When contributing to this repository, please first discuss the change you wish t
 
 ### Release Versions
 
-A release is created, by admins, via pushing a tag that matches the following regex: `\d+.\d+.\d+`, i.e. 0.1.0
-or 1.1.1.
+A release is created, by admins, via pushing a tag that matches the following regex: `\d+.\d+.\d+`, i.e. 1.1.1.
 
 ## Code of Conduct
 
