@@ -13,7 +13,8 @@ body:
       description: |
         Also tell us, what did you expect to happen? If applicable, add screenshots to help explain your problem.
         > :bulb: You can attach files by dragging and dropping them on the text control below.
-      placeholder: Tell or show us what you see!
+        > :exclamation: Make sure that any files you submit do not contain sensitive information!
+      placeholder: Tell or show us what you see.
     validations:
       required: true
   - type: input
@@ -48,9 +49,10 @@ body:
     id: logs
     attributes:
       label: Relevant log output
-      description: >
-        Please copy and paste any relevant log output. This will be automatically formatted into code, so no
-        need for backticks.
+      description: |
+        Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+        Warning or errors may have been written to the log file at `~/.space/space.log`.
+        > :exclamation: Make sure that any log entries you provide do not contain sensitive information!
       render: Shell
   - type: checkboxes
     id: terms
