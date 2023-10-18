@@ -91,12 +91,12 @@ impl Size {
     }
 
     /// Converts the size to string, using the specified format.
-    pub fn to_string(&self, format: &SizeDisplayFormat) -> String {
+    pub fn to_string(&self, format: SizeDisplayFormat) -> String {
         let best_format = Self::get_best_format(self.value, format);
         format!("{} {}", self.value / best_format.divisor, best_format.unit)
     }
 
-    fn get_best_format(size_in_bytes: u64, format: &SizeDisplayFormat) -> &'static SizeDisplayData {
+    fn get_best_format(size_in_bytes: u64, format: SizeDisplayFormat) -> &'static SizeDisplayData {
         let config = match format {
             SizeDisplayFormat::Binary => BINARY_DISPLAY_DATA,
             SizeDisplayFormat::Metric => METRIC_DISPLAY_DATA,

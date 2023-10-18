@@ -80,6 +80,11 @@ struct CliArgs {
     /// If specified then only non-interactive output will be rendered.
     #[arg(short = 'n', long)]
     non_interactive: bool,
+
+    /// If specified then the time to analyze and display the specified tree(s) will be shown. Note: This is
+    /// ignored unless --non-interactive is specified.
+    #[arg(short = 't', long)]
+    show_timing: bool,
 }
 
 pub(crate) const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
@@ -91,6 +96,7 @@ enum CommandArgs {
     View {},
 }
 
+#[cfg(not(test))]
 pub fn main() -> anyhow::Result<()> {
     run(
         &env::args().collect::<Vec<_>>(),
@@ -130,6 +136,7 @@ fn resolve_command(args: &[String]) -> Result<impl CliCommand, anyhow::Error> {
         Some(args.size_format),
         args.size_threshold_percentage,
         args.non_interactive,
+        args.show_timing,
     ))
 }
 

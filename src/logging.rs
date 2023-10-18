@@ -15,6 +15,7 @@ const SPACE_LOG_LEVEL_ENV_VAR_NAME: &str = "SPACE_LOG_LEVEL";
 
 type GetEnvVarFn = fn(key: &str) -> Result<String, VarError>;
 
+#[cfg(not(test))]
 fn get_env_var(key: &str) -> Result<String, VarError> {
     env::var(key)
 }
@@ -24,8 +25,9 @@ pub(crate) fn configure_logger(
     user_home_dir: Option<PathBuf>,
     get_env_var_fn: Option<GetEnvVarFn>,
 ) -> LevelFilter {
-    let get_env_var_fn = get_env_var_fn.unwrap_or(get_env_var);
-    let level = if let Ok(log_level) = get_env_var_fn(SPACE_LOG_LEVEL_ENV_VAR_NAME) {
+    #[cfg(not(test))]
+    let get_env_var_fn = get_env_var_fn.or(Some(get_env_var));
+    let level = if let Ok(log_level) = get_env_var_fn.unwrap()(SPACE_LOG_LEVEL_ENV_VAR_NAME) {
         if let Ok(level) = LevelFilter::from_str(log_level.as_str()) {
             level
         } else {
