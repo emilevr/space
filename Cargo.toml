@@ -40,11 +40,11 @@ clap = { version = "^4.3.21", optional = true }
 crossterm = { version = "^0.27.0", optional = true }
 dirs = { version = "^5.0.1", optional = true }
 log = "^0.4.20"
+log4rs = "^1.2.0"
 ratatui = { version = "^0.23.0", features = ["all-widgets"], optional = true }
 rayon = "^1.7.0"
 serde = { version = "^1.0.188", features = ["derive"], optional = true }
 serde_yaml = { version = "^0.9.25", optional = true }
-simple-log = "^1.6.0"
 unicode-segmentation = "^1.10.1"
 
 [dev-dependencies]
