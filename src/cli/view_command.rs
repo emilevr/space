@@ -47,25 +47,25 @@ impl CliCommand for ViewCommand {
             self.target_paths = Some(vec![env::current_dir()?]);
         }
 
-        if self.size_display_format.is_none() {
-            self.size_display_format = Some(SizeDisplayFormat::Metric);
-        }
-
         Ok(())
     }
 
     fn run<W: Write>(&mut self, writer: &mut W) -> anyhow::Result<()> {
         if let Some(target_paths) = &self.target_paths {
             if target_paths.len() == 1 {
-                println!("Analyzing path {}", target_paths[0].display());
+                writeln!(writer, "Analyzing path {}", target_paths[0].display())?;
             } else {
-                println!("Analyzing the following paths:");
-                target_paths.iter().for_each(|path| {
-                    println!("  - {}", path.display());
-                });
+                writeln!(writer, "Analyzing the following paths:")?;
+                target_paths.iter().try_for_each(|path| {
+                    writeln!(writer, "  - {}", path.display())?;
+                    anyhow::Ok(())
+                })?;
             }
         }
-        println!("This could take a while depending on the size of the tree ...");
+        writeln!(
+            writer,
+            "This could take a while depending on the size of the tree ..."
+        )?;
 
         let items = self.get_directory_items();
 

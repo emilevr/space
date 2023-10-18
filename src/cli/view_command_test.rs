@@ -184,8 +184,9 @@ fn render_rows_given_size_threshold_should_render_correct_rows(
 }
 
 #[test]
-// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests. It will be
-// included with those on the build agent.
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
 #[ignore]
 fn run_given_no_size_display_format_defaults_to_metric() -> anyhow::Result<()> {
     // Arrange
@@ -210,8 +211,9 @@ fn run_given_no_size_display_format_defaults_to_metric() -> anyhow::Result<()> {
     Ok(())
 }
 
-// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests. It will be
-// included with those on the build agent.
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
 #[rstest]
 #[ignore]
 #[case(SizeDisplayFormat::Metric, "170 KB")]
@@ -239,6 +241,66 @@ fn run_with_size_display_format_uses_that_format(
     output.expect(expected_output)?;
 
     delete_test_directory_tree(&temp_dir);
+
+    Ok(())
+}
+
+#[test]
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
+#[ignore]
+fn run_given_single_target_path_shows_expected_duration_prompt() -> anyhow::Result<()> {
+    // Arrange
+    let mut output = TestOut::new();
+    let temp_dir = create_test_directory_tree()?;
+    let mut view_command = ViewCommand {
+        target_paths: Some(vec![temp_dir.clone()]),
+        size_display_format: None,
+        size_threshold_percentage: 100,
+        non_interactive: true,
+        total_size_in_bytes: 0,
+    };
+
+    // Act
+    view_command.run(&mut output)?;
+
+    // Assert
+    output.expect("Analyzing path ")?;
+
+    delete_test_directory_tree(&temp_dir);
+
+    Ok(())
+}
+
+#[test]
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
+#[ignore]
+fn run_given_multiple_target_paths_shows_expected_duration_prompt() -> anyhow::Result<()> {
+    // Arrange
+    let mut output = TestOut::new();
+    let temp_dir1 = create_test_directory_tree()?;
+    let temp_dir2 = create_test_directory_tree()?;
+    let mut view_command = ViewCommand {
+        target_paths: Some(vec![temp_dir1.clone(), temp_dir2.clone()]),
+        size_display_format: None,
+        size_threshold_percentage: 100,
+        non_interactive: true,
+        total_size_in_bytes: 0,
+    };
+
+    // Act
+    view_command.run(&mut output)?;
+
+    // Assert
+    output.expect("Analyzing the following paths:")?;
+    output.expect(temp_dir1.to_str().expect("Unable to get temp dir 1 path"))?;
+    output.expect(temp_dir2.to_str().expect("Unable to get temp dir 2 path"))?;
+
+    delete_test_directory_tree(&temp_dir1);
+    delete_test_directory_tree(&temp_dir2);
 
     Ok(())
 }
