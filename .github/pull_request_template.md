@@ -17,7 +17,12 @@
 
 - [ ] I have followed the guidelines in the [Contribution Guide](../CONTRIBUTING.md#general-guidelines) document.
 - [ ] I have checked that there aren't other open [Pull Requests](https://github.com/emilevr/space/pulls) for the same update/change.
-- [ ] I have confirmed that all tests pass locally
+
+- [ ] I have confirmed locally that there are no linting issues.
+  > :construction_worker: This should already be happening on local commit via the pre-commit hook, as described in the [README](../README.md#enabling-git-hooks-once-off).
+  > :construction_worker: DELETE THIS NOTE
+
+- [ ] I have confirmed that all tests pass locally.
   > :construction_worker: Run all tests locally via `cargo test -- --include-ignored`
   > :information_source: This will include the TUI interactive tests, so make sure you run this in a maximized terminal window. Other platforms will be tested on the build agent.
   > :construction_worker: DELETE THIS NOTE
