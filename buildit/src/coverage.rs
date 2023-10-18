@@ -79,6 +79,9 @@ impl BuildItCommand for CoverageCommand {
         println!("👷 Creating coverage directory ...");
         create_dir_all(&output_path)?;
 
+        println!("👷 Setting target dir to target_coverage");
+        env::set_var("CARGO_TARGET_DIR", "./target_coverage");
+
         println!("👷 Running Tests with Code Coverage ...");
         let mut args = vec!["test"];
         if let Some(package) = &self.package {
