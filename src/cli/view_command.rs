@@ -1,6 +1,7 @@
+#[cfg(not(test))]
+use super::crossterm_input_event_source::CrosstermInputEventSource;
 use super::{
     cli_command::CliCommand,
-    crossterm_input_event_source::CrosstermInputEventSource,
     row_item::RowItem,
     tui,
     view_state::{self, ViewState},
@@ -9,7 +10,7 @@ use anyhow::{bail, Context};
 use crossterm::{style::Print, QueueableCommand};
 use ratatui::prelude::*;
 use space_rs::{DirectoryItem, SizeDisplayFormat};
-use std::{cell::RefCell, env, io::Write, path::PathBuf, rc::Rc};
+use std::{cell::RefCell, env, io::Write, path::PathBuf, rc::Rc, time::Instant};
 use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
@@ -21,6 +22,7 @@ pub struct ViewCommand {
     pub size_display_format: Option<SizeDisplayFormat>,
     pub size_threshold_percentage: u8,
     pub non_interactive: bool,
+    pub show_timing: bool,
     total_size_in_bytes: u64,
 }
 
@@ -47,25 +49,27 @@ impl CliCommand for ViewCommand {
             self.target_paths = Some(vec![env::current_dir()?]);
         }
 
-        if self.size_display_format.is_none() {
-            self.size_display_format = Some(SizeDisplayFormat::Metric);
-        }
-
         Ok(())
     }
 
     fn run<W: Write>(&mut self, writer: &mut W) -> anyhow::Result<()> {
         if let Some(target_paths) = &self.target_paths {
             if target_paths.len() == 1 {
-                println!("Analyzing path {}", target_paths[0].display());
+                writeln!(writer, "Analyzing path {}", target_paths[0].display())?;
             } else {
-                println!("Analyzing the following paths:");
-                target_paths.iter().for_each(|path| {
-                    println!("  - {}", path.display());
-                });
+                writeln!(writer, "Analyzing the following paths:")?;
+                target_paths.iter().try_for_each(|path| {
+                    writeln!(writer, "  - {}", path.display())?;
+                    anyhow::Ok(())
+                })?;
             }
         }
-        println!("This could take a while depending on the size of the tree ...");
+        writeln!(
+            writer,
+            "This could take a while depending on the size of the tree ..."
+        )?;
+
+        let start_time = Instant::now();
 
         let items = self.get_directory_items();
 
@@ -81,14 +85,26 @@ impl CliCommand for ViewCommand {
         // TODO: Push any error into some sort of error stream and expose in UI.
         let _ = view_state.read_config_file();
 
+        #[cfg(not(test))]
         if self.is_interactive() {
             tui::render(
                 &mut view_state,
                 writer,
                 &mut CrosstermInputEventSource::new(),
             )?;
-        } else {
-            render_rows(view_state, size_threshold_fraction, writer)?;
+            writeln!(writer, "Done.")?;
+            return Ok(());
+        }
+
+        render_rows(view_state, size_threshold_fraction, writer)?;
+        if self.show_timing && self.non_interactive {
+            let end_time = Instant::now();
+            let elapsed_time = end_time.duration_since(start_time);
+            writeln!(
+                writer,
+                "⏳Elapsed time: {} ms",
+                elapsed_time.subsec_millis()
+            )?;
         }
 
         Ok(())
@@ -103,11 +119,6 @@ impl ViewCommand {
     #[inline(always)]
     pub fn get_directory_items(&mut self) -> Vec<DirectoryItem> {
         self.trace_space()
-    }
-
-    #[cfg(test)]
-    fn is_interactive(&self) -> bool {
-        false
     }
 
     #[cfg(not(test))]
@@ -126,12 +137,14 @@ impl ViewCommand {
         size_display_format: Option<SizeDisplayFormat>,
         size_threshold_percentage: u8,
         non_interactive: bool,
+        show_timing: bool,
     ) -> Self {
         ViewCommand {
             target_paths,
             size_display_format,
             size_threshold_percentage,
             non_interactive,
+            show_timing,
             total_size_in_bytes: 0,
         }
     }
@@ -228,7 +241,7 @@ fn render_rows<W: Write>(
                 size_threshold_fraction,
                 &constraints,
                 width,
-                &view_state.size_display_format,
+                view_state.size_display_format,
                 terminal.backend_mut(),
             )?;
             anyhow::Ok(())
@@ -245,7 +258,7 @@ fn render_row<W: Write>(
     size_threshold_fraction: f32,
     constraints: &Vec<Constraint>,
     terminal_width: u16,
-    size_display_format: &SizeDisplayFormat,
+    size_display_format: SizeDisplayFormat,
     backend: &mut CrosstermBackend<W>,
 ) -> anyhow::Result<usize> {
     let mut rendered_count = 0;

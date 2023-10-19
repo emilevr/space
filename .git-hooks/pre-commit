@@ -41,31 +41,51 @@ fi
 
 echo "👷 Checking if any source of CI files have changed ..."
 STAGED_FILES=$(git diff-index --cached --name-only HEAD)
-echo $STAGED_FILES | grep -q -e "src/" -F --
+echo $STAGED_FILES | grep -q -e "src/" -e "buildit/src/" -F --
 GREP_EXIT_CODE=$?
 if [ $GREP_EXIT_CODE -ne 0 ]; then
     echo "✔️ No source files were changed. Not running additional tasks."
     exit 0
 fi
 
-echo "👷 Checking code with Clippy ..."
-cargo clippy
-CLIPPY_EXIT_CODE=$?
-if [ $CLIPPY_EXIT_CODE -ne 0 ]; then
-    echo "❌ Please fix the issues Clippy raised."
-    exit 1
-else
-    echo "✔️ Clippy did not detect any issues."
-fi
-
-echo "👷 Checking code formatting ..."
+echo "👷 Checking CLI code formatting ..."
 cargo fmt -- --check
 FORMATTING_EXIT_CODE=$?
 if [ $FORMATTING_EXIT_CODE -ne 0 ]; then
-    echo "❌ Please fix the detected formatting issues."
+    echo "❌ Please fix the detected formatting issues in CLI code."
     exit 1
 else
-    echo "✔️ All formatting checks passed."
+    echo "✔️ All formatting checks passed for CLI code."
+fi
+
+echo "👷 Checking CLI code with Clippy ..."
+cargo clippy
+CLIPPY_EXIT_CODE=$?
+if [ $CLIPPY_EXIT_CODE -ne 0 ]; then
+    echo "❌ Please fix the issues Clippy raised in CLI code."
+    exit 1
+else
+    echo "✔️ Clippy did not detect any issues in CLI code."
+fi
+
+echo "👷 Checking BuildIt code formatting ..."
+cargo fmt --manifest-path ./buildit/Cargo.toml -- --check
+FORMATTING_EXIT_CODE=$?
+if [ $FORMATTING_EXIT_CODE -ne 0 ]; then
+    echo "❌ Please fix the detected formatting issues in BuildIt code."
+    exit 1
+else
+    echo "✔️ All formatting checks passed for BuildIt code."
+fi
+
+echo "👷 Checking BuildIt code with Clippy ..."
+cargo clippy --manifest-path ./buildit/Cargo.toml
+CLIPPY_EXIT_CODE=$?
+if [ $CLIPPY_EXIT_CODE -ne 0 ]; then
+    echo "❌ Please fix the issues Clippy raised in BuildIt code."
+    exit 1
+else
+    echo "✔️ Clippy did not detect any issues in BuildIt code."
 fi
 
 echo "🚀 Done."
