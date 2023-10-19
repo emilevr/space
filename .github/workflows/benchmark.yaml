@@ -1,5 +1,4 @@
-name: benchmark
-run-name: Run benchmarks
+name: Benchmark
 on:
   - pull_request
   - workflow_call

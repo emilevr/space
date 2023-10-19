@@ -1,5 +1,4 @@
-name: build-and-release
-run-name: Build and release
+name: Build & Release
 on:
   push:
     tags:

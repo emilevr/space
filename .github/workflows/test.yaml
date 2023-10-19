@@ -1,14 +1,11 @@
-name: test
-run-name: Test
+name: Test
 on:
   pull_request:
   push:
-    paths-ignore:
-      - '.git-hooks/**'
-      - '.vscode/**'
-      - '**/*.md'
-      - 'coverage/**'
-      - 'docs/**'
+    branches:
+      - '*'
+    tags-ignore:
+      - '*.*.*'
 jobs:
   test:
     name: 'Test on ${{ matrix.runs-on }}'
