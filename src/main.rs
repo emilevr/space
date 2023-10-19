@@ -1,9 +1,8 @@
-use anyhow::{anyhow, bail};
 use clap::{ColorChoice, Parser};
 use cli::cli_command::CliCommand;
 use cli::view_command::ViewCommand;
 use log::error;
-use simple_log::{log_level, LogConfigBuilder};
+use logging::configure_logger;
 use space_rs::SizeDisplayFormat;
 use std::env;
 use std::io::Write;
@@ -14,11 +13,12 @@ mod cli;
 #[cfg(test)]
 #[path = "./main_test.rs"]
 mod main_test;
-
 #[cfg(test)]
 mod test_directory_utils;
 #[cfg(test)]
 mod test_utils;
+
+mod logging;
 
 pub(crate) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -80,6 +80,11 @@ struct CliArgs {
     /// If specified then only non-interactive output will be rendered.
     #[arg(short = 'n', long)]
     non_interactive: bool,
+
+    /// If specified then the time to analyze and display the specified tree(s) will be shown. Note: This is
+    /// ignored unless --non-interactive is specified.
+    #[arg(short = 't', long)]
+    show_timing: bool,
 }
 
 pub(crate) const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
@@ -91,9 +96,23 @@ enum CommandArgs {
     View {},
 }
 
+#[cfg(not(test))]
 pub fn main() -> anyhow::Result<()> {
-    configure_logger()?;
-    if let Err(e) = run(env::args().collect(), &mut std::io::stdout()) {
+    run(
+        &env::args().collect::<Vec<_>>(),
+        &mut std::io::stdout(),
+        dirs::home_dir(),
+    )?;
+    Ok(())
+}
+
+pub(crate) fn run<W: Write>(
+    args: &[String],
+    writer: &mut W,
+    user_home_dir: Option<PathBuf>,
+) -> anyhow::Result<()> {
+    configure_logger(user_home_dir, Some(|key| env::var(key)));
+    if let Err(e) = run_command(args, writer) {
         error!("{}", e);
         eprintln!("{}", e);
         Err(e)
@@ -102,43 +121,25 @@ pub fn main() -> anyhow::Result<()> {
     }
 }
 
-fn configure_logger() -> anyhow::Result<()> {
-    if let Some(home_dir) = dirs::home_dir() {
-        let level = env::var("SPACE_LOG_LEVEL").unwrap_or(log_level::WARN.to_string());
-        let config = LogConfigBuilder::builder()
-            .path(home_dir.join(".space").join("space.log").to_string_lossy())
-            .size(1)
-            .roll_count(5)
-            .time_format("%Y-%m-%dT%H:%M:%S.%f") //E.g:%H:%M:%S.%f
-            .level(level)
-            .output_file()
-            .build();
-
-        simple_log::new(config).map_err(|e| anyhow!("Unable to configure the logger! {}", e))?;
-    } else {
-        bail!("Could not determine the user's home directory!");
-    }
-
-    Ok(())
-}
-
-pub(crate) fn run<W: Write>(args: Vec<String>, writer: &mut W) -> anyhow::Result<()> {
+fn run_command<W: Write>(args: &[String], writer: &mut W) -> anyhow::Result<()> {
     let mut command = resolve_command(args)?;
     command.prepare()?;
     command.run(writer)?;
+
     Ok(())
 }
 
-fn resolve_command(args: Vec<String>) -> Result<impl CliCommand, anyhow::Error> {
+fn resolve_command(args: &[String]) -> Result<impl CliCommand, anyhow::Error> {
     let args = parse_args(args)?;
     Ok(ViewCommand::new(
         args.target_paths,
         Some(args.size_format),
         args.size_threshold_percentage,
         args.non_interactive,
+        args.show_timing,
     ))
 }
 
-fn parse_args(args: Vec<String>) -> Result<CliArgs, anyhow::Error> {
+fn parse_args(args: &[String]) -> Result<CliArgs, anyhow::Error> {
     Ok(CliArgs::parse_from(args))
 }

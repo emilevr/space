@@ -116,7 +116,7 @@ impl ViewState {
                 &mut rows,
                 &mut self.visible_row_items,
                 item.clone(),
-                &self.size_display_format,
+                self.size_display_format,
                 self.size_threshold_fraction,
                 self.visible_offset,
                 self.visible_height,
@@ -442,7 +442,7 @@ fn add_table_row(
     rows: &mut Vec<Row>,
     row_items: &mut Vec<Rc<RefCell<RowItem>>>,
     item: Rc<RefCell<RowItem>>,
-    size_display_format: &SizeDisplayFormat,
+    size_display_format: SizeDisplayFormat,
     size_threshold_fraction: f32,
     visible_offset: usize,
     visible_height: usize,
@@ -513,7 +513,7 @@ fn reset_item_tree_row_indices(item: &Rc<RefCell<RowItem>>) {
 
 pub(crate) fn get_row_cell_content(
     item: &Rc<RefCell<RowItem>>,
-    size_display_format: &SizeDisplayFormat,
+    size_display_format: SizeDisplayFormat,
     table_width: u16,
     is_non_interactive_output: bool,
 ) -> Vec<String> {

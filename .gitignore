@@ -18,3 +18,4 @@ coverage/
 *.profraw
 tmp.sample/
 tmp.sample.zip
+target_coverage/

@@ -722,7 +722,7 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
             Line::from(vec![
                 Span::raw("This will free up at least "),
                 Span::styled(
-                    selected_item_ref.size.to_string(&view_state.size_display_format),
+                    selected_item_ref.size.to_string(view_state.size_display_format),
                     value_style,
                 ),
             ]),

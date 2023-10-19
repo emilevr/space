@@ -79,6 +79,10 @@ impl BuildItCommand for CoverageCommand {
         println!("👷 Creating coverage directory ...");
         create_dir_all(&output_path)?;
 
+        let target_coverage_dir = "./target_coverage";
+        println!("👷 Setting target dir to {}", target_coverage_dir);
+        env::set_var("CARGO_TARGET_DIR", target_coverage_dir);
+
         println!("👷 Running Tests with Code Coverage ...");
         let mut args = vec!["test"];
         if let Some(package) = &self.package {
@@ -111,32 +115,45 @@ impl BuildItCommand for CoverageCommand {
         };
 
         // Call grcov, which has to be available on the path.
-        // Note: The regex provided as the --excl-line arg has been crafted to remove incorrect coverage
-        // reporting, by exluding the following lines:
-        //  ^\\s*((debug_)?assert(_eq|_ne)?!                                            => debug_assert and assert variants
-        //  ^\\s*#\\[cfg\\(                                                             => cfg attributes
-        //  ^\\s*#\\[inline\\()                                                         => inline attributes
-        //  ^\\s*\\}\\s*else\\s*\\{\\s*$                                                => lines containing only "} else {"
-        //  ^\\s*//.*$                                                                  => lines containing only a comment
-        //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$      => lines containing only a fn definition
-        //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*[^ ]+\\s*:\\s*[^ ]+\\s*,\\s*$ => lines containing only a property declaration
-        //  ^\\s*loop\\s*\\{\\s*$                                                       => lines containing only 'loop {'
-        //  ^\\s*[^ ]+\\s*=>\\s*(\\{)?\\s*$                                             => lines only containing the expression part of a match clause
-        //  ^\\s*\\)\\s*->\\s*[^ ]+\\s*\\{\\s*$                                         => lines only ') -> some_return_type {'
-        //  ^\\s*[{}(),;\\[\\] ]*\\s*$                                                  => lines with only delimiters or whitespace, no logic
-        //  ^\\s*impl\\s+.*\\s+for\\s+.*\\s+\\{\\s*$                                    => lines containing only an impl declaration
         cmd!(
             "grcov",
             ".",
             "--binary-path",
-            "./target/debug/deps",
+            format!("{}/debug/deps", target_coverage_dir),
             "-s",
             ".",
             "-t",
             output_types,
             "--branch",
             "--excl-line",
-            "^\\s*((debug_)?assert(_eq|_ne)?!|#\\[cfg\\(|#\\[inline\\()|^\\s*\\}\\s*else\\s*\\{\\s*$|^\\s*//.*$|^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$|^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*[^ ]+\\s*:\\s*[^ ]+\\s*,\\s*$|^\\s*loop\\s*\\{\\s*$|^\\s*[^ ]+\\s*=>\\s*(\\{)?\\s*$|^\\s*\\)\\s*->\\s*[^ ]+\\s*\\{\\s*$|^\\s[});({]*\\s*$|^\\s*[{}(),;\\[\\] ]*\\s*$|^\\s*impl\\s+.*\\s+for\\s+.*\\s+\\{\\s*$",
+            // Exlude the following lines:
+            //  ^\\s*(debug_)?assert(_eq|_ne)?!                                             => debug_assert and assert variants
+            //  ^\\s*#\\[cfg\\s*\\(.*\\]\\s*$                                               => cfg attributes
+            //  ^\\s*#\\[inline\\s*\\(.*\\]\\s*$                                            => inline attributes
+            //  ^\\s*#\\[derive\\s*\\(.*\\]\\s*$                                            => derive attributes
+            //  ^\\s*\\}\\s*else\\s*\\{\\s*$                                                => lines containing only "} else {"
+            //  ^\\s*//.*$                                                                  => lines containing only a comment
+            //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$      => lines containing only a fn definition
+            //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*[^ ]+\\s*:\\s*[^ ]+\\s*,\\s*$ => lines containing only a property declaration
+            //  ^\\s*loop\\s*\\{\\s*$                                                       => lines containing only 'loop {'
+            //  ^\\s*[^ ]+\\s*=>\\s*(\\{)?\\s*$                                             => lines only containing the expression part of a match clause
+            //  ^\\s*\\)\\s*->\\s*[^ ]+\\s*\\{\\s*$                                         => lines only ') -> some_return_type {'
+            //  ^\\s*[{}(),;\\[\\] ]*\\s*$                                                  => lines with only delimiters or whitespace, no logic
+            //  ^\\s*impl\\s+.*\\s+for\\s+.*\\s+\\{\\s*$                                    => lines containing only an impl declaration
+            "^\\s*(debug_)?assert(_eq|_ne)?!\
+                |^\\s*#\\[cfg\\s*\\(.*\\]\\s*$\
+                |^\\s*#\\[inline\\s*\\(.*\\]\\s*$\
+                |^\\s*#\\[derive\\s*\\(.*\\]\\s*$\
+                |^\\s*\\}\\s*else\\s*\\{\\s*$\
+                |^\\s*//.*$\
+                |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$\
+                |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*[^ ]+\\s*:\\s*[^ ]+\\s*,\\s*$\
+                |^\\s*loop\\s*\\{\\s*$\
+                |^\\s*[^ ]+\\s*=>\\s*(\\{)?\\s*$\
+                |^\\s*\\)\\s*->\\s*[^ ]+\\s*\\{\\s*$\
+                |^\\s[});({]*\\s*$\
+                |^\\s*[{}(),;\\[\\] ]*\\s*$\
+                |^\\s*impl\\s+.*\\s+for\\s+.*\\s+\\{\\s*$",
             "--ignore-not-existing",
             "--ignore",
             "buildit/*",

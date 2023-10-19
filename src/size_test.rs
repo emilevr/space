@@ -66,7 +66,7 @@ fn get_best_format_returns_correct_display_data(
     // Arrange
 
     // Act
-    let display_data = Size::get_best_format(size_in_bytes, &display_format);
+    let display_data = Size::get_best_format(size_in_bytes, display_format);
 
     // Assert
     assert_eq!(expected_display_data, display_data);

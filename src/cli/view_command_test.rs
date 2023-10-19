@@ -27,6 +27,7 @@ fn single_target_path_that_does_not_exist_should_fail() -> anyhow::Result<()> {
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: true,
+        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -48,6 +49,7 @@ fn add_row_item_given_item_of_size_below_threshold_does_not_add_item() {
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: false,
+        show_timing: false,
         total_size_in_bytes: 1000000,
     };
     let item = DirectoryItem {
@@ -77,6 +79,7 @@ fn trace_space_given_no_target_paths_traces_current_dir() -> anyhow::Result<()> 
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: true,
+        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -138,7 +141,7 @@ fn render_row_with_size_smaller_than_threshold_does_not_output_anything() -> any
         1f32,
         &constraints,
         80,
-        &SizeDisplayFormat::Metric,
+        SizeDisplayFormat::Metric,
         &mut backend,
     )?;
 
@@ -184,8 +187,9 @@ fn render_rows_given_size_threshold_should_render_correct_rows(
 }
 
 #[test]
-// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests. It will be
-// included with those on the build agent.
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
 #[ignore]
 fn run_given_no_size_display_format_defaults_to_metric() -> anyhow::Result<()> {
     // Arrange
@@ -196,6 +200,7 @@ fn run_given_no_size_display_format_defaults_to_metric() -> anyhow::Result<()> {
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: true,
+        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -210,8 +215,9 @@ fn run_given_no_size_display_format_defaults_to_metric() -> anyhow::Result<()> {
     Ok(())
 }
 
-// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests. It will be
-// included with those on the build agent.
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
 #[rstest]
 #[ignore]
 #[case(SizeDisplayFormat::Metric, "170 KB")]
@@ -229,6 +235,7 @@ fn run_with_size_display_format_uses_that_format(
         size_display_format: Some(size_display_format),
         size_threshold_percentage: 1,
         non_interactive: true,
+        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -237,6 +244,97 @@ fn run_with_size_display_format_uses_that_format(
 
     // Assert
     output.expect(expected_output)?;
+
+    delete_test_directory_tree(&temp_dir);
+
+    Ok(())
+}
+
+#[test]
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
+#[ignore]
+fn run_given_single_target_path_shows_expected_duration_prompt() -> anyhow::Result<()> {
+    // Arrange
+    let mut output = TestOut::new();
+    let temp_dir = create_test_directory_tree()?;
+    let mut view_command = ViewCommand {
+        target_paths: Some(vec![temp_dir.clone()]),
+        size_display_format: None,
+        size_threshold_percentage: 100,
+        non_interactive: true,
+        show_timing: false,
+        total_size_in_bytes: 0,
+    };
+
+    // Act
+    view_command.run(&mut output)?;
+
+    // Assert
+    output.expect("Analyzing path ")?;
+
+    delete_test_directory_tree(&temp_dir);
+
+    Ok(())
+}
+
+#[test]
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
+#[ignore]
+fn run_given_multiple_target_paths_shows_expected_duration_prompt() -> anyhow::Result<()> {
+    // Arrange
+    let mut output = TestOut::new();
+    let temp_dir1 = create_test_directory_tree()?;
+    let temp_dir2 = create_test_directory_tree()?;
+    let mut view_command = ViewCommand {
+        target_paths: Some(vec![temp_dir1.clone(), temp_dir2.clone()]),
+        size_display_format: None,
+        size_threshold_percentage: 100,
+        non_interactive: true,
+        show_timing: false,
+        total_size_in_bytes: 0,
+    };
+
+    // Act
+    view_command.run(&mut output)?;
+
+    // Assert
+    output.expect("Analyzing the following paths:")?;
+    output.expect(temp_dir1.to_str().expect("Unable to get temp dir 1 path"))?;
+    output.expect(temp_dir2.to_str().expect("Unable to get temp dir 2 path"))?;
+
+    delete_test_directory_tree(&temp_dir1);
+    delete_test_directory_tree(&temp_dir2);
+
+    Ok(())
+}
+
+#[test]
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
+#[ignore]
+fn run_with_show_timings_should_output_timing() -> anyhow::Result<()> {
+    // Arrange
+    let mut output = TestOut::new();
+    let temp_dir = create_test_directory_tree()?;
+    let mut view_command = ViewCommand {
+        target_paths: Some(vec![temp_dir.clone()]),
+        size_display_format: Some(SizeDisplayFormat::Metric),
+        size_threshold_percentage: 100,
+        non_interactive: true,
+        show_timing: true,
+        total_size_in_bytes: 0,
+    };
+
+    // Act
+    view_command.run(&mut output)?;
+
+    // Assert
+    output.expect("Elapsed time:")?;
 
     delete_test_directory_tree(&temp_dir);
 
