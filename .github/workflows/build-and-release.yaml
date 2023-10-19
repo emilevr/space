@@ -64,6 +64,7 @@ jobs:
       - name: Package for distribution (Linux and MacOS)
         if: ${{ matrix.runs-on == 'ubuntu-latest' || matrix.runs-on == 'macos-latest' }}
         run: |
+          BIN_DIR_PATH=./target/release
           BIN_FILE_PATH=./target/release/space
           ARCHIVE_FILE_PATH=./artifacts/dist/space-${{ matrix.target }}.tar.gz
 
@@ -73,7 +74,7 @@ jobs:
           mkdir -p ./artifacts/dist
 
           # Compress
-          tar -czf $ARCHIVE_FILE_PATH $BIN_FILE_PATH
+          tar -C $BIN_DIR_PATH -czf $ARCHIVE_FILE_PATH .
 
           # Calculate hash
           shasum -a 256 $ARCHIVE_FILE_PATH > ${ARCHIVE_FILE_PATH}.sha256
