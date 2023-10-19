@@ -1,5 +1,4 @@
-name: coverage
-run-name: Code Coverage
+name: Code Coverage
 on:
   - pull_request
   - workflow_call

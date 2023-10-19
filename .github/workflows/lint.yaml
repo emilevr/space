@@ -1,14 +1,11 @@
-name: lint
-run-name: Lint
+name: Lint
 on:
   pull_request:
   push:
-    paths-ignore:
-      - '.git-hooks/**'
-      - '.vscode/**'
-      - '**/*.md'
-      - 'coverage/**'
-      - 'docs/**'
+    branches:
+      - '*'
+    tags-ignore:
+      - '*.*.*'
   workflow_call:
 jobs:
   test:
