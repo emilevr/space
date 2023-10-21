@@ -303,11 +303,16 @@ fn ensure_visible_given_visible_offset_of_non_zero_should_move_visible_offset_co
 }
 
 #[rstest]
-#[case(4, 0, 0f32, 0, 1, "1")] // First page, first item selected -> second item selected
-#[case(4, 0, 0f32, 3, 3, "1.3")] // First page, last item on page selected -> next item that was off page now visible and selected
-#[case(10, 0, 0.09f32, 8, 8, "1.6")]
+// First page, first item selected -> second item selected
+#[case(4, 0, 0f32, 0, 1, "1")]
+// First page, last item on page selected -> next item that was off page now visible and selected
+#[case(4, 0, 0f32, 3, 3, "1.3")]
 // First page, with page size larger than number of items, last item selected -> last item remains selected
-#[case(4, 21, 0f32, 3, 3, "1.10")] // Last page, last item selected -> last item remains selected
+#[case(10, 0, 0.09f32, 8, 8, "1.6")]
+// Last page, last item selected -> last item remains selected
+#[case(4, 21, 0f32, 3, 3, "1.10")]
+// No visible items
+#[case(4, 0, 1.1f32, 0, 0, "")]
 fn next_selects_expected_item(
     #[case] visible_height: usize,
     #[case] visible_offset: usize,
@@ -333,7 +338,9 @@ fn next_selects_expected_item(
         expected_table_selected_index,
         view_state.table_selected_index
     );
-    assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    if view_state.displayable_item_count > 0 {
+        assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    }
 
     delete_test_directory_tree(&temp_dir_path);
 
@@ -484,33 +491,47 @@ fn first_selects_first_item(
 }
 
 #[rstest]
-#[case(7, 0, 0, "")] // first item selected -> last item selected
-#[case(7, 6, 5, "1.5.2")] // 1.5.2 selected -> last item selected
-#[case(7, 18, 6, "1.10")] // last item selected -> last item selected
+#[case(7, 0, 0f32, 0, "")] // first item selected -> last item selected
+#[case(7, 6, 0f32, 5, "1.5.2")] // 1.5.2 selected -> last item selected
+#[case(7, 18, 0f32, 6, "1.10")] // last item selected -> last item selected
+#[case(4, 0, 1.1f32, 0, "")] // No visible items
 fn last_selects_last_item(
     #[case] visible_height: usize,
     #[case] visible_offset: usize,
+    #[case] view_size_threshold_fraction: f32,
     #[case] table_selected_index: usize,
     #[case] expected_preselected_item_name: &str,
 ) -> anyhow::Result<()> {
     // Arrange
-    let (mut view_state, temp_dir_path) =
-        make_test_view_state_with_height(visible_height, visible_offset, 0f32)?;
+    let (mut view_state, temp_dir_path) = make_test_view_state_with_height(
+        visible_height,
+        visible_offset,
+        view_size_threshold_fraction,
+    )?;
     view_state.table_selected_index = table_selected_index;
-    assert_selected_item_name_eq(expected_preselected_item_name, &view_state);
+    if view_state.displayable_item_count > 0 {
+        assert_selected_item_name_eq(expected_preselected_item_name, &view_state);
+    }
 
     // Act
     view_state.last();
 
     // Assert
-    assert_eq!(
-        view_state.displayable_item_count - view_state.visible_height,
-        view_state.visible_offset
-    );
-    assert_eq!(
-        view_state.visible_height - 1,
-        view_state.table_selected_index
-    );
+    if view_state.displayable_item_count >= view_state.visible_height {
+        assert_eq!(
+            view_state.displayable_item_count - view_state.visible_height,
+            view_state.visible_offset
+        );
+    }
+
+    if view_state.visible_height >= view_state.displayable_item_count
+        && view_state.displayable_item_count > 0
+    {
+        assert_eq!(
+            view_state.visible_height - 1,
+            view_state.table_selected_index
+        );
+    }
 
     delete_test_directory_tree(&temp_dir_path);
 

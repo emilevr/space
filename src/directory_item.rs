@@ -1,7 +1,10 @@
 //! Provides functionality to analyze disk space usage.
 
 use crate::Size;
-use rayon::prelude::{ParallelBridge, ParallelIterator};
+use rayon::{
+    prelude::{ParallelBridge, ParallelIterator},
+    slice::ParallelSliceMut,
+};
 use std::{cmp::Ordering, fs, path::PathBuf, sync::Arc};
 
 #[cfg(test)]
@@ -30,6 +33,8 @@ pub struct DirectoryItem {
     pub item_type: DirectoryItemType,
     /// The size in bytes.
     pub size_in_bytes: Size,
+    /// If the item is a directory it may also have child items.
+    pub child_count: usize,
     /// If the item is a directory, it may also have child items.
     pub children: Vec<DirectoryItem>,
 }
@@ -56,6 +61,7 @@ impl DirectoryItem {
             path: path.clone(),
             item_type: DirectoryItemType::Unknown,
             size_in_bytes: Size::default(),
+            child_count: 0,
             children: vec![],
         }
     }
@@ -82,6 +88,7 @@ impl DirectoryItem {
             path: path.clone(),
             item_type: DirectoryItemType::File,
             size_in_bytes: Size::new(size_in_bytes),
+            child_count: 0,
             children: vec![],
         }
     }
@@ -92,6 +99,7 @@ impl DirectoryItem {
             path: path.clone(),
             item_type: DirectoryItemType::SymbolicLink,
             size_in_bytes: Size::default(),
+            child_count: 0,
             children: vec![],
         }
     }
@@ -99,7 +107,7 @@ impl DirectoryItem {
     fn from_directory(path: &Arc<PathBuf>) -> DirectoryItem {
         let children = {
             let mut children = Self::get_child_items(path);
-            children.sort_by(|a, b| b.partial_cmp(a).unwrap());
+            children.par_sort_by(|a, b| b.partial_cmp(a).unwrap());
             children
         };
         DirectoryItem {
@@ -111,6 +119,7 @@ impl DirectoryItem {
                     .map(|child| child.size_in_bytes.get_value())
                     .sum(),
             ),
+            child_count: 0,
             children,
         }
     }

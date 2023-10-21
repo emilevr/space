@@ -13,14 +13,16 @@ mod cli;
 #[cfg(test)]
 #[path = "./main_test.rs"]
 mod main_test;
+
 #[cfg(test)]
 mod test_directory_utils;
+
 #[cfg(test)]
 mod test_utils;
 
 mod logging;
 
-pub(crate) const VERSION: &str = env!("CARGO_PKG_VERSION");
+pub(crate) const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
 
 #[derive(Clone, Debug, Parser)]
 #[clap(
@@ -80,20 +82,6 @@ struct CliArgs {
     /// If specified then only non-interactive output will be rendered.
     #[arg(short = 'n', long)]
     non_interactive: bool,
-
-    /// If specified then the time to analyze and display the specified tree(s) will be shown. Note: This is
-    /// ignored unless --non-interactive is specified.
-    #[arg(short = 't', long)]
-    show_timing: bool,
-}
-
-pub(crate) const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
-
-#[derive(Debug, Parser)]
-enum CommandArgs {
-    /// Shows the apparent disk space usage of the specified directory tree(s). This is the default command.
-    #[command()]
-    View {},
 }
 
 #[cfg(not(test))]
@@ -122,24 +110,22 @@ pub(crate) fn run<W: Write>(
 }
 
 fn run_command<W: Write>(args: &[String], writer: &mut W) -> anyhow::Result<()> {
-    let mut command = resolve_command(args)?;
-    command.prepare()?;
-    command.run(writer)?;
-
-    Ok(())
-}
-
-fn resolve_command(args: &[String]) -> Result<impl CliCommand, anyhow::Error> {
     let args = parse_args(args)?;
-    Ok(ViewCommand::new(
-        args.target_paths,
-        Some(args.size_format),
-        args.size_threshold_percentage,
-        args.non_interactive,
-        args.show_timing,
-    ))
+    prepare_command(args)?.run(writer)?;
+    Ok(())
 }
 
 fn parse_args(args: &[String]) -> Result<CliArgs, anyhow::Error> {
     Ok(CliArgs::parse_from(args))
+}
+
+fn prepare_command(args: CliArgs) -> anyhow::Result<ViewCommand> {
+    let mut command = ViewCommand::new(
+        args.target_paths,
+        Some(args.size_format),
+        args.size_threshold_percentage,
+        args.non_interactive,
+    );
+    command.prepare()?;
+    Ok(command)
 }

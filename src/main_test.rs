@@ -1,10 +1,10 @@
+use std::env;
+
 use crate::{
-    cli::{cli_command::CliCommand, view_command::ViewCommand},
-    parse_args, resolve_command, run,
+    parse_args, prepare_command, run,
     test_directory_utils::{create_test_directory_tree, delete_test_directory_tree},
     test_utils::TestOut,
 };
-use std::env;
 
 const BINARY_PATH: &str = "./space";
 
@@ -41,22 +41,18 @@ fn parse_args_given_non_interactive_returns_correct_args() -> anyhow::Result<()>
 }
 
 #[test]
-fn resolve_command_when_no_target_paths_specified_uses_current_dir() -> anyhow::Result<()> {
+fn prepare_command_when_no_target_paths_specified_uses_current_dir() -> anyhow::Result<()> {
     // Arrange
     let args = vec![BINARY_PATH.to_string()];
+    let args = parse_args(&args)?;
 
     // Act
-    let mut cli_command = resolve_command(&args)?;
-    cli_command.prepare()?;
+    let command = prepare_command(args)?;
 
     // Assert
-    let view_command = cli_command
-        .as_any()
-        .downcast_ref::<ViewCommand>()
-        .expect("Not a ViewCommand!");
     assert_eq!(
         Some(vec!(env::current_dir().unwrap())),
-        view_command.target_paths
+        command.target_paths
     );
 
     Ok(())

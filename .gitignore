@@ -19,3 +19,6 @@ coverage/
 tmp.sample/
 tmp.sample.zip
 target_coverage/
+
+# Artifacts
+artifacts/

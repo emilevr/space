@@ -1,9 +1,9 @@
+use super::VERSION;
 use super::*;
 use crate::cli::view_state::ViewState;
 use crate::cli::view_state_test_utils::{
     assert_selected_item_name_eq, make_test_view_state, TEST_DIRECTORY_TREE_ITEM_COUNT,
 };
-use crate::VERSION;
 use crate::{
     cli::{
         input_event_source::InputEventSource, view_state_test_utils::make_test_view_state_from_path,
@@ -650,18 +650,16 @@ fn render_given_collapse_children_input_for_directory_item_collapses_all_childre
 
 #[test]
 #[ignore]
-fn render_given_expand_children_input_for_directory_item_expands_all_children() -> anyhow::Result<()>
-{
+fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_children(
+) -> anyhow::Result<()> {
     // Arrange
     // NOTE: The real terminal height will be used when this test runs, so make sure the test is independent
     //       of the terminal height.
     let (mut view_state, temp_dir_path) = make_test_view_state(0f32)?;
     let mut output = TestOut::new();
     let mut input_event_source = TestInputEventSource::new(vec![
-        Event::Key(KeyEvent::new(
-            KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY),
-            KeyModifiers::NONE,
-        )), // Collapses children
+        Event::Key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)), // Select 1
+        Event::Key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE)), // Collapses 1
         Event::Key(KeyEvent::new(
             KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY),
             KeyModifiers::NONE,
@@ -673,9 +671,40 @@ fn render_given_expand_children_input_for_directory_item_expands_all_children() 
     render(&mut view_state, &mut output, &mut input_event_source)?;
 
     // Assert
-    let item = view_state.visible_row_items[1].borrow();
-    assert_eq!("1", item.name);
-    assert!(item.expanded);
+    assert_eq!(12, view_state.displayable_item_count);
+
+    delete_test_directory_tree(&temp_dir_path);
+
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn render_given_expand_children_input_for_expanded_directory_item_expands_all_children(
+) -> anyhow::Result<()> {
+    // Arrange
+    // NOTE: The real terminal height will be used when this test runs, so make sure the test is independent
+    //       of the terminal height.
+    let (mut view_state, temp_dir_path) = make_test_view_state(0f32)?;
+    let mut output = TestOut::new();
+    let mut input_event_source = TestInputEventSource::new(vec![
+        Event::Key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)), // Select 1
+        Event::Key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE)), // Collapses 1
+        Event::Key(KeyEvent::new(
+            KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY),
+            KeyModifiers::NONE,
+        )), // Expands direct children
+        Event::Key(KeyEvent::new(
+            KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY),
+            KeyModifiers::NONE,
+        )), // Expands all children
+        Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
+    ]);
+
+    // Act
+    render(&mut view_state, &mut output, &mut input_event_source)?;
+
+    // Assert
     assert_eq!(
         TEST_DIRECTORY_TREE_ITEM_COUNT,
         view_state.displayable_item_count

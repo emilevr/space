@@ -45,7 +45,6 @@ pub(crate) fn make_test_view_state_from_path(
         Some(size_display_format.clone()),
         (size_threshold_fraction * 100f32) as u8,
         false,
-        false,
     );
     let items = view_command.get_directory_items();
     let items = view_command.get_row_items(items, 0f32);

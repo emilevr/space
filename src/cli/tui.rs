@@ -5,7 +5,6 @@ use super::{
         EXPAND_INDICATOR_COLUMN_WIDTH, INCL_PERCENTAGE_COLUMN_WIDTH,
     },
 };
-use crate::VERSION;
 #[cfg(not(test))]
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{
@@ -31,6 +30,8 @@ use std::{
 #[cfg(test)]
 #[path = "./tui_test.rs"]
 mod tui_test;
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const KEY_HELP_KEY_FG_COLOR: Color = Color::Rgb(88, 144, 255);
 const TABLE_HEADER_BG_COLOR: Color = Color::Rgb(64, 64, 192);

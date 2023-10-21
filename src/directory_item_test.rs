@@ -21,10 +21,12 @@ fn cmp_with_given_size_in_bytes_returns_correct_ordering(
         path: Arc::new(PathBuf::from("/1")),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_1),
+        child_count: 1,
         children: vec![DirectoryItem {
             path: Arc::new(PathBuf::from("/1/1")),
             size_in_bytes: Size::new(size_in_bytes_1),
             children: vec![],
+            child_count: 0,
             item_type: DirectoryItemType::File,
         }],
     };
@@ -32,6 +34,7 @@ fn cmp_with_given_size_in_bytes_returns_correct_ordering(
         path: Arc::new(PathBuf::from("/2")),
         size_in_bytes: Size::new(size_in_bytes_2),
         children: vec![],
+        child_count: 0,
         item_type: DirectoryItemType::Directory,
     };
 
@@ -56,10 +59,12 @@ fn partial_cmp_with_given_size_in_bytes_returns_correct_ordering(
         path: Arc::new(PathBuf::from("/2")),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_1),
+        child_count: 1,
         children: vec![DirectoryItem {
             path: Arc::new(PathBuf::from("/2/1")),
             item_type: DirectoryItemType::File,
             size_in_bytes: Size::new(size_in_bytes_1),
+            child_count: 0,
             children: vec![],
         }],
     };
@@ -67,6 +72,7 @@ fn partial_cmp_with_given_size_in_bytes_returns_correct_ordering(
         path: Arc::new(PathBuf::from("/3")),
         item_type: DirectoryItemType::File,
         size_in_bytes: Size::new(size_in_bytes_2),
+        child_count: 0,
         children: vec![],
     };
 
@@ -91,10 +97,12 @@ fn eq_with_given_size_in_bytes_returns_correct_result(
         path: Arc::new(PathBuf::from("/3")),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_1),
+        child_count: 1,
         children: vec![DirectoryItem {
             path: Arc::new(PathBuf::from("/3/1")),
             item_type: DirectoryItemType::Directory,
             size_in_bytes: Size::new(size_in_bytes_1),
+            child_count: 0,
             children: vec![],
         }],
     };
@@ -102,6 +110,7 @@ fn eq_with_given_size_in_bytes_returns_correct_result(
         path: Arc::new(PathBuf::from("/4")),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_2),
+        child_count: 0,
         children: vec![],
     };
 
@@ -159,10 +168,12 @@ fn debug_succeeds() {
         path: Arc::new(PathBuf::from("/1")),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(777),
+        child_count: 1,
         children: vec![DirectoryItem {
             path: Arc::new(PathBuf::from("/2/3")),
             item_type: DirectoryItemType::Directory,
             size_in_bytes: Size::new(778),
+            child_count: 0,
             children: vec![],
         }],
     };
@@ -210,6 +221,7 @@ fn get_fraction_given_total_size_in_bytes_of_0_should_return_0() {
         path: Arc::new(PathBuf::from("/1")),
         item_type: DirectoryItemType::File,
         size_in_bytes: Size::new(123),
+        child_count: 0,
         children: vec![],
     };
 

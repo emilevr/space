@@ -27,7 +27,6 @@ fn single_target_path_that_does_not_exist_should_fail() -> anyhow::Result<()> {
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: true,
-        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -49,13 +48,13 @@ fn add_row_item_given_item_of_size_below_threshold_does_not_add_item() {
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: false,
-        show_timing: false,
         total_size_in_bytes: 1000000,
     };
     let item = DirectoryItem {
         path: Arc::new(PathBuf::from("/some/path")),
         size_in_bytes: Size::default(),
         children: vec![],
+        child_count: 0,
         item_type: DirectoryItemType::Unknown,
     };
     let mut rows = vec![];
@@ -68,7 +67,7 @@ fn add_row_item_given_item_of_size_below_threshold_does_not_add_item() {
 }
 
 #[test]
-fn trace_space_given_no_target_paths_traces_current_dir() -> anyhow::Result<()> {
+fn analyze_space_given_no_target_paths_traces_current_dir() -> anyhow::Result<()> {
     // Arrange
     let temp_dir = create_test_directory_tree()?;
     let current_dir = std::env::current_dir()?;
@@ -79,12 +78,11 @@ fn trace_space_given_no_target_paths_traces_current_dir() -> anyhow::Result<()> 
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: true,
-        show_timing: false,
         total_size_in_bytes: 0,
     };
 
     // Act
-    let items = view_command.trace_space();
+    let items = view_command.analyze_space();
 
     // Assert
     assert_eq!(1, items.len());
@@ -200,7 +198,6 @@ fn run_given_no_size_display_format_defaults_to_metric() -> anyhow::Result<()> {
         size_display_format: None,
         size_threshold_percentage: 1,
         non_interactive: true,
-        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -235,7 +232,6 @@ fn run_with_size_display_format_uses_that_format(
         size_display_format: Some(size_display_format),
         size_threshold_percentage: 1,
         non_interactive: true,
-        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -264,7 +260,6 @@ fn run_given_single_target_path_shows_expected_duration_prompt() -> anyhow::Resu
         size_display_format: None,
         size_threshold_percentage: 100,
         non_interactive: true,
-        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -294,7 +289,6 @@ fn run_given_multiple_target_paths_shows_expected_duration_prompt() -> anyhow::R
         size_display_format: None,
         size_threshold_percentage: 100,
         non_interactive: true,
-        show_timing: false,
         total_size_in_bytes: 0,
     };
 
@@ -308,35 +302,6 @@ fn run_given_multiple_target_paths_shows_expected_duration_prompt() -> anyhow::R
 
     delete_test_directory_tree(&temp_dir1);
     delete_test_directory_tree(&temp_dir2);
-
-    Ok(())
-}
-
-#[test]
-// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
-// not work on build agents for some operating systems. It will be included with those on the build agent
-// using an appropriate terminal multiplexer.
-#[ignore]
-fn run_with_show_timings_should_output_timing() -> anyhow::Result<()> {
-    // Arrange
-    let mut output = TestOut::new();
-    let temp_dir = create_test_directory_tree()?;
-    let mut view_command = ViewCommand {
-        target_paths: Some(vec![temp_dir.clone()]),
-        size_display_format: Some(SizeDisplayFormat::Metric),
-        size_threshold_percentage: 100,
-        non_interactive: true,
-        show_timing: true,
-        total_size_in_bytes: 0,
-    };
-
-    // Act
-    view_command.run(&mut output)?;
-
-    // Assert
-    output.expect("Elapsed time:")?;
-
-    delete_test_directory_tree(&temp_dir);
 
     Ok(())
 }

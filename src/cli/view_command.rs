@@ -10,7 +10,7 @@ use anyhow::{bail, Context};
 use crossterm::{style::Print, QueueableCommand};
 use ratatui::prelude::*;
 use space_rs::{DirectoryItem, SizeDisplayFormat};
-use std::{cell::RefCell, env, io::Write, path::PathBuf, rc::Rc, time::Instant};
+use std::{cell::RefCell, env, io::Write, path::PathBuf, rc::Rc};
 use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
@@ -22,12 +22,11 @@ pub struct ViewCommand {
     pub size_display_format: Option<SizeDisplayFormat>,
     pub size_threshold_percentage: u8,
     pub non_interactive: bool,
-    pub show_timing: bool,
     total_size_in_bytes: u64,
 }
 
 impl CliCommand for ViewCommand {
-    fn prepare(&mut self) -> anyhow::Result<()> {
+    fn prepare(&mut self) -> anyhow::Result<&mut Self> {
         let has_target_paths = match &self.target_paths {
             Some(target_paths) => !target_paths.is_empty(),
             None => false,
@@ -49,7 +48,7 @@ impl CliCommand for ViewCommand {
             self.target_paths = Some(vec![env::current_dir()?]);
         }
 
-        Ok(())
+        Ok(self)
     }
 
     fn run<W: Write>(&mut self, writer: &mut W) -> anyhow::Result<()> {
@@ -68,8 +67,6 @@ impl CliCommand for ViewCommand {
             writer,
             "This could take a while depending on the size of the tree ..."
         )?;
-
-        let start_time = Instant::now();
 
         let items = self.get_directory_items();
 
@@ -97,28 +94,16 @@ impl CliCommand for ViewCommand {
         }
 
         render_rows(view_state, size_threshold_fraction, writer)?;
-        if self.show_timing && self.non_interactive {
-            let end_time = Instant::now();
-            let elapsed_time = end_time.duration_since(start_time);
-            writeln!(
-                writer,
-                "⏳Elapsed time: {} ms",
-                elapsed_time.subsec_millis()
-            )?;
-        }
+        writer.flush()?;
 
         Ok(())
-    }
-
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
     }
 }
 
 impl ViewCommand {
     #[inline(always)]
     pub fn get_directory_items(&mut self) -> Vec<DirectoryItem> {
-        self.trace_space()
+        self.analyze_space()
     }
 
     #[cfg(not(test))]
@@ -137,14 +122,12 @@ impl ViewCommand {
         size_display_format: Option<SizeDisplayFormat>,
         size_threshold_percentage: u8,
         non_interactive: bool,
-        show_timing: bool,
     ) -> Self {
         ViewCommand {
             target_paths,
             size_display_format,
             size_threshold_percentage,
             non_interactive,
-            show_timing,
             total_size_in_bytes: 0,
         }
     }
@@ -180,7 +163,7 @@ impl ViewCommand {
         Some(value)
     }
 
-    fn trace_space(&mut self) -> Vec<DirectoryItem> {
+    fn analyze_space(&mut self) -> Vec<DirectoryItem> {
         use std::sync::Arc;
 
         let paths: Vec<_> = if let Some(target_paths) = &self.target_paths {
