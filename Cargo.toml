@@ -22,6 +22,11 @@ name = "space"
 path = "src/main.rs"
 required-features = ["cli"]
 
+[[bin]]
+name = "space-bench"
+path = "src/space_bench.rs"
+required-features = ["bench"]
+
 [[bench]]
 name = "directory_item_build"
 harness = false
@@ -32,16 +37,18 @@ harness = false
 #default = ["cli", "nightly"]
 default = ["cli"]
 nightly = []
-cli = ["clap/derive", "crossterm", "dirs", "ratatui/all-widgets", "serde/derive", "serde_yaml"]
+cli = ["clap/derive", "crossterm", "dirs", "ratatui", "serde/derive", "serde_yaml", "log", "log4rs"]
+bench = ["clap/derive", "crossterm", "dirs", "ratatui", "criterion"]
 
 [dependencies]
 anyhow = "^1.0.72"
 clap = { version = "^4.3.21", optional = true }
+criterion = { version = "^0.5.1", default-features = false, features = [], optional = true }
 crossterm = { version = "^0.27.0", optional = true }
 dirs = { version = "^5.0.1", optional = true }
-log = "^0.4.20"
-log4rs = "^1.2.0"
-ratatui = { version = "^0.23.0", features = ["all-widgets"], optional = true }
+log = { version = "^0.4.20", optional = true }
+log4rs = { version = "^1.2.0", optional = true }
+ratatui = { version = "^0.23.0", default-features = false, features = ["crossterm"], optional = true }
 rayon = "^1.7.0"
 serde = { version = "^1.0.188", features = ["derive"], optional = true }
 serde_yaml = { version = "^0.9.25", optional = true }

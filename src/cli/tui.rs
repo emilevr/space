@@ -5,7 +5,6 @@ use super::{
         EXPAND_INDICATOR_COLUMN_WIDTH, INCL_PERCENTAGE_COLUMN_WIDTH,
     },
 };
-use crate::VERSION;
 #[cfg(not(test))]
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{
@@ -31,6 +30,8 @@ use std::{
 #[cfg(test)]
 #[path = "./tui_test.rs"]
 mod tui_test;
+
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const KEY_HELP_KEY_FG_COLOR: Color = Color::Rgb(88, 144, 255);
 const TABLE_HEADER_BG_COLOR: Color = Color::Rgb(64, 64, 192);
@@ -497,8 +498,9 @@ fn render_help<B: Backend>(f: &mut Frame<B>) {
                 Cell::from(format!("{EXPAND_SELECTED_CHILDREN_KEY:^key_column_size$}"))
                     .style(key_style),
                 Cell::from(""),
-                Cell::from("Expand all children of the selected directory item"),
-            ]),
+                Cell::from("If selected item is collapsed, then expand and show collapsed children\nIf selected directory item is expanded, then expand all descendants"),
+            ])
+            .height(2),
             Row::new(Vec::<Cell>::with_capacity(0)),
             Row::new(vec![
                 Cell::from(format!(

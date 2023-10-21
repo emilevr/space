@@ -1,7 +1,6 @@
-use std::{any::Any, io::Write};
+use std::io::Write;
 
 pub trait CliCommand {
-    fn prepare(&mut self) -> anyhow::Result<()>;
+    fn prepare(&mut self) -> anyhow::Result<&mut Self>;
     fn run<W: Write>(&mut self, writer: &mut W) -> anyhow::Result<()>;
-    fn as_any(&self) -> &dyn Any;
 }

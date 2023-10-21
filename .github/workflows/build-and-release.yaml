@@ -25,14 +25,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - id: linux
-            runs-on: ubuntu-latest
+          - runs-on: ubuntu-latest
             target: x86_64-unknown-linux-musl
-          - id: macos
-            runs-on: macos-latest
+          - runs-on: macos-latest
             target: x86_64-apple-darwin
-          - id: windows
-            runs-on: windows-latest
+          - runs-on: windows-latest
             target: x86_64-pc-windows-msvc
     env:
       RUST_LOG: trace
@@ -59,51 +56,67 @@ jobs:
         run: buildit version
 
       - name: Build binaries for packaging
-        run: cargo build --release
+        run: cargo build --release --all-features
 
       - name: Package for distribution (Linux and MacOS)
         if: ${{ matrix.runs-on == 'ubuntu-latest' || matrix.runs-on == 'macos-latest' }}
         run: |
-          BIN_DIR_PATH=./target/release
-          BIN_FILE_PATH=./target/release/space
-          ARCHIVE_FILE_PATH=./artifacts/dist/space-${{ matrix.target }}.tar.gz
+          ARCHIVE_FILE_DIR=./artifacts/dist
+          mkdir -p $ARCHIVE_FILE_DIR
 
-          # Strip debug symbols
-          strip $BIN_FILE_PATH
+          BIN_FILE_NAMES=(space space-bench)
+          for BIN_FILE_NAME in "${BIN_FILE_NAMES[@]}"
+          do
+            BIN_DIR_PATH=./target/release
+            BIN_FILE_PATH=./target/release/${BIN_FILE_NAME}
+            ARCHIVE_FILE_NAME=${BIN_FILE_NAME}-${{ matrix.target }}.tar.gz
+            ARCHIVE_FILE_PATH=${ARCHIVE_FILE_DIR}/${ARCHIVE_FILE_NAME}
+            ACHIVE_HASH_FILE_NAME=${ARCHIVE_FILE_NAME}.sha256
 
-          mkdir -p ./artifacts/dist
+            echo "Stripping debug symbols from ${BIN_FILE_PATH}"
+            strip ${BIN_FILE_PATH}
 
-          # Compress
-          tar -C $BIN_DIR_PATH -czf $ARCHIVE_FILE_PATH .
+            echo "Compressing ${BIN_FILE_PATH} to ${ARCHIVE_FILE_PATH}"
+            tar -C $BIN_DIR_PATH -czf $ARCHIVE_FILE_PATH $BIN_FILE_NAME
 
-          # Calculate hash
-          shasum -a 256 $ARCHIVE_FILE_PATH > ${ARCHIVE_FILE_PATH}.sha256
+            pushd $ARCHIVE_FILE_DIR > /dev/null
+
+            echo "Calculating SHA256 hash of ${ARCHIVE_FILE_NAME} to ${ACHIVE_HASH_FILE_NAME}"
+            shasum -a 256 $ARCHIVE_FILE_NAME > $ACHIVE_HASH_FILE_NAME
+
+            popd > /dev/null
+          done
 
       - name: Package for distribution (Windows)
         if: ${{ matrix.runs-on == 'windows-latest' }}
         run: |
-          $binFilePath = './target/release/space.exe'
-          $archiveFilePath = "./artifacts/dist/space-${{ matrix.target }}.zip"
-
           New-Item -Type Directory -Path ./artifacts/dist -Force
 
-          $compress = @{
-            Path = $binFilePath
-            DestinationPath = $archiveFilePath
-            CompressionLevel = "Optimal"
-          }
-          Compress-Archive @compress
+          $binFileNames = @('space', 'space-bench')
+          foreach ($fileName in $binFileNames) {
+            $binFilePath = "./target/release/${fileName}.exe"
+            $archiveFilePath = "./artifacts/dist/${fileName}-${{ matrix.target }}.zip"
+            $archiveHashFilePath = "${archiveFilePath}.sha256"
 
-          # Calculate hash
-          Get-FileHash -Path $archiveFilePath -Algorithm SHA256 `
-            | Select-Object @{Label='Hash';Expression={$_.Hash.ToLower()}} `
-            | Select-Object -ExpandProperty Hash `
-            > "${archiveFilePath}.sha256"
+            Write-Host "Compressing ${binFilePath} to ${archiveFilePath}"
+            $compress = @{
+              Path = $binFilePath
+              DestinationPath = $archiveFilePath
+              CompressionLevel = "Optimal"
+            }
+            Compress-Archive @compress
+
+            Write-Host "Calculating SHA256 of ${archiveFilePath} to ${archiveHashFilePath}"
+            Get-FileHash -Path $archiveFilePath -Algorithm SHA256 `
+              | Select-Object @{Label='Hash';Expression={$_.Hash.ToLower()}} `
+              | Select-Object -ExpandProperty Hash `
+              > $archiveHashFilePath
+          }
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: dist-${{ matrix.id }}
+          name: dist-${{ matrix.target }}
           path: ./artifacts/dist
 
   create-release:
@@ -141,21 +154,26 @@ jobs:
           $isPreRelease = $true
           $preReleaseParam = '--prerelease'
           if ($isPreReleaseVar -eq 'false') {
+            Write-Host 'This is a release'
             $isPreRelease = $false
             $preReleaseParam = $null
+          } else {
+            Write-Host 'This is a pre-release'
           }
 
           $hasPrevReleaseVersion = -not [string]::IsNullOrWhiteSpace($prevReleaseVersion)
           if ($hasPrevReleaseVersion) {
+            Write-Host "Will create release $calculatedVersion from tag $prevReleaseVersion to tag $calculatedVersion"
             gh release create $calculatedVersion $preReleaseParam --generate-notes --latest --notes-start-tag $prevReleaseVersion --title $calculatedVersion
           } else {
+            Write-Host "Will create first release $calculatedVersion"
             gh release create $calculatedVersion $preReleaseParam --notes 'First release' --title $calculatedVersion
           }
 
-          $distributions = @('linux', 'macos', 'windows')
-          foreach ($distro in $distributions) {
-            $artifactsDir = "./dist-$distro"
-            if (Test-Path $artifactsDir) {
-              gh release upload $calculatedVersion $artifactsDir/*
+          $targets = @('x86_64-unknown-linux-musl', 'x86_64-apple-darwin', 'x86_64-pc-windows-msvc')
+          foreach ($target in $targets) {
+            $targetArtifactsDir = "./dist-$target"
+            if (Test-Path $targetArtifactsDir) {
+              gh release upload $calculatedVersion $targetArtifactsDir/*
             }
           }

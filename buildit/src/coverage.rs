@@ -84,7 +84,7 @@ impl BuildItCommand for CoverageCommand {
         env::set_var("CARGO_TARGET_DIR", target_coverage_dir);
 
         println!("👷 Running Tests with Code Coverage ...");
-        let mut args = vec!["test"];
+        let mut args = vec!["test", "--all-features"];
         if let Some(package) = &self.package {
             args.push("--package");
             args.push(package);
@@ -126,11 +126,10 @@ impl BuildItCommand for CoverageCommand {
             output_types,
             "--branch",
             "--excl-line",
-            // Exlude the following lines:
+            // Exclude the following lines:
             //  ^\\s*(debug_)?assert(_eq|_ne)?!                                             => debug_assert and assert variants
-            //  ^\\s*#\\[cfg\\s*\\(.*\\]\\s*$                                               => cfg attributes
-            //  ^\\s*#\\[inline\\s*\\(.*\\]\\s*$                                            => inline attributes
-            //  ^\\s*#\\[derive\\s*\\(.*\\]\\s*$                                            => derive attributes
+            //  ^\\s*#\\[.*$                                                                => lines containing only an attribute
+            //  ^\\s*#!\\[.*$                                                               => lines containing only a crate attribute
             //  ^\\s*\\}\\s*else\\s*\\{\\s*$                                                => lines containing only "} else {"
             //  ^\\s*//.*$                                                                  => lines containing only a comment
             //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$      => lines containing only a fn definition
@@ -141,9 +140,8 @@ impl BuildItCommand for CoverageCommand {
             //  ^\\s*[{}(),;\\[\\] ]*\\s*$                                                  => lines with only delimiters or whitespace, no logic
             //  ^\\s*impl\\s+.*\\s+for\\s+.*\\s+\\{\\s*$                                    => lines containing only an impl declaration
             "^\\s*(debug_)?assert(_eq|_ne)?!\
-                |^\\s*#\\[cfg\\s*\\(.*\\]\\s*$\
-                |^\\s*#\\[inline\\s*\\(.*\\]\\s*$\
-                |^\\s*#\\[derive\\s*\\(.*\\]\\s*$\
+                |^\\s*#\\[.*$
+                |^\\s*#!\\[.*$
                 |^\\s*\\}\\s*else\\s*\\{\\s*$\
                 |^\\s*//.*$\
                 |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$\

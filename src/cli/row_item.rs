@@ -145,12 +145,17 @@ impl RowItem {
 
     pub fn expand_all_children(&mut self) {
         if self.has_children {
-            for child in &self.children {
-                let mut child = child.borrow_mut();
-                if child.has_children {
-                    child.expanded = true;
-                    child.expand_all_children();
+            if self.expanded {
+                for child in &self.children {
+                    let mut child = child.borrow_mut();
+                    if child.has_children {
+                        child.expanded = true;
+                        child.expand_all_children();
+                    }
                 }
+            } else {
+                self.expanded = true;
+                self.collapse_all_children();
             }
         }
     }

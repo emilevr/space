@@ -101,16 +101,19 @@ After the initial checkout please run the post-checkout hook manually via:
 
 This will setup the hooks directory, enabling the pre-commit hook to run linting, code coverage and benchmarks.
 
-### Building and running the CLI
+### Building and running the space CLI
 
-To build the library and CLI, simply run `cargo build` from the repo root directory. The binaries will be built
-in the `./target/debug` directory. Alternatively use `cargo run` to build and run the CLI.
+To build the library and binaries, simply run `cargo build --all-features` from the repo root directory.
+The binaries will be built in the `./target/debug` directory. Alternatively use `cargo run --bin space` to
+build and run the `space` CLI.
 
 > :information_source: All the commands listed below should also be run from the repo root.
 
 ### Running Tests
 
-Run `cargo test`.
+- Run non-interactive tests via `cargo test --all-features`.
+- Run all tests, including interactive. ones via `cargo test --all-features -- --include-ignored`. Note:this
+  requires a large/maximized terminal window.
 
 ### Running code format and lint tests
 
@@ -131,7 +134,7 @@ benchmark tasks.
 In order for code coverage to be generated, ensure you have installed *llvm-tools* via
 `rustup component add llvm-tools`.
 
-To generate a code coverage report, run `cargo buildit coverage`.
+To generate a code coverage report, run `cargo install --path ./buildit && buildit coverage --include-ignored`.
 
 ### Benchmarks
 

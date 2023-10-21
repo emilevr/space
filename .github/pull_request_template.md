@@ -23,14 +23,14 @@
   > :construction_worker: DELETE THIS NOTE
 
 - [ ] I have confirmed that all tests pass locally.
-  > :construction_worker: Run all tests locally via `cargo test -- --include-ignored`
+  > :construction_worker: Run all tests locally via `cargo test --all-features -- --include-ignored`
   > :information_source: This will include the TUI interactive tests, so make sure you run this in a maximized terminal window. Other platforms will be tested on the build agent.
   > :construction_worker: DELETE THIS NOTE
 
 - [ ] I have confirmed that my changes do not negatively impact performance by manually comparing before and
       after performance against a suitable local directory tree.
-  > :construction_worker: Run the release build in non-interactive mode and with timing output via `cargo run --release --non-interactive --show-timing`
-  > :information_source: A benchmark will be run on the build agent.
+  > :construction_worker: Run the latest release of [space-bench for your platform](https://github.com/emilevr/space/releases), then run the local release build of `space-bench` via `cargo run --bin space-bench --release --all-features -- <tree_path>` for a comparative test.
+  > :information_source: A comparative benchmark will be run on the build agent.
   > :construction_worker: DELETE THIS NOTE
 
 - [ ] I have confirmed that code coverage has not regressed as a result of my changes.
