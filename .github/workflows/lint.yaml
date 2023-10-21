@@ -2,6 +2,8 @@ name: Lint
 on:
   pull_request:
   push:
+    branches-ignore:
+      - ' '
     tags-ignore:
       - '*.*.*'
   workflow_call:
