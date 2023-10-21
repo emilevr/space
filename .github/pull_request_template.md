@@ -23,7 +23,7 @@
   > :construction_worker: DELETE THIS NOTE
 
 - [ ] I have confirmed that all tests pass locally.
-  > :construction_worker: Run all tests locally via `cargo test -- --include-ignored`
+  > :construction_worker: Run all tests locally via `cargo test --all-features -- --include-ignored`
   > :information_source: This will include the TUI interactive tests, so make sure you run this in a maximized terminal window. Other platforms will be tested on the build agent.
   > :construction_worker: DELETE THIS NOTE
 
