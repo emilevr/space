@@ -131,7 +131,7 @@ benchmark tasks.
 In order for code coverage to be generated, ensure you have installed *llvm-tools* via
 `rustup component add llvm-tools`.
 
-To generate a code coverage report, run `cargo buildit coverage`.
+To generate a code coverage report, run `cargo install --path ./buildit && buildit coverage --include-ignored`.
 
 ### Benchmarks
 
