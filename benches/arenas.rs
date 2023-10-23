@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bumpalo::Bump;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use id_arena::{Arena, Id};
@@ -30,6 +32,7 @@ pub struct IdArenaItem {
 
 pub fn bench_arenas(c: &mut Criterion) {
     let mut group = c.benchmark_group("arenas");
+    group.measurement_time(Duration::from_secs(4));
     group.bench_function("std", |b| {
         let mut items = vec![];
         b.iter(|| {
@@ -82,24 +85,22 @@ pub fn bench_arenas(c: &mut Criterion) {
     });
     group.bench_function("id-arena", |b| {
         let mut arena = Arena::<IdArenaItem>::new();
-        // let mut segment_arena = Arena::<String>::new();
-        // let mut size_arena = Arena::<Size>::new();
         b.iter(|| {
             black_box({
                 let parent = arena.alloc(IdArenaItem {
                     parent: None,
-                    path_segment: "parent".to_string(), //segment_arena.alloc("parent".into()),
+                    path_segment: "parent".to_string(),
                     item_type: DirectoryItemType::Directory,
-                    size_in_bytes: Size::new(1234), //size_arena.alloc(Size::new(1234)),
+                    size_in_bytes: Size::new(1234),
                     child_count: 1,
                     children: vec![],
                 });
 
                 let child = arena.alloc(IdArenaItem {
                     parent: Some(parent),
-                    path_segment: "child".to_string(), //segment_arena.alloc("child".into()),
+                    path_segment: "child".to_string(),
                     item_type: DirectoryItemType::File,
-                    size_in_bytes: Size::new(1234), //size_arena.alloc(Size::new(1234)),
+                    size_in_bytes: Size::new(1234),
                     child_count: 0,
                     children: vec![],
                 });
