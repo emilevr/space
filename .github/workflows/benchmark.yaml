@@ -6,24 +6,30 @@ on:
 jobs:
   benchmark:
     name: Benchmark
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - runs-on: ubuntu-latest
+          - runs-on: macos-latest
+          - runs-on: windows-latest
+    runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/detect-and-install-rust-toolchain
 
-      - uses: ./.github/actions/install-buildit
+      # - uses: ./.github/actions/install-buildit
 
-      - name: Cache tmp.sample
-        uses: actions/cache@v3
-        timeout-minutes: 1
-        continue-on-error: true
-        with:
-          path: ./tmp.sample
-          key: tmp.sample-${{ github.job }}-${{ runner.os }}
-          restore-keys: tmp.sample-${{ github.job }}-${{ runner.os }}
+      # - name: Cache tmp.sample
+      #   uses: actions/cache@v3
+      #   timeout-minutes: 1
+      #   continue-on-error: true
+      #   with:
+      #     path: ./tmp.sample
+      #     key: tmp.sample-${{ github.job }}-${{ runner.os }}
+      #     restore-keys: tmp.sample-${{ github.job }}-${{ runner.os }}
 
-      - name: Build binaries for packaging
+      - name: Run arena allocator benchmark
         run: cargo bench
 
       # - name: Benchmark
