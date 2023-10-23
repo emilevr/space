@@ -32,7 +32,7 @@ pub struct IdArenaItem {
 
 pub fn bench_arenas(c: &mut Criterion) {
     let mut group = c.benchmark_group("arenas");
-    group.measurement_time(Duration::from_secs(4));
+    group.measurement_time(Duration::from_secs(3));
     group.bench_function("std", |b| {
         let mut items = vec![];
         b.iter(|| {
