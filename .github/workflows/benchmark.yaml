@@ -23,5 +23,8 @@ jobs:
           key: tmp.sample-${{ github.job }}-${{ runner.os }}
           restore-keys: tmp.sample-${{ github.job }}-${{ runner.os }}
 
-      - name: Benchmark
-        run: buildit benchmark
+      - name: Build binaries for packaging
+        run: cargo bench
+
+      # - name: Benchmark
+      #   run: buildit benchmark

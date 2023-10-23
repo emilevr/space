@@ -28,7 +28,7 @@ path = "src/space_bench.rs"
 required-features = ["bench"]
 
 [[bench]]
-name = "directory_item_build"
+name = "arenas"
 harness = false
 
 [features]
@@ -55,7 +55,10 @@ serde_yaml = { version = "^0.9.25", optional = true }
 unicode-segmentation = "^1.10.1"
 
 [dev-dependencies]
+bumpalo = { version = "^3.14.0", features = ["collections"] }
+bumpalo-herd = "^0.1.2"
 criterion = "^0.5.1"
+id-arena = { version = "^2.2.1", features = ["rayon"] }
 regex = "^1.9.5"
 rstest = "^0.18.2"
 uuid = { version = "^1.4.1", features = ["v4"] }

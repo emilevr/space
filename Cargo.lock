@@ -117,6 +117,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f30e7476521f6f8af1a1c4c0b8cc94f0bee37d91763d0ca2665f299b6cd8aec"
 
 [[package]]
+name = "bumpalo-herd"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c51ab7ee02d3459317cc16fec045966c9120733a10229541acaf3cc81b137c95"
+dependencies = [
+ "bumpalo",
+]
+
+[[package]]
 name = "cassowary"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -576,6 +585,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "id-arena"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25a2bc672d1148e28034f176e01fffebb08b35768468cc954630da77a1449005"
+dependencies = [
+ "rayon",
 ]
 
 [[package]]
@@ -1168,10 +1186,13 @@ name = "space_rs"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "bumpalo",
+ "bumpalo-herd",
  "clap",
  "criterion",
  "crossterm",
  "dirs",
+ "id-arena",
  "log",
  "log4rs",
  "ratatui",
