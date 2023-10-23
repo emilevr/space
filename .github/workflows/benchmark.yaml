@@ -12,6 +12,7 @@ jobs:
           - runs-on: ubuntu-latest
           - runs-on: macos-latest
           - runs-on: windows-latest
+      fail-fast: false
     runs-on: ${{ matrix.runs-on }}
     steps:
       - uses: actions/checkout@v4
