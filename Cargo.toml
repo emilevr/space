@@ -48,6 +48,7 @@ crossterm = { version = "^0.27.0", optional = true }
 dirs = { version = "^5.0.1", optional = true }
 log = { version = "^0.4.20", optional = true }
 log4rs = { version = "^1.2.0", optional = true }
+page_size = "^0.6.0"
 ratatui = { version = "^0.23.0", default-features = false, features = ["crossterm"], optional = true }
 rayon = "^1.7.0"
 serde = { version = "^1.0.188", features = ["derive"], optional = true }
@@ -59,6 +60,7 @@ bumpalo = { version = "^3.14.0", features = ["collections"] }
 bumpalo-herd = "^0.1.2"
 criterion = "^0.5.1"
 id-arena = { version = "^2.2.1", features = ["rayon"] }
+memory-stats = "^1.1.0"
 regex = "^1.9.5"
 rstest = "^0.18.2"
 uuid = { version = "^1.4.1", features = ["v4"] }
