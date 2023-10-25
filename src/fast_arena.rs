@@ -10,7 +10,7 @@ mod fast_arena_test;
 /// An arena that can be used to allocate objects efficiently.
 #[derive(Debug)]
 pub struct FastIdArena<T> {
-    buckets: Vec<Box<Vec<T>>>,
+    buckets: Vec<Vec<T>>,
     items_per_bucket: usize,
     bucket_index: usize,
 }
@@ -27,7 +27,7 @@ impl<T> FastIdArena<T> {
     pub fn new() -> Self {
         let items_per_bucket = max(page_size::get(), page_size::get_granularity()) / size_of::<T>();
         FastIdArena::<T> {
-            buckets: vec![Box::new(Vec::<T>::with_capacity(items_per_bucket))],
+            buckets: vec![Vec::<T>::with_capacity(items_per_bucket)],
             items_per_bucket,
             bucket_index: 0,
         }
@@ -36,7 +36,7 @@ impl<T> FastIdArena<T> {
     /// Creates a new arena with each bucket able to hold the specified number of items.
     pub fn new_with_bucket_size(items_per_bucket: usize) -> Self {
         FastIdArena::<T> {
-            buckets: vec![Box::new(Vec::<T>::with_capacity(items_per_bucket))],
+            buckets: vec![Vec::<T>::with_capacity(items_per_bucket)],
             items_per_bucket,
             bucket_index: 0,
         }
@@ -53,7 +53,7 @@ impl<T> FastIdArena<T> {
         let mut bucket = &mut self.buckets[self.bucket_index];
         if bucket.len() == self.items_per_bucket {
             self.buckets
-                .push(Box::new(Vec::<T>::with_capacity(self.items_per_bucket)));
+                .push(Vec::<T>::with_capacity(self.items_per_bucket));
             self.bucket_index += 1;
             bucket = &mut self.buckets[self.bucket_index];
         }
@@ -83,6 +83,11 @@ impl<T> FastIdArena<T> {
     /// Returns the number of allocated items in the arena.
     pub fn len(&self) -> usize {
         self.bucket_index * self.items_per_bucket + self.buckets[self.bucket_index].len()
+    }
+
+    /// Returns true is the arena is empty.
+    pub fn is_empty(&self) -> bool {
+        self.bucket_index == 0 && self.buckets[self.bucket_index].len() == 0
     }
 
     /// Resets the arena to the default state, with a single empty bucket.

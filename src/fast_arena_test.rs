@@ -263,6 +263,31 @@ fn len_with_allocs_returns_correct_length(
     assert_eq!(alloc_count, len);
 }
 
+#[test]
+fn is_empty_given_empty_arena_returns_true() {
+    // Arrange
+    let arena = FastIdArena::<Something>::new();
+
+    // Act
+    let is_empty = arena.is_empty();
+
+    // Assert
+    assert!(is_empty);
+}
+
+#[test]
+fn is_empty_given_non_empty_arena_returns_false() {
+    // Arrange
+    let mut arena = FastIdArena::<usize>::new();
+    arena.alloc(123);
+
+    // Act
+    let is_empty = arena.is_empty();
+
+    // Assert
+    assert!(!is_empty);
+}
+
 #[rstest]
 #[case(5, 0)]
 #[case(5, 503)]
