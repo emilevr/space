@@ -59,7 +59,7 @@ else
 fi
 
 echo "👷 Checking CLI code with Clippy ..."
-cargo clippy
+cargo clippy --all-features
 CLIPPY_EXIT_CODE=$?
 if [ $CLIPPY_EXIT_CODE -ne 0 ]; then
     echo "❌ Please fix the issues Clippy raised in CLI code."
@@ -79,7 +79,7 @@ else
 fi
 
 echo "👷 Checking BuildIt code with Clippy ..."
-cargo clippy --manifest-path ./buildit/Cargo.toml
+cargo clippy --manifest-path ./buildit/Cargo.toml --all-features
 CLIPPY_EXIT_CODE=$?
 if [ $CLIPPY_EXIT_CODE -ne 0 ]; then
     echo "❌ Please fix the issues Clippy raised in BuildIt code."

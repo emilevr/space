@@ -30,10 +30,10 @@ jobs:
         run: cargo fmt --manifest-path ./buildit/Cargo.toml -- --check
 
       - name: Lint with Clippy
-        run: cargo clippy --no-deps
+        run: cargo clippy --no-deps --all-features
 
       - name: Check code formatting (BuildIt)
         run: cargo fmt -- --check
 
       - name: Lint with Clippy (BuildIt)
-        run: cargo clippy --manifest-path ./buildit/Cargo.toml
+        run: cargo clippy --manifest-path ./buildit/Cargo.toml --all-features

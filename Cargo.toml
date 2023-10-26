@@ -27,10 +27,6 @@ name = "space-bench"
 path = "src/space_bench.rs"
 required-features = ["bench"]
 
-[[bench]]
-name = "directory_item_build"
-harness = false
-
 [features]
 # Uncomment the "default = ..." below to include the nightly features in the build by default, and in the Rust
 # analyzer. If you do so then you will have to add "+nightly" to cargo commands, e.g. "cargo +nightly build".
@@ -55,7 +51,6 @@ serde_yaml = { version = "^0.9.25", optional = true }
 unicode-segmentation = "^1.10.1"
 
 [dev-dependencies]
-criterion = "^0.5.1"
 regex = "^1.9.5"
 rstest = "^0.18.2"
 uuid = { version = "^1.4.1", features = ["v4"] }

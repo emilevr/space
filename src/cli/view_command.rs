@@ -164,25 +164,21 @@ impl ViewCommand {
     }
 
     fn analyze_space(&mut self) -> Vec<DirectoryItem> {
-        use std::sync::Arc;
-
-        let paths: Vec<_> = if let Some(target_paths) = &self.target_paths {
-            let mut target_paths: Vec<_> =
-                target_paths.iter().filter(|path| path.exists()).collect();
-            target_paths.sort();
-            target_paths.dedup();
-            target_paths
-                .into_iter()
-                .map(|path| Arc::new(path.clone()))
-                .collect()
+        let mut sanitized_paths = vec![];
+        if let Some(target_paths) = &self.target_paths {
+            for path in target_paths {
+                if !sanitized_paths.contains(path) && path.exists() {
+                    sanitized_paths.push(path.clone());
+                }
+            }
+            sanitized_paths.sort();
         } else if let Ok(current_dir) = env::current_dir() {
-            vec![Arc::new(current_dir)]
-        } else {
-            vec![]
-        };
+            sanitized_paths.push(current_dir);
+        }
 
-        let items = DirectoryItem::build(paths);
+        let items = DirectoryItem::build(sanitized_paths);
 
+        // TODO: Do this inline
         self.total_size_in_bytes = items.iter().map(|t| t.size_in_bytes.get_value()).sum();
 
         items

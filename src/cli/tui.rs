@@ -1,5 +1,6 @@
 use super::{
     input_event_source::InputEventSource,
+    row_item::RowItemType,
     view_state::{
         get_excl_percentage_column_width, ViewState, APPARENT_SIZE_COLUMN_WIDTH,
         EXPAND_INDICATOR_COLUMN_WIDTH, INCL_PERCENTAGE_COLUMN_WIDTH,
@@ -702,7 +703,7 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
     if let Some(selected_item) = view_state.get_selected_item() {
         let value_style = Style::default().fg(VALUE_FG_COLOR);
         let selected_item_ref = selected_item.borrow();
-        let is_dir = selected_item_ref.path.is_dir();
+        let is_dir = selected_item_ref.item_type == RowItemType::Directory;
 
         let lines = vec![
             Line::from(vec![
@@ -712,7 +713,7 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
                 } else {
                     "file "
                 }),
-                Span::styled(format!("{}", selected_item_ref.path.display()), value_style),
+                Span::styled(&selected_item_ref.path_segment, value_style),
                 Span::styled(if is_dir {
                     " - including all files and sub-directories"
                 } else {

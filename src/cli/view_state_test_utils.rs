@@ -71,12 +71,15 @@ pub(crate) fn assert_selected_item_name_eq(
         );
         // The first item is selected, which has a randomly generated name. We use that in the check instead
         // of the specified value.
-        expected = view_state.visible_row_items[0].borrow().name.clone();
+        expected = view_state.visible_row_items[0]
+            .borrow()
+            .path_segment
+            .clone();
     }
 
     let selected_item = view_state.get_selected_item().unwrap();
     let selected_item = selected_item.borrow();
-    assert_eq!(expected, selected_item.name);
+    assert_eq!(expected, selected_item.path_segment);
 }
 
 pub(crate) fn select_item_by_name(name: &str, view_state: &mut ViewState) -> anyhow::Result<()> {
@@ -106,7 +109,7 @@ pub(crate) fn get_row_index_by_name(name: &str, view_state: &ViewState) -> Optio
 
 fn get_item_row_index(name: &str, item: &Rc<RefCell<RowItem>>) -> Option<usize> {
     let item = item.borrow();
-    if item.name == name {
+    if item.path_segment == name {
         return Some(item.row_index);
     } else if item.has_children {
         for child in &item.children {

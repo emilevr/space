@@ -1,17 +1,16 @@
 use space_rs::{DirectoryItem, DirectoryItemType, Size};
 use std::{
     cell::RefCell,
-    ffi::OsStr,
     fmt::Display,
     path::PathBuf,
     rc::{Rc, Weak},
-    sync::Arc,
 };
 
 #[cfg(test)]
 #[path = "./row_item_test.rs"]
 mod row_item_test;
 
+#[derive(PartialEq)]
 pub(crate) enum RowItemType {
     Directory,
     File,
@@ -25,9 +24,8 @@ pub(crate) struct RowItem {
     pub expanded: bool,
     pub tree_prefix: String,
     pub item_type: RowItemType,
-    pub name: String,
     pub incl_fraction: f32,
-    pub path: Arc<PathBuf>,
+    pub path_segment: String,
     pub children: Vec<Rc<RefCell<RowItem>>>,
     pub parent: Option<Weak<RefCell<RowItem>>>,
     pub row_index: usize,
@@ -59,19 +57,8 @@ impl RowItem {
                 DirectoryItemType::SymbolicLink => RowItemType::SymbolicLink,
                 DirectoryItemType::Unknown => RowItemType::Unknown,
             },
-            name: if current_row_index == 0 {
-                dir_item.path.display().to_string()
-            } else {
-                dir_item
-                    .path
-                    .file_name()
-                    .unwrap_or(OsStr::new("<error>"))
-                    .to_str()
-                    .unwrap_or("<error>")
-                    .to_string()
-            },
             incl_fraction: dir_item.get_fraction(total_size_in_bytes),
-            path: dir_item.path.clone(),
+            path_segment: dir_item.path_segment.clone(),
             children: vec![],
             parent,
             row_index: current_row_index,
@@ -159,6 +146,12 @@ impl RowItem {
             }
         }
     }
+
+    pub fn get_path(&self) -> PathBuf {
+        let mut path = PathBuf::default();
+        add_path(self, &mut path);
+        path
+    }
 }
 
 impl Display for RowItem {
@@ -166,9 +159,19 @@ impl Display for RowItem {
         write!(
             f,
             "{} with {} children",
-            self.path.display(),
+            self.path_segment,
             self.children.len()
         )?;
         Ok(())
     }
+}
+
+fn add_path(row_item: &RowItem, path: &mut PathBuf) {
+    if let Some(parent) = &row_item.parent {
+        if let Some(parent) = parent.upgrade() {
+            add_path(&parent.borrow(), path);
+        }
+    }
+
+    path.push(&row_item.path_segment);
 }

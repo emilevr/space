@@ -288,12 +288,12 @@ impl ViewState {
     pub(crate) fn delete_selected_item(&mut self) {
         if let Some(selected_item) = self.get_selected_item() {
             let selected_item_ref = selected_item.borrow();
-            let path = selected_item_ref.path.as_path();
+            let path = selected_item_ref.get_path();
 
             let remove_result = if path.is_dir() {
-                fs::remove_dir_all(path)
+                fs::remove_dir_all(&path)
             } else {
-                fs::remove_file(path)
+                fs::remove_file(&path)
             };
             match remove_result {
                 Ok(()) => {
@@ -547,7 +547,7 @@ pub(crate) fn get_row_cell_content(
             RowItemType::SymbolicLink => ITEM_TYPE_SYMBOLIC_LINK_SYMBOL,
             RowItemType::Unknown => ITEM_TYPE_UNKNOWN_SYMBOL,
         },
-        item_ref.name
+        item_ref.path_segment
     ));
     cells.push("░".repeat(excl_filled_count));
     cells.push(format!(

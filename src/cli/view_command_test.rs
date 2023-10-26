@@ -14,7 +14,7 @@ use space_rs::{
     size::{Size, SizeDisplayFormat},
     DirectoryItem, DirectoryItemType,
 };
-use std::{cell::RefCell, path::PathBuf, rc::Rc, sync::Arc};
+use std::{cell::RefCell, rc::Rc};
 use uuid::Uuid;
 
 use super::{render_row, render_rows};
@@ -51,7 +51,7 @@ fn add_row_item_given_item_of_size_below_threshold_does_not_add_item() {
         total_size_in_bytes: 1000000,
     };
     let item = DirectoryItem {
-        path: Arc::new(PathBuf::from("/some/path")),
+        path_segment: "/some/path".to_string(),
         size_in_bytes: Size::default(),
         children: vec![],
         child_count: 0,
@@ -86,18 +86,13 @@ fn analyze_space_given_no_target_paths_traces_current_dir() -> anyhow::Result<()
 
     // Assert
     assert_eq!(1, items.len());
-    assert!(items[0]
-        .path
-        .display()
-        .to_string()
-        .contains(temp_dir.display().to_string().as_str()));
+    assert_eq!(
+        temp_dir.display().to_string().as_str(),
+        items[0].path_segment
+    );
     assert_eq!(170000, items[0].size_in_bytes.get_value());
     assert_eq!(1, items[0].children.len());
-    assert!(items[0].children[0]
-        .path
-        .display()
-        .to_string()
-        .ends_with("1"));
+    assert_eq!("1", items[0].children[0].path_segment);
 
     // Restore the current dir.
     std::env::set_current_dir(current_dir)?;
@@ -125,9 +120,8 @@ fn render_row_with_size_smaller_than_threshold_does_not_output_anything() -> any
         expanded: false,
         tree_prefix: String::default(),
         item_type: RowItemType::File,
-        name: "some name".to_string(),
         incl_fraction: 0.1f32,
-        path: Arc::new(PathBuf::from("/some/path")),
+        path_segment: "/some/path".to_string(),
         children: vec![],
         parent: None,
         row_index: 1,

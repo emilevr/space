@@ -77,7 +77,7 @@ fn render_outputs_full_path_as_first_row_with_100_percent_size() -> anyhow::Resu
     // Assert
     let regex_safe_path = view_state.visible_row_items[0]
         .borrow()
-        .name
+        .path_segment
         .as_str()
         .replace("\\", "\\\\");
     output.matches(Regex::new(
@@ -259,9 +259,9 @@ fn render_with_confirmed_delete_deletes_selected_item(
     assert_eq!(expected_final_item_count, view_state.total_items_in_tree);
     view_state.item_tree.iter().for_each(|item| {
         let item_ref = item.borrow();
-        assert!(item_ref.name != expected_deleted_item_name);
+        assert!(item_ref.path_segment != expected_deleted_item_name);
         assert!(!item_ref
-            .name
+            .path_segment
             .starts_with(format!("{}.", expected_deleted_item_name).as_str()));
     });
 
@@ -580,7 +580,7 @@ fn render_given_collapse_input_for_expanded_directory_item_collapses_it() -> any
 
     // Assert
     let item = view_state.visible_row_items[1].borrow();
-    assert_eq!("1", item.name);
+    assert_eq!("1", item.path_segment);
     assert!(!item.expanded);
 
     delete_test_directory_tree(&temp_dir_path);
@@ -609,7 +609,7 @@ fn render_given_expand_input_for_collapsed_directory_item_expands_it() -> anyhow
 
     // Assert
     let item = view_state.visible_row_items[1].borrow();
-    assert_eq!("1", item.name);
+    assert_eq!("1", item.path_segment);
     assert!(item.expanded);
 
     delete_test_directory_tree(&temp_dir_path);
@@ -639,7 +639,7 @@ fn render_given_collapse_children_input_for_directory_item_collapses_all_childre
 
     // Assert
     let item = view_state.visible_row_items[1].borrow();
-    assert_eq!("1", item.name);
+    assert_eq!("1", item.path_segment);
     assert!(!item.expanded);
     assert_eq!(2, view_state.displayable_item_count);
 
