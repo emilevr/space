@@ -10,8 +10,8 @@ jobs:
       matrix:
         include:
           - runs-on: ubuntu-latest
-          - runs-on: macos-latest
-          - runs-on: windows-latest
+          # - runs-on: macos-latest
+          # - runs-on: windows-latest
       fail-fast: false
     runs-on: ${{ matrix.runs-on }}
     steps:
@@ -27,8 +27,8 @@ jobs:
         continue-on-error: true
         with:
           path: ./tmp.sample
-          key: tmp.sample-${{ github.job }}-${{ runner.os }}
-          restore-keys: tmp.sample-${{ github.job }}-${{ runner.os }}
+          key: tmp.sample-${{ github.job }}
+          restore-keys: tmp.sample-${{ github.job }}
 
       - name: Run arena allocator benchmark
         run: cargo bench
