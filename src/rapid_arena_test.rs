@@ -15,7 +15,7 @@ fn new_creates_single_bucket_with_expected_bucket_size() {
         max(page_size::get(), page_size::get_granularity()) / size_of::<Something>();
 
     // Act
-    let arena = FastIdArena::<Something>::new();
+    let arena = RapIdArena::<Something>::new();
 
     // Assert
     assert_eq!(1, arena.buckets.len());
@@ -30,7 +30,7 @@ fn default_creates_single_bucket_with_expected_bucket_size() {
         max(page_size::get(), page_size::get_granularity()) / size_of::<Something>();
 
     // Act
-    let arena = FastIdArena::<Something>::default();
+    let arena = RapIdArena::<Something>::default();
 
     // Assert
     assert_eq!(1, arena.buckets.len());
@@ -44,7 +44,7 @@ fn new_with_bucket_size_creates_single_bucket_with_expected_bucket_size() {
     let items_per_bucket = 100;
 
     // Act
-    let arena = FastIdArena::<Something>::new_with_bucket_size(items_per_bucket);
+    let arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
 
     // Assert
     assert_eq!(1, arena.buckets.len());
@@ -55,7 +55,7 @@ fn new_with_bucket_size_creates_single_bucket_with_expected_bucket_size() {
 #[test]
 fn alloc_then_get_returns_expected_item() {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new();
+    let mut arena = RapIdArena::<Something>::new();
     let value1 = 123;
     let value2 = "abc".to_string();
 
@@ -74,7 +74,7 @@ fn alloc_then_get_returns_expected_item() {
 #[test]
 fn cloned_id_returns_expected_item() {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new();
+    let mut arena = RapIdArena::<Something>::new();
     let value1 = 1024;
     let value2 = "some string".to_string();
     let id = arena.alloc(Something {
@@ -96,7 +96,7 @@ fn cloned_id_returns_expected_item() {
 #[test]
 fn copied_id_returns_expected_item() {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new();
+    let mut arena = RapIdArena::<Something>::new();
     let value1 = 1024;
     let value2 = "some string".to_string();
     let id = arena.alloc(Something {
@@ -127,7 +127,7 @@ fn alloc_creates_correct_number_of_buckets(
     #[case] expected_bucket_count: usize,
 ) {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new_with_bucket_size(items_per_bucket);
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
 
     // Act
     for i in 0..alloc_count {
@@ -145,7 +145,7 @@ fn alloc_creates_correct_number_of_buckets(
 #[test]
 fn index_operator_returns_expected_item() {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new();
+    let mut arena = RapIdArena::<Something>::new();
     let value1 = 777;
     let value2 = "a string".to_string();
 
@@ -165,7 +165,7 @@ fn index_operator_returns_expected_item() {
 fn get_item_in_second_bucket_returns_expected_item() {
     // Arrange
     let bucket_size = 5;
-    let mut arena = FastIdArena::<Something>::new_with_bucket_size(bucket_size);
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(bucket_size);
     let mut ids = vec![];
 
     for i in 0..=bucket_size {
@@ -186,8 +186,8 @@ fn get_item_in_second_bucket_returns_expected_item() {
 #[test]
 fn get_with_invalid_id_returns_none() {
     // Arrange
-    let arena = FastIdArena::<Something>::new();
-    let id: FastId<Something> = FastId::<Something> {
+    let arena = RapIdArena::<Something>::new();
+    let id: RapId<Something> = RapId::<Something> {
         index: 123,
         _t: PhantomData,
     };
@@ -202,8 +202,8 @@ fn get_with_invalid_id_returns_none() {
 #[test]
 fn get_mut_with_invalid_id_returns_none() {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new();
-    let id: FastId<Something> = FastId::<Something> {
+    let mut arena = RapIdArena::<Something>::new();
+    let id: RapId<Something> = RapId::<Something> {
         index: 123,
         _t: PhantomData,
     };
@@ -218,7 +218,7 @@ fn get_mut_with_invalid_id_returns_none() {
 #[test]
 fn get_mut_then_modified_modifies_correct_entry() {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new();
+    let mut arena = RapIdArena::<Something>::new();
     let mut ids = vec![];
     let value1 = 111;
     for i in 0..=2 {
@@ -248,7 +248,7 @@ fn len_with_allocs_returns_correct_length(
     #[case] alloc_count: usize,
 ) {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new_with_bucket_size(items_per_bucket);
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
     for i in 0..alloc_count {
         arena.alloc(Something {
             value1: i,
@@ -266,7 +266,7 @@ fn len_with_allocs_returns_correct_length(
 #[test]
 fn is_empty_given_empty_arena_returns_true() {
     // Arrange
-    let arena = FastIdArena::<Something>::new();
+    let arena = RapIdArena::<Something>::new();
 
     // Act
     let is_empty = arena.is_empty();
@@ -278,7 +278,7 @@ fn is_empty_given_empty_arena_returns_true() {
 #[test]
 fn is_empty_given_non_empty_arena_returns_false() {
     // Arrange
-    let mut arena = FastIdArena::<usize>::new();
+    let mut arena = RapIdArena::<usize>::new();
     arena.alloc(123);
 
     // Act
@@ -296,7 +296,7 @@ fn reset_results_in_single_empty_bucket(
     #[case] alloc_count: usize,
 ) {
     // Arrange
-    let mut arena = FastIdArena::<Something>::new_with_bucket_size(items_per_bucket);
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
     for i in 0..alloc_count {
         arena.alloc(Something {
             value1: i,

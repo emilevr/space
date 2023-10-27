@@ -3,7 +3,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use id_arena::{Arena, Id};
 use memory_stats::memory_stats;
 use space_rs::{
-    fast_arena::{FastId, FastIdArena},
+    rapid_arena::{RapId, RapIdArena},
     DirectoryItemType, Size, SizeDisplayFormat,
 };
 use std::time::Duration;
@@ -33,13 +33,13 @@ pub struct IdArenaItem {
     pub children: Vec<Id<IdArenaItem>>,
 }
 
-pub struct FastIdArenaItem {
-    pub parent: Option<FastId<FastIdArenaItem>>,
+pub struct RapIdArenaItem {
+    pub parent: Option<RapId<RapIdArenaItem>>,
     pub path_segment: String,
     pub item_type: DirectoryItemType,
     pub size_in_bytes: Size,
     pub child_count: usize,
-    pub children: Vec<FastId<FastIdArenaItem>>,
+    pub children: Vec<RapId<RapIdArenaItem>>,
 }
 
 fn bench_arenas(c: &mut Criterion) {
@@ -51,7 +51,7 @@ fn bench_arenas(c: &mut Criterion) {
 
     benchmark_std_alloc(&mut group, sample_size);
     benchmark_id_arena(&mut group, sample_size);
-    benchmark_fast_id_arena(&mut group, sample_size);
+    benchmark_rapid_arena(&mut group, sample_size);
     benchmark_bumpalo(&mut group, sample_size);
 
     group.finish();
@@ -214,7 +214,7 @@ fn benchmark_id_arena(
     });
 }
 
-fn benchmark_fast_id_arena(
+fn benchmark_rapid_arena(
     group: &mut criterion::BenchmarkGroup<'_, criterion::measurement::WallTime>,
     sample_size: usize,
 ) {
@@ -222,7 +222,7 @@ fn benchmark_fast_id_arena(
     let mut start_physical_mem: usize = 0;
     let mut start_virtual_mem: usize = 0;
 
-    group.bench_function("fast-id-arena", |b| {
+    group.bench_function("rapid-arena", |b| {
         sample_number += 1;
 
         if sample_number == 1 {
@@ -232,7 +232,7 @@ fn benchmark_fast_id_arena(
             }
         }
 
-        let mut arena = FastIdArena::<FastIdArenaItem>::new();
+        let mut arena = RapIdArena::<RapIdArenaItem>::new();
 
         if sample_number == 1 {
             if let Some(usage) = memory_stats() {
@@ -243,7 +243,7 @@ fn benchmark_fast_id_arena(
 
         b.iter(|| {
             black_box({
-                let parent = arena.alloc(FastIdArenaItem {
+                let parent = arena.alloc(RapIdArenaItem {
                     parent: None,
                     path_segment: "parent".to_string(),
                     item_type: DirectoryItemType::Directory,
@@ -252,7 +252,7 @@ fn benchmark_fast_id_arena(
                     children: vec![],
                 });
 
-                let child = arena.alloc(FastIdArenaItem {
+                let child = arena.alloc(RapIdArenaItem {
                     parent: Some(parent),
                     path_segment: "child".to_string(),
                     item_type: DirectoryItemType::File,
@@ -267,7 +267,7 @@ fn benchmark_fast_id_arena(
 
         if sample_number == sample_size {
             report_memory_usage(
-                "fast-id-arena",
+                "rapid-arena",
                 arena.len(),
                 start_physical_mem,
                 start_virtual_mem,

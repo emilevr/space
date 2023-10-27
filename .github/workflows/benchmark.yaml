@@ -30,8 +30,5 @@ jobs:
           key: tmp.sample-${{ github.job }}
           restore-keys: tmp.sample-${{ github.job }}
 
-      - name: Run arena allocator benchmark
-        run: cargo bench
-
-      - name: Benchmark
+      - name: Run all benchmarks
         run: buildit benchmark

@@ -33,6 +33,6 @@ mod test_directory_utils;
 
 pub use directory_item::DirectoryItem;
 pub use directory_item::DirectoryItemType;
-pub mod fast_arena;
+pub mod rapid_arena;
 pub use size::Size;
 pub use size::SizeDisplayFormat;
