@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use clap::{ColorChoice, Parser};
 use cli::cli_command::CliCommand;
 use cli::view_command::ViewCommand;

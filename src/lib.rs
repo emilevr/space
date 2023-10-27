@@ -1,6 +1,7 @@
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(unreachable_pub)]
+#![forbid(unsafe_code)]
 
 //! Space may be the final frontier, but it sure is annoying when you run out. 🖖
 //!
