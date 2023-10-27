@@ -1,11 +1,12 @@
 //! Implements a fast arena allocator that uses fixed size buckets and returns IDs for allocated objects.
 
-use page_size;
-use std::{cmp::max, marker::PhantomData, mem::size_of, ops::Index};
+use std::{marker::PhantomData, mem::size_of, ops::Index};
 
 #[cfg(test)]
 #[path = "./rapid_arena_test.rs"]
 mod rapid_arena_test;
+
+const DEFAULT_BUCKET_SIZE_IN_BYTES: usize = 64 * 1024;
 
 /// An arena that can be used to allocate objects efficiently.
 #[derive(Debug)]
@@ -18,6 +19,7 @@ pub struct RapIdArena<T> {
 /// An ID that identifies an allocated object.
 #[derive(Debug)]
 pub struct RapId<T> {
+    bucket_index: usize,
     index: usize,
     _t: PhantomData<T>,
 }
@@ -25,7 +27,7 @@ pub struct RapId<T> {
 impl<T> RapIdArena<T> {
     /// Creates a new arena for the specified type.
     pub fn new() -> Self {
-        let items_per_bucket = max(page_size::get(), page_size::get_granularity()) / size_of::<T>();
+        let items_per_bucket = DEFAULT_BUCKET_SIZE_IN_BYTES / size_of::<T>();
         RapIdArena::<T> {
             buckets: vec![Vec::<T>::with_capacity(items_per_bucket)],
             items_per_bucket,
@@ -58,12 +60,13 @@ impl<T> RapIdArena<T> {
             bucket = &mut self.buckets[self.bucket_index];
         }
 
-        let index = bucket.len();
+        let item_index = bucket.len();
 
         bucket.push(item);
 
         RapId::<T> {
-            index,
+            bucket_index: self.bucket_index,
+            index: item_index,
             _t: PhantomData,
         }
     }
@@ -71,13 +74,21 @@ impl<T> RapIdArena<T> {
     /// Returns a reference to the item identified by the specified ID.
     #[inline]
     pub fn get(&self, id: RapId<T>) -> Option<&T> {
-        self.buckets[self.bucket_index].get(id.index())
+        if let Some(bucket) = self.buckets.get(id.bucket_index) {
+            bucket.get(id.index)
+        } else {
+            None
+        }
     }
 
     /// Returns a mutable reference to the item identified by the specified ID.
     #[inline]
     pub fn get_mut(&mut self, id: RapId<T>) -> Option<&mut T> {
-        self.buckets[self.bucket_index].get_mut(id.index())
+        if let Some(bucket) = self.buckets.get_mut(id.bucket_index) {
+            bucket.get_mut(id.index)
+        } else {
+            None
+        }
     }
 
     /// Returns the number of allocated items in the arena.
@@ -107,15 +118,8 @@ impl<T> Index<RapId<T>> for RapIdArena<T> {
     type Output = T;
 
     #[inline]
-    fn index(&self, index: RapId<T>) -> &Self::Output {
-        &self.buckets[self.bucket_index][index.index()]
-    }
-}
-
-impl<T> RapId<T> {
-    #[inline]
-    fn index(&self) -> usize {
-        self.index
+    fn index(&self, id: RapId<T>) -> &Self::Output {
+        &self.buckets[id.bucket_index][id.index]
     }
 }
 

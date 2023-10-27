@@ -327,6 +327,7 @@ fn report_memory_usage(
     } else {
         println!("Couldn't get the current memory usage!");
     }
+    println!("");
 }
 
 criterion_group!(benches, bench_arenas);

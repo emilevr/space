@@ -1,18 +1,27 @@
-use rstest::rstest;
-
 use super::*;
+use rstest::rstest;
 
 #[derive(Debug, PartialEq)]
 struct Something {
-    value1: usize,
-    value2: String,
+    some_value: usize,
+    some_string: String,
+}
+
+fn alloc_items(arena: &mut RapIdArena<Something>, count: usize) -> Vec<RapId<Something>> {
+    let mut ids = vec![];
+    for i in 0..count {
+        ids.push(arena.alloc(Something {
+            some_value: i,
+            some_string: format!("i = {}", i),
+        }));
+    }
+    ids
 }
 
 #[test]
 fn new_creates_single_bucket_with_expected_bucket_size() {
     // Arrange
-    let items_per_bucket =
-        max(page_size::get(), page_size::get_granularity()) / size_of::<Something>();
+    let items_per_bucket = DEFAULT_BUCKET_SIZE_IN_BYTES / size_of::<Something>();
 
     // Act
     let arena = RapIdArena::<Something>::new();
@@ -26,8 +35,7 @@ fn new_creates_single_bucket_with_expected_bucket_size() {
 #[test]
 fn default_creates_single_bucket_with_expected_bucket_size() {
     // Arrange
-    let items_per_bucket =
-        max(page_size::get(), page_size::get_granularity()) / size_of::<Something>();
+    let items_per_bucket = DEFAULT_BUCKET_SIZE_IN_BYTES / size_of::<Something>();
 
     // Act
     let arena = RapIdArena::<Something>::default();
@@ -56,30 +64,30 @@ fn new_with_bucket_size_creates_single_bucket_with_expected_bucket_size() {
 fn alloc_then_get_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 123;
-    let value2 = "abc".to_string();
+    let v1 = 123;
+    let s1 = "abc".to_string();
 
     // Act
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Assert
     let actual = arena.get(id).expect("The ID is expected to be valid!");
-    assert_eq!(value1, actual.value1);
-    assert_eq!(value2, actual.value2);
+    assert_eq!(v1, actual.some_value);
+    assert_eq!(s1, actual.some_string);
 }
 
 #[test]
 fn cloned_id_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 1024;
-    let value2 = "some string".to_string();
+    let v1 = 1024;
+    let s1 = "some string".to_string();
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Act
@@ -89,19 +97,19 @@ fn cloned_id_returns_expected_item() {
     let entry = arena
         .get(cloned_id)
         .expect("The ID is expected to be valid!");
-    assert_eq!(value1, entry.value1);
-    assert_eq!(value2, entry.value2);
+    assert_eq!(v1, entry.some_value);
+    assert_eq!(s1, entry.some_string);
 }
 
 #[test]
 fn copied_id_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 1024;
-    let value2 = "some string".to_string();
+    let v1 = 1024;
+    let s1 = "some string".to_string();
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Act
@@ -111,8 +119,8 @@ fn copied_id_returns_expected_item() {
     let entry = arena
         .get(copied_id)
         .expect("The ID is expected to be valid!");
-    assert_eq!(value1, entry.value1);
-    assert_eq!(value2, entry.value2);
+    assert_eq!(v1, entry.some_value);
+    assert_eq!(s1, entry.some_string);
 }
 
 #[rstest]
@@ -130,12 +138,7 @@ fn alloc_creates_correct_number_of_buckets(
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
 
     // Act
-    for i in 0..alloc_count {
-        arena.alloc(Something {
-            value1: i,
-            value2: format!("i = {}", i),
-        });
-    }
+    alloc_items(&mut arena, alloc_count);
 
     // Assert
     assert_eq!(alloc_count, arena.len());
@@ -146,41 +149,37 @@ fn alloc_creates_correct_number_of_buckets(
 fn index_operator_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 777;
-    let value2 = "a string".to_string();
+    let v1 = 777;
+    let s1 = "a string".to_string();
 
     // Act
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Assert
     let actual = &arena[id];
-    assert_eq!(value1, actual.value1);
-    assert_eq!(value2, actual.value2);
+    assert_eq!(v1, actual.some_value);
+    assert_eq!(s1, actual.some_string);
 }
 
 #[test]
-fn get_item_in_second_bucket_returns_expected_item() {
+fn get_given_multiple_buckets_returns_each_item() {
     // Arrange
     let bucket_size = 5;
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(bucket_size);
-    let mut ids = vec![];
+    let count = (bucket_size as f32 * 3.5f32) as usize;
+    let ids = alloc_items(&mut arena, count);
 
-    for i in 0..=bucket_size {
-        ids.push(arena.alloc(Something {
-            value1: i,
-            value2: format!("i = {}", i),
-        }));
+    for i in 0..count {
+        // Act
+        let entry = arena.get(ids[i]).expect("The ID is expected to be valid!");
+
+        // Assert
+        assert_eq!(i, entry.some_value);
+        assert_eq!(format!("i = {}", i), entry.some_string);
     }
-
-    // Act
-    let entry = arena.get(ids[5]).expect("The ID is expected to be valid!");
-
-    // Assert
-    assert_eq!(bucket_size, entry.value1);
-    assert_eq!(format!("i = {}", bucket_size), entry.value2);
 }
 
 #[test]
@@ -188,6 +187,7 @@ fn get_with_invalid_id_returns_none() {
     // Arrange
     let arena = RapIdArena::<Something>::new();
     let id: RapId<Something> = RapId::<Something> {
+        bucket_index: 321,
         index: 123,
         _t: PhantomData,
     };
@@ -204,7 +204,8 @@ fn get_mut_with_invalid_id_returns_none() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
     let id: RapId<Something> = RapId::<Something> {
-        index: 123,
+        bucket_index: 111,
+        index: 222,
         _t: PhantomData,
     };
 
@@ -219,24 +220,17 @@ fn get_mut_with_invalid_id_returns_none() {
 fn get_mut_then_modified_modifies_correct_entry() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let mut ids = vec![];
-    let value1 = 111;
-    for i in 0..=2 {
-        ids.push(arena.alloc(Something {
-            value1: value1 + i * 111,
-            value2: format!("i = {}", i),
-        }));
-    }
+    let ids = alloc_items(&mut arena, 3);
 
     // Act
     let mut something = arena.get_mut(ids[1]).expect("Expected ID to be valid!");
-    something.value1 += 1;
-    something.value2 = "world".to_string();
+    something.some_value += 1;
+    something.some_string = "world".to_string();
 
     // Assert
     let entry = arena.get(ids[1]).expect("Expected ID to be valid!");
-    assert_eq!(223, entry.value1);
-    assert_eq!("world", entry.value2);
+    assert_eq!(2, entry.some_value);
+    assert_eq!("world", entry.some_string);
 }
 
 #[rstest]
@@ -249,12 +243,7 @@ fn len_with_allocs_returns_correct_length(
 ) {
     // Arrange
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
-    for i in 0..alloc_count {
-        arena.alloc(Something {
-            value1: i,
-            value2: format!("entry {}", i),
-        });
-    }
+    alloc_items(&mut arena, alloc_count);
 
     // Act
     let len = arena.len();
@@ -297,12 +286,7 @@ fn reset_results_in_single_empty_bucket(
 ) {
     // Arrange
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
-    for i in 0..alloc_count {
-        arena.alloc(Something {
-            value1: i,
-            value2: format!("entry {}", i),
-        });
-    }
+    alloc_items(&mut arena, alloc_count);
 
     // Act
     arena.reset();
