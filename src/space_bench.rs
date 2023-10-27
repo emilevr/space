@@ -112,7 +112,6 @@ impl BenchmarkCommand {
 
     fn run(&mut self) -> anyhow::Result<()> {
         let mut c = Criterion::default()
-            .significance_level(0.5)
             .sample_size(self.sample_size.into())
             .warm_up_time(Duration::from_secs(self.warmup_seconds.into()))
             .measurement_time(Duration::from_secs(self.measurement_seconds.into()));
