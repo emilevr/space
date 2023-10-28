@@ -84,3 +84,16 @@ fn get_value_returns_correct_value() {
     // Assert
     assert_eq!(VALUE, value);
 }
+
+#[test]
+fn into_returns_correct_value() {
+    // Arrange
+    const EXPECTED: u64 = 123;
+    let size = Size::new(EXPECTED);
+
+    // Act
+    let value: u64 = size.into();
+
+    // Assert
+    assert_eq!(EXPECTED, value);
+}
