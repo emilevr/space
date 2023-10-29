@@ -78,7 +78,9 @@ impl<T> RapIdArena<T> {
 
         bucket.push(item);
 
-        RapId(ptr::NonNull::from(&bucket[item_index]))
+        RapId {
+            p: ptr::NonNull::from(&bucket[item_index]),
+        }
     }
 
     /// Returns the number of allocated items in the arena.
@@ -108,14 +110,16 @@ unsafe impl<T> Sync for RapIdArena<T> {}
 
 /// An ID that contains an allocated object.
 #[derive(Debug)]
-pub struct RapId<T>(ptr::NonNull<T>);
+pub struct RapId<T> {
+    p: ptr::NonNull<T>,
+}
 
 impl<T> Copy for RapId<T> {}
 
 impl<T> Clone for RapId<T> {
     #[inline]
     fn clone(&self) -> Self {
-        Self(self.0)
+        Self { p: self.p }
     }
 }
 
@@ -128,7 +132,7 @@ impl<T> Deref for RapId<T> {
             // We require readers to borrow the RapId, and the lifetime of the return value is elided to the
             // lifetime of the input. This means the borrow checker will enforce that no one can mutate the
             // contents of the RapId until the reference returned is dropped.
-            self.0.as_ref()
+            self.p.as_ref()
         }
     }
 }
@@ -140,17 +144,17 @@ impl<T> DerefMut for RapId<T> {
             // We require readers to borrow the RapId, and the lifetime of the return value is elided to the
             // lifetime of the input. This means the borrow checker will enforce that no one can mutate the
             // contents of the RapId until the reference returned is dropped.
-            self.0.as_mut()
+            self.p.as_mut()
         }
     }
 }
 
 // Safety: No one besides us has the raw pointer, so we can safely transfer the RapId to another thread if T
 // can be safely transferred.
-unsafe impl<T> Send for RapId<T> where T: Send {}
+unsafe impl<T: Send> Send for RapId<T> {}
 
 // Safety: Since there exists a public way to go from a `&RapId<T>` to a `&T` in an unsynchronized fashion
 // (such as `Deref`), then `RapId<T>` can't be `Sync` if `T` isn't. Conversely, `RapId` itself does not use
 // any interior mutability whatsoever: all the mutations are performed through an exclusive reference
 // (`&mut`). This means it suffices that `T` be `Sync` for `RapId<T>` to be `Sync`.
-unsafe impl<T> Sync for RapId<T> where T: Sync {}
+unsafe impl<T: Sync> Sync for RapId<T> {}

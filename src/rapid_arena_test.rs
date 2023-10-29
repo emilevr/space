@@ -1,8 +1,7 @@
-use std::{thread, time::Duration};
-
 use super::*;
 use criterion::black_box;
 use rstest::rstest;
+use std::{thread, time::Duration};
 
 #[derive(Debug, PartialEq)]
 struct Something {
@@ -269,9 +268,17 @@ fn deref_multi_threaded_test() {
 #[test]
 fn deref_mut_multi_threaded_test() {
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(1);
-    let ids = alloc_items(&mut arena, 7);
+    let count = 7;
+    let mut ids = vec![];
+    for i in 0..count {
+        ids.push(arena.alloc(Something {
+            some_value: i,
+            some_string: format!("i = {}", i),
+        }));
+    }
+
     std::thread::scope(|s| {
-        for _ in 0..14 {
+        for _ in 0..(count * 3) {
             s.spawn(|| {
                 let item_count = arena.len();
                 for i in 0..item_count * 11 {
