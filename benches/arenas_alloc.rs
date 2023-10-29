@@ -6,7 +6,7 @@ use space_rs::{
     rapid_arena::{RapId, RapIdArena},
     DirectoryItemType, Size, SizeDisplayFormat,
 };
-use std::time::Duration;
+use std::{ops::DerefMut, time::Duration};
 
 pub struct StdItem {
     pub path_segment: String,
@@ -42,17 +42,17 @@ pub struct RapIdArenaItem {
     pub children: Vec<RapId<RapIdArenaItem>>,
 }
 
-fn bench_arenas(c: &mut Criterion) {
+fn bench_arenas_alloc(c: &mut Criterion) {
     let sample_size = 100;
-    let mut group = c.benchmark_group("arenas");
+    let mut group = c.benchmark_group("arenas_alloc");
     group.measurement_time(Duration::from_secs(3));
     group.warm_up_time(Duration::from_secs(1));
     group.sample_size(sample_size);
 
     benchmark_std_alloc(&mut group, sample_size);
-    benchmark_id_arena(&mut group, sample_size);
+    //benchmark_id_arena(&mut group, sample_size);
     benchmark_rapid_arena(&mut group, sample_size);
-    benchmark_bumpalo(&mut group, sample_size);
+    //benchmark_bumpalo(&mut group, sample_size);
 
     group.finish();
 }
@@ -243,7 +243,7 @@ fn benchmark_rapid_arena(
 
         b.iter(|| {
             black_box({
-                let parent = arena.alloc(RapIdArenaItem {
+                let mut parent = arena.alloc(RapIdArenaItem {
                     parent: None,
                     path_segment: "parent".to_string(),
                     item_type: DirectoryItemType::Directory,
@@ -261,7 +261,7 @@ fn benchmark_rapid_arena(
                     children: vec![],
                 });
 
-                arena.get_mut(parent).unwrap().children.push(child);
+                parent.deref_mut().children.push(child);
             })
         });
 
@@ -330,5 +330,5 @@ fn report_memory_usage(
     println!("");
 }
 
-criterion_group!(benches, bench_arenas);
+criterion_group!(benches, bench_arenas_alloc);
 criterion_main!(benches);

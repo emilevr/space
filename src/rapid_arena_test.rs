@@ -1,4 +1,7 @@
+use std::{thread, time::Duration};
+
 use super::*;
+use criterion::black_box;
 use rstest::rstest;
 
 #[derive(Debug, PartialEq)]
@@ -27,8 +30,9 @@ fn new_creates_single_bucket_with_expected_bucket_size() {
     let arena = RapIdArena::<Something>::new();
 
     // Assert
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(0, arena.bucket_index);
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(1, internals.buckets.len());
+    assert_eq!(0, internals.bucket_index);
     assert_eq!(items_per_bucket, arena.items_per_bucket());
 }
 
@@ -41,8 +45,9 @@ fn default_creates_single_bucket_with_expected_bucket_size() {
     let arena = RapIdArena::<Something>::default();
 
     // Assert
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(0, arena.bucket_index);
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(1, internals.buckets.len());
+    assert_eq!(0, internals.bucket_index);
     assert_eq!(items_per_bucket, arena.items_per_bucket());
 }
 
@@ -55,13 +60,14 @@ fn new_with_bucket_size_creates_single_bucket_with_expected_bucket_size() {
     let arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
 
     // Assert
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(0, arena.bucket_index);
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(1, internals.buckets.len());
+    assert_eq!(0, internals.bucket_index);
     assert_eq!(items_per_bucket, arena.items_per_bucket());
 }
 
 #[test]
-fn alloc_then_get_returns_expected_item() {
+fn alloc_then_deref_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
     let v1 = 123;
@@ -74,7 +80,7 @@ fn alloc_then_get_returns_expected_item() {
     });
 
     // Assert
-    let actual = arena.get(id).expect("The ID is expected to be valid!");
+    let actual = id.deref();
     assert_eq!(v1, actual.some_value);
     assert_eq!(s1, actual.some_string);
 }
@@ -94,9 +100,7 @@ fn cloned_id_returns_expected_item() {
     let cloned_id = id.clone();
 
     // Assert
-    let entry = arena
-        .get(cloned_id)
-        .expect("The ID is expected to be valid!");
+    let entry = cloned_id.deref();
     assert_eq!(v1, entry.some_value);
     assert_eq!(s1, entry.some_string);
 }
@@ -116,9 +120,7 @@ fn copied_id_returns_expected_item() {
     let copied_id = id;
 
     // Assert
-    let entry = arena
-        .get(copied_id)
-        .expect("The ID is expected to be valid!");
+    let entry = copied_id.deref();
     assert_eq!(v1, entry.some_value);
     assert_eq!(s1, entry.some_string);
 }
@@ -142,7 +144,8 @@ fn alloc_creates_correct_number_of_buckets(
 
     // Assert
     assert_eq!(alloc_count, arena.len());
-    assert_eq!(expected_bucket_count, arena.buckets.len());
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(expected_bucket_count, internals.buckets.len());
 }
 
 #[test]
@@ -159,22 +162,22 @@ fn index_operator_returns_expected_item() {
     });
 
     // Assert
-    let actual = &arena[id];
+    let actual = id.deref();
     assert_eq!(v1, actual.some_value);
     assert_eq!(s1, actual.some_string);
 }
 
 #[test]
-fn get_given_multiple_buckets_returns_each_item() {
+fn deref_given_multiple_buckets_returns_each_item() {
     // Arrange
     let bucket_size = 5;
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(bucket_size);
-    let count = (bucket_size as f32 * 3.5f32) as usize;
+    let count = (bucket_size as f32 * 111f32) as usize;
     let ids = alloc_items(&mut arena, count);
 
     for i in 0..count {
         // Act
-        let entry = arena.get(ids[i]).expect("The ID is expected to be valid!");
+        let entry = ids[i].deref();
 
         // Assert
         assert_eq!(i, entry.some_value);
@@ -183,52 +186,18 @@ fn get_given_multiple_buckets_returns_each_item() {
 }
 
 #[test]
-fn get_with_invalid_id_returns_none() {
-    // Arrange
-    let arena = RapIdArena::<Something>::new();
-    let id: RapId<Something> = RapId::<Something> {
-        bucket_index: 321,
-        index: 123,
-        _t: PhantomData,
-    };
-
-    // Act
-    let value = arena.get(id);
-
-    // Assert
-    assert!(value.is_none());
-}
-
-#[test]
-fn get_mut_with_invalid_id_returns_none() {
+fn get_then_modify_modifies_entry() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let id: RapId<Something> = RapId::<Something> {
-        bucket_index: 111,
-        index: 222,
-        _t: PhantomData,
-    };
+    let mut ids = alloc_items(&mut arena, 3);
 
     // Act
-    let value = arena.get_mut(id);
-
-    // Assert
-    assert!(value.is_none());
-}
-
-#[test]
-fn get_mut_then_modified_modifies_correct_entry() {
-    // Arrange
-    let mut arena = RapIdArena::<Something>::new();
-    let ids = alloc_items(&mut arena, 3);
-
-    // Act
-    let mut something = arena.get_mut(ids[1]).expect("Expected ID to be valid!");
+    let something = ids[1].deref_mut();
     something.some_value += 1;
     something.some_string = "world".to_string();
 
     // Assert
-    let entry = arena.get(ids[1]).expect("Expected ID to be valid!");
+    let entry = ids[1].deref();
     assert_eq!(2, entry.some_value);
     assert_eq!("world", entry.some_string);
 }
@@ -277,22 +246,50 @@ fn is_empty_given_non_empty_arena_returns_false() {
     assert!(!is_empty);
 }
 
-#[rstest]
-#[case(5, 0)]
-#[case(5, 503)]
-fn reset_results_in_single_empty_bucket(
-    #[case] items_per_bucket: usize,
-    #[case] alloc_count: usize,
-) {
-    // Arrange
-    let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
-    alloc_items(&mut arena, alloc_count);
+#[test]
+fn deref_multi_threaded_test() {
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(1);
+    let ids = alloc_items(&mut arena, 7);
+    std::thread::scope(|s| {
+        for _ in 0..14 {
+            s.spawn(|| {
+                let item_count = arena.len();
+                for i in 0..item_count * 503 {
+                    let id = &ids[i % item_count];
+                    let item = id.deref();
+                    black_box({
+                        let _ = item.some_value + 1;
+                    })
+                }
+            });
+        }
+    });
+}
 
-    // Act
-    arena.reset();
+#[test]
+fn deref_mut_multi_threaded_test() {
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(1);
+    let ids = alloc_items(&mut arena, 7);
+    std::thread::scope(|s| {
+        for _ in 0..14 {
+            s.spawn(|| {
+                let item_count = arena.len();
+                for i in 0..item_count * 11 {
+                    let mut id = ids[i % item_count];
+                    let item = id.deref_mut();
 
-    // Assert
-    assert_eq!(0, arena.bucket_index);
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(items_per_bucket, arena.items_per_bucket);
+                    let some_value = item.some_value + 1;
+                    let some_string = format!("i = {}", some_value);
+
+                    item.some_value = some_value;
+                    item.some_string = some_string.clone();
+
+                    thread::sleep(Duration::from_millis(1));
+
+                    assert_eq!(some_value, item.some_value);
+                    assert_eq!(some_string, item.some_string)
+                }
+            });
+        }
+    });
 }

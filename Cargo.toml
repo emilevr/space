@@ -28,7 +28,11 @@ path = "src/space_bench.rs"
 required-features = ["bench"]
 
 [[bench]]
-name = "arenas"
+name = "arenas_alloc"
+harness = false
+
+[[bench]]
+name = "arenas_read"
 harness = false
 
 [[bench]]
