@@ -268,9 +268,9 @@ fn deref_multi_threaded_test() {
 #[test]
 fn deref_mut_multi_threaded_test() {
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(1);
-    let count = 7;
+    const ITEM_COUNT: usize = 7;
     let mut ids = vec![];
-    for i in 0..count {
+    for i in 0..ITEM_COUNT {
         ids.push(arena.alloc(Something {
             some_value: i,
             some_string: format!("i = {}", i),
@@ -278,11 +278,10 @@ fn deref_mut_multi_threaded_test() {
     }
 
     std::thread::scope(|s| {
-        for _ in 0..(count * 3) {
+        for _ in 0..(ITEM_COUNT * 3) {
             s.spawn(|| {
-                let item_count = arena.len();
-                for i in 0..item_count * 11 {
-                    let mut id = ids[i % item_count];
+                for i in 0..ITEM_COUNT * 11 {
+                    let mut id = ids[i % ITEM_COUNT];
                     let item = id.deref_mut();
 
                     let some_value = item.some_value + 1;

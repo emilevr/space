@@ -50,9 +50,9 @@ fn bench_arenas_alloc(c: &mut Criterion) {
     group.sample_size(sample_size);
 
     benchmark_std_alloc(&mut group, sample_size);
-    //benchmark_id_arena(&mut group, sample_size);
+    benchmark_id_arena(&mut group, sample_size);
     benchmark_rapid_arena(&mut group, sample_size);
-    //benchmark_bumpalo(&mut group, sample_size);
+    benchmark_bumpalo(&mut group, sample_size);
 
     group.finish();
 }
