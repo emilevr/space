@@ -140,6 +140,7 @@ impl BuildItCommand for CoverageCommand {
             //  ^\\s*[{}(),;\\[\\] ]*\\s*$                                                  => lines with only delimiters or whitespace, no logic
             //  ^\\s*impl\\s+[^ ]+\\s*\\{\\s*$                                              => lines containing only an impl declaration
             //  ^\\s*impl\\s+[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$                              => lines containing only an impl for declaration
+            //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*const\\s+.*\\s*[(){}]*\\s*$   => lines containing only a const definition
             "^\\s*(debug_)?assert(_eq|_ne)?!\
                 |^\\s*#\\[.*$\
                 |^\\s*#!\\[.*$\
@@ -153,7 +154,8 @@ impl BuildItCommand for CoverageCommand {
                 |^\\s[});({]*\\s*$\
                 |^\\s*[{}(),;\\[\\] ]*\\s*$\
                 |^\\s*impl\\s+[^ ]+\\s*\\{\\s*$\
-                |^\\s*impl\\s+[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$",
+                |^\\s*impl\\s+[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$\
+                |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*const\\s+.*\\s*[(){}]*\\s*$",
             "--ignore-not-existing",
             "--ignore",
             "buildit/*",

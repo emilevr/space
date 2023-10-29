@@ -1,5 +1,6 @@
 use super::*;
 use criterion::black_box;
+use rayon::prelude::{ParallelBridge, ParallelIterator};
 use rstest::rstest;
 use std::{thread, time::Duration};
 
@@ -267,14 +268,14 @@ fn deref_multi_threaded_test() {
 
 #[test]
 fn deref_mut_multi_threaded_test() {
-    let mut arena = RapIdArena::<Something>::new_with_bucket_size(1);
+    let mut arena = RapIdArena::<RwLock<Something>>::new_with_bucket_size(1);
     const ITEM_COUNT: usize = 7;
     let mut ids = vec![];
     for i in 0..ITEM_COUNT {
-        ids.push(arena.alloc(Something {
+        ids.push(arena.alloc(RwLock::new(Something {
             some_value: i,
             some_string: format!("i = {}", i),
-        }));
+        })));
     }
 
     std::thread::scope(|s| {
@@ -282,7 +283,7 @@ fn deref_mut_multi_threaded_test() {
             s.spawn(|| {
                 for i in 0..ITEM_COUNT * 11 {
                     let mut id = ids[i % ITEM_COUNT];
-                    let item = id.deref_mut();
+                    let mut item = id.deref_mut().write().unwrap();
 
                     let some_value = item.some_value + 1;
                     let some_string = format!("i = {}", some_value);
@@ -298,4 +299,30 @@ fn deref_mut_multi_threaded_test() {
             });
         }
     });
+}
+
+#[test]
+fn rayon_test() {
+    // Arrange
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(5);
+    let count = 31;
+    alloc_items(&mut arena, count);
+    // Since we start from 0 not 1, our formula is n(n-1)/2 instead of n(n+1)/2
+    let expected_sum = count * (count - 1) / 2;
+
+    // Act
+    let sum: usize = arena
+        .iter()
+        .par_bridge()
+        .map(|id| id.deref().some_value)
+        .sum();
+
+    // Assert
+    assert_eq!(expected_sum, sum);
+}
+
+#[test]
+#[should_panic]
+fn new_with_bucket_size_of_zero_should_panic() {
+    RapIdArena::<Something>::new_with_bucket_size(0);
 }

@@ -24,7 +24,7 @@ mod test_utils;
 
 mod logging;
 
-pub(crate) const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
+const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
 
 #[derive(Clone, Debug, Parser)]
 #[clap(

@@ -42,7 +42,7 @@ impl<T> RapIdArena<T> {
     /// Creates a new arena with each bucket able to hold the specified number of items.
     pub fn new_with_bucket_size(items_per_bucket: usize) -> Self {
         if items_per_bucket == 0 {
-            panic!("The specified items per bucket value is invalid! The value must be greater than 0.")
+            panic!("The specified number of items per bucket is invalid! The value must be greater than 0.")
         }
         RapIdArena::<T> {
             items_per_bucket,
@@ -94,6 +94,20 @@ impl<T> RapIdArena<T> {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    /// Returs an iterator for the arena contents. This iterator is threadsafe.
+    pub fn iter(&self) -> RapIdArenaIterator<T> {
+        let mut data = vec![];
+        let arena_internals = self.internals.read().unwrap();
+        for bucket in &arena_internals.buckets {
+            for item in bucket {
+                data.push(RapId {
+                    p: ptr::NonNull::from(item),
+                })
+            }
+        }
+        RapIdArenaIterator::<T> { data, index: 0 }
+    }
 }
 
 impl<T> Default for RapIdArena<T> {
@@ -107,6 +121,27 @@ unsafe impl<T> Send for RapIdArena<T> {}
 
 // Safety: items_per_bucket is immutable and all the internal values are protected via a RwLock.
 unsafe impl<T> Sync for RapIdArena<T> {}
+
+/// An iterator for a RapIdArena instance.
+#[derive(Debug)]
+pub struct RapIdArenaIterator<T> {
+    data: Vec<RapId<T>>,
+    index: usize,
+}
+
+impl<T> Iterator for RapIdArenaIterator<T> {
+    type Item = RapId<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index < self.data.len() {
+            let value = self.data[self.index];
+            self.index += 1;
+            Some(value)
+        } else {
+            None
+        }
+    }
+}
 
 /// An ID that contains an allocated object.
 #[derive(Debug)]
@@ -138,6 +173,11 @@ impl<T> Deref for RapId<T> {
 }
 
 impl<T> DerefMut for RapId<T> {
+    /// NOTE! If the mutable reference is used concurrently from multiple threads, then T has to be threadsafe
+    ///       or race conditions may occur. Wrap T in Mutex or RwLock rather than storing T instances directly
+    ///       in the arena.
+    ///       However, it is safe to modify instances in a single parallel iterator as each item is accessed
+    ///       only by a single thread at a time.
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe {
             // Safety: The pointer is aligned, initialized, and dereferenceable by the guarantees made by Vec.
