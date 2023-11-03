@@ -8,17 +8,17 @@ jobs:
   # lint:
   #   uses: ./.github/workflows/lint.yaml
 
-  # coverage:
-  #   uses: ./.github/workflows/coverage.yaml
+  coverage:
+    uses: ./.github/workflows/coverage.yaml
 
   # benchmark:
   #   uses: ./.github/workflows/benchmark.yaml
 
   build-and-test:
     name: '${{ matrix.target }}'
-    # needs:
+    needs:
     #   - benchmark
-    #   - coverage
+      - coverage
     #   - lint
     runs-on: ${{ matrix.runs-on }}
     outputs:
@@ -86,7 +86,7 @@ jobs:
         if: ${{ matrix.runs-on == 'windows-latest' }}
         uses: actions/upload-artifact@v3
         with:
-          name: scoop-${{ matrix.target }}
+          name: scoop-manifest
           path: ./artifacts/scoop
 
   create-release:
@@ -174,13 +174,19 @@ jobs:
       - name: Package pages artifacts
         #if: ${{ env.IS_PRE_RELEASE == 'false' }}
         run: |
-          TARGET=x86_64-pc-windows-msvc
-          SCOOP_ARTIFACTS_DIR="./scoop-${TARGET}"
           SITE_DIRECTORY=_site
-          SCOOP_DIRECTORY="${SITE_DIRECTORY}/scoop"
 
-          mkdir -p $SITE_DIRECTORY
-          mv $SCOOP_ARTIFACTS_DIR $SCOOP_DIRECTORY
+          SCOOP_MANIFEST_DIR="./scoop-manifest"
+          SITE_SCOOP_DIRECTORY="${SITE_DIRECTORY}/scoop"
+
+          COVERAGE_BADGE_DIR="./coverage-badge"
+          SITE_COVERAGE_DIRECTORY="${SITE_DIRECTORY}/coverage"
+          SITE_COVERAGE_BADGE_DIRECTORY="${SITE_COVERAGE_DIRECTORY}/badges"
+
+          mkdir -p SITE_COVERAGE_DIRECTORY
+
+          mv $SCOOP_MANIFEST_DIR $SITE_SCOOP_DIRECTORY
+          mv $COVERAGE_BADGE_DIR $SITE_COVERAGE_BADGE_DIRECTORY
 
           echo "Setting Pages file permissions"
           chmod -c -R +rX "${SITE_DIRECTORY}/" | while read line; do
