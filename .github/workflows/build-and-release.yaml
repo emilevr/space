@@ -82,6 +82,12 @@ jobs:
           name: dist-${{ matrix.target }}
           path: ./artifacts/dist
 
+      - name: Upload Scoop artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: pages-${{ matrix.target }}
+          path: ./artifacts/pages
+
   create-release:
     name: Create release
     needs: build-and-test
