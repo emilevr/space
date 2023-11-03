@@ -172,7 +172,7 @@ jobs:
       - name: Package pages artifacts
         run: |
           TARGET=x86_64-pc-windows-msvc
-          TARGET_ARTIFACTS_DIR="./dist-${TARGET}"
+          TARGET_ARTIFACTS_DIR="./pages-${TARGET}"
           PAGES_ARTIFACTS_DIR="${TARGET_ARTIFACTS_DIR}/pages"
 
           ls $PAGES_ARTIFACTS_DIR -la
