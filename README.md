@@ -2,7 +2,7 @@
 
 [![Lint](https://github.com/emilevr/space/actions/workflows/lint.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/lint.yaml)
 [![Test](https://github.com/emilevr/space/actions/workflows/test.yaml/badge.svg)](https://github.com/emilevr/space/actions/test.yaml)
-[![Code Coverage](coverage/html/badges/flat.svg)](https://crates.io/crates/space)
+[![Code Coverage](https://emilevr.github.io/space/coverage/badges/flat.svg)](https://crates.io/crates/space)
 [![Benchmark](https://github.com/emilevr/space/actions/workflows/benchmark.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/benchmark.yaml)
 [![Release](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml)
 

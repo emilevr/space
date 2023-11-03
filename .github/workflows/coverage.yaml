@@ -56,13 +56,8 @@ jobs:
             exit $EXITCODE
 
       - name: Upload code coverage badge
-        #if: ${{ env.IS_PRE_RELEASE == 'false' }}
+        if: ${{ env.IS_PRE_RELEASE == 'false' }}
         uses: actions/upload-artifact@v3
         with:
           name: coverage-badge
           path: ./coverage/html/badges/flat.svg
-
-      # - name: Upload code coverage to codecov.io
-      #   uses: codecov/codecov-action@v3
-      #   with:
-      #       files: coverage/lcov
