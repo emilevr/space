@@ -179,6 +179,7 @@ jobs:
           SITE_DIRECTORY=_site
           SCOOP_DIRECTORY="${SITE_DIRECTORY}/scoop"
 
+          mkdir -p $SITE_DIRECTORY
           mv $SCOOP_ARTIFACTS_DIR $SCOOP_DIRECTORY
 
           echo "Setting Pages file permissions"
