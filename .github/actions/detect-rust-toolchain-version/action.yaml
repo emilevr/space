@@ -9,4 +9,4 @@ runs:
       shell: pwsh
       run: |
         $version = (Select-String -Path ./rust-toolchain.toml -Pattern "^channel\s*=\s*`"\s*(\d+.\d+.\d+)").Matches.Groups[1].Value
-        Write-Host "RUST_TOOLCHAIN_VERSION=$version" >> "${env:GITHUB_ENV}"
+        "RUST_TOOLCHAIN_VERSION=$version" >> "${env:GITHUB_ENV}"
