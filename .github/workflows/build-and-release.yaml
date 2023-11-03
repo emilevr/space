@@ -174,15 +174,16 @@ jobs:
         run: |
           TARGET=x86_64-pc-windows-msvc
           TARGET_ARTIFACTS_DIR="./pages-${TARGET}"
+          SITE_DIRECTORY=_site
+
+          mv $TARGET_ARTIFACTS_DIR $SITE_DIRECTORY
 
           echo "Setting pages file permissions"
-          chmod -c -R +rX "${TARGET_ARTIFACTS_DIR}/" | while read line; do
+          chmod -c -R +rX "${SITE_DIRECTORY}/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
 
-          ls $TARGET_ARTIFACTS_DIR -la -R
-
-          tar -C "${TARGET_ARTIFACTS_DIR}/" -czf github-pages .
+          #tar -C "${TARGET_ARTIFACTS_DIR}/" -czf github-pages .
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
