@@ -165,7 +165,7 @@ jobs:
 
       - name: Package pages artifacts
         run: |
-          TARGET=dist-x86_64-pc-windows-msvc
+          TARGET=x86_64-pc-windows-msvc
           TARGET_ARTIFACTS_DIR="./dist-${TARGET}"
           PAGES_ARTIFACTS_DIR="${TARGET_ARTIFACTS_DIR}/pages"
 
