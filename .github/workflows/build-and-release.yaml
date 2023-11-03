@@ -182,7 +182,7 @@ jobs:
 
           ls $TARGET_ARTIFACTS_DIR -la -R
 
-          tar -C "${TARGET_ARTIFACTS_DIR}/" -czf github-pages
+          tar -C "${TARGET_ARTIFACTS_DIR}/" -czf github-pages .
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
