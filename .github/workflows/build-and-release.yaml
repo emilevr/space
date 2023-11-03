@@ -86,8 +86,8 @@ jobs:
         if: ${{ matrix.runs-on == 'windows-latest' }}
         uses: actions/upload-artifact@v3
         with:
-          name: pages-${{ matrix.target }}
-          path: ./artifacts/pages
+          name: scoop-${{ matrix.target }}
+          path: ./artifacts/scoop
 
   create-release:
     name: Create release
@@ -168,30 +168,29 @@ jobs:
 
     steps:
       - name: Download all workflow run artifacts
-        if: ${{ env.IS_PRE_RELEASE == 'false' }}
+        #if: ${{ env.IS_PRE_RELEASE == 'false' }}
         uses: actions/download-artifact@v3
 
       - name: Package pages artifacts
-        if: ${{ env.IS_PRE_RELEASE == 'false' }}
+        #if: ${{ env.IS_PRE_RELEASE == 'false' }}
         run: |
           TARGET=x86_64-pc-windows-msvc
-          TARGET_ARTIFACTS_DIR="./pages-${TARGET}"
+          SCOOP_ARTIFACTS_DIR="./scoop-${TARGET}"
           SITE_DIRECTORY=_site
+          SCOOP_DIRECTORY="${SITE_DIRECTORY}/scoop"
 
-          mv $TARGET_ARTIFACTS_DIR $SITE_DIRECTORY
+          mv $SCOOP_ARTIFACTS_DIR $SCOOP_DIRECTORY
 
-          echo "Setting pages file permissions"
+          echo "Setting Pages file permissions"
           chmod -c -R +rX "${SITE_DIRECTORY}/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
 
-          #tar -C "${TARGET_ARTIFACTS_DIR}/" -czf github-pages .
-
       - name: Upload Pages artifact
-        if: ${{ env.IS_PRE_RELEASE == 'false' }}
+        #if: ${{ env.IS_PRE_RELEASE == 'false' }}
         uses: actions/upload-pages-artifact@v2
 
       - name: Deploy to GitHub Pages
-        if: ${{ env.IS_PRE_RELEASE == 'false' }}
+        #if: ${{ env.IS_PRE_RELEASE == 'false' }}
         id: deployment
         uses: actions/deploy-pages@v2
