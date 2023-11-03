@@ -175,7 +175,7 @@ jobs:
           TARGET_ARTIFACTS_DIR="./pages-${TARGET}"
           PAGES_ARTIFACTS_DIR="${TARGET_ARTIFACTS_DIR}/pages"
 
-          ls $PAGES_ARTIFACTS_DIR -la
+          ls $TARGET_ARTIFACTS_DIR -la
 
           echo "Setting pages file permissions"
           chmod -c -R +rX "${PAGES_ARTIFACTS_DIR}/" | while read line; do
