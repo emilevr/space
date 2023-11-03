@@ -152,7 +152,7 @@ jobs:
           }
 
   publish-scoop-manifest:
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref == 'refs/heads/main' }}
     needs: build-and-test
     runs-on: ubuntu-latest
 
@@ -168,9 +168,11 @@ jobs:
 
     steps:
       - name: Download all workflow run artifacts
+        if: ${{ env.IS_PRE_RELEASE == 'false' }}
         uses: actions/download-artifact@v3
 
       - name: Package pages artifacts
+        if: ${{ env.IS_PRE_RELEASE == 'false' }}
         run: |
           TARGET=x86_64-pc-windows-msvc
           TARGET_ARTIFACTS_DIR="./pages-${TARGET}"
@@ -186,8 +188,10 @@ jobs:
           #tar -C "${TARGET_ARTIFACTS_DIR}/" -czf github-pages .
 
       - name: Upload Pages artifact
+        if: ${{ env.IS_PRE_RELEASE == 'false' }}
         uses: actions/upload-pages-artifact@v2
 
       - name: Deploy to GitHub Pages
+        if: ${{ env.IS_PRE_RELEASE == 'false' }}
         id: deployment
         uses: actions/deploy-pages@v2

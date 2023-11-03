@@ -12,6 +12,7 @@ runs:
         .github/actions/package-windows/package-release-binaries.ps1 -Target ${{ inputs.target }}
 
     - name: Update Scoop manifest
+      if: ${{ env.IS_PRE_RELEASE == 'false' }}
       shell: pwsh
       run: |
         # The ARCHIVE_FILE_HASH env var is set by package-release-binaries.ps1 called above.
@@ -23,6 +24,7 @@ runs:
           -Version $env:CALCULATED_VERSION
 
     - name: Upload pages artifacts
+      if: ${{ env.IS_PRE_RELEASE == 'false' }}
       uses: actions/upload-artifact@v3
       with:
         name: pages-${{ inputs.target }}
