@@ -111,9 +111,6 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Create release
-        # Temporarily disable release creation to test pages task below
-        # TODO: Remove this when done testing
-        if: ${{ false }}
         shell: pwsh
         run: |
           $isPreReleaseVar = '${{ env.IS_PRE_RELEASE }}'
