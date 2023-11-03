@@ -1,0 +1,36 @@
+name: Package for distribution (MacOS)
+description: Creates distribution artifacts for MacOS
+inputs:
+  target:
+      description: The target of the binaries to package.
+runs:
+  using: composite
+  steps:
+    - name: Package release binaries
+      shell: bash
+      run: |
+          ARCHIVE_FILE_DIR=./artifacts/dist
+          mkdir -p $ARCHIVE_FILE_DIR
+
+          BIN_FILE_NAMES=(space space-bench)
+          for BIN_FILE_NAME in "${BIN_FILE_NAMES[@]}"
+          do
+            BIN_DIR_PATH=./target/release
+            BIN_FILE_PATH=./target/release/${BIN_FILE_NAME}
+            ARCHIVE_FILE_NAME=${BIN_FILE_NAME}-${{ inputs.target }}.tar.gz
+            ARCHIVE_FILE_PATH=${ARCHIVE_FILE_DIR}/${ARCHIVE_FILE_NAME}
+            ARCHIVE_HASH_FILE_NAME=${ARCHIVE_FILE_NAME}.sha256
+
+            echo "Stripping debug symbols from ${BIN_FILE_PATH}"
+            strip ${BIN_FILE_PATH}
+
+            echo "Compressing ${BIN_FILE_PATH} to ${ARCHIVE_FILE_PATH}"
+            tar -C $BIN_DIR_PATH -czf $ARCHIVE_FILE_PATH $BIN_FILE_NAME
+
+            pushd $ARCHIVE_FILE_DIR > /dev/null
+
+            echo "Calculating SHA256 hash of ${ARCHIVE_FILE_NAME} to ${ARCHIVE_HASH_FILE_NAME}"
+            shasum -a 256 $ARCHIVE_FILE_NAME > $ARCHIVE_HASH_FILE_NAME
+
+            popd > /dev/null
+          done

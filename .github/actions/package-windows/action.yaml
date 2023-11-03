@@ -1,0 +1,31 @@
+name: Package for distribution (Windows)
+description: Creates distribution artifacts for Windows
+inputs:
+  target:
+      description: The target of the binaries to package.
+runs:
+  using: composite
+  steps:
+    - name: Package release binaries
+      shell: pwsh
+      run: |
+        .github/actions/package-windows/package-release-binaries.ps1 -Target ${{ inputs.target }}
+
+    - name: Update Scoop manifest
+      if: ${{ env.IS_PRE_RELEASE == 'false' }}
+      shell: pwsh
+      run: |
+        # The ARCHIVE_FILE_HASH env var is set by package-release-binaries.ps1 called above.
+        # The CALCULATED_VERSION env var is set by the buildit coverage command.
+
+        .github/actions/package-windows/update-scoop-manifest.ps1 `
+          -Target ${{ inputs.target }} `
+          -ArchiveFileHash $env:ARCHIVE_FILE_HASH `
+          -Version $env:CALCULATED_VERSION
+
+    - name: Upload Scoop artifacts
+      if: ${{ env.IS_PRE_RELEASE == 'false' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: pages-${{ inputs.target }}
+        path: ./artifacts/scoop

@@ -16,6 +16,10 @@ jobs:
 
       - uses: ./.github/actions/install-buildit
 
+      - name: Set the build version
+        id: version
+        run: buildit version
+
       - uses: ./.github/actions/install-tmux
 
       - name: Download grcov for code coverage measurement and reporting
@@ -51,13 +55,8 @@ jobs:
             # Now exit with the saved exit code.
             exit $EXITCODE
 
-      # - name: Upload code coverage report
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: coverage-report-${{ matrix.id }}
-      #     path: ./coverage/html
-
-      # - name: Upload code coverage to codecov.io
-      #   uses: codecov/codecov-action@v3
-      #   with:
-      #       files: coverage/lcov
+      - name: Upload code coverage badge
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-badge
+          path: ./coverage/html/badges/flat.svg

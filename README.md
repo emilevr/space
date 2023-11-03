@@ -2,7 +2,7 @@
 
 [![Lint](https://github.com/emilevr/space/actions/workflows/lint.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/lint.yaml)
 [![Test](https://github.com/emilevr/space/actions/workflows/test.yaml/badge.svg)](https://github.com/emilevr/space/actions/test.yaml)
-[![Code Coverage](coverage/html/badges/flat.svg)](https://crates.io/crates/space)
+[![Code Coverage](https://emilevr.github.io/space/coverage/badges/flat.svg)](https://crates.io/crates/space)
 [![Benchmark](https://github.com/emilevr/space/actions/workflows/benchmark.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/benchmark.yaml)
 [![Release](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml)
 
@@ -39,6 +39,37 @@ Two operating modes are supported:
 
 - Hard links are considered real files and their sizes will be included.
 - Symbolic links are listed but not followed.
+
+### Installing the CLI
+
+The CLI is being added to several package managers, but in the mean time here are instructions to install the latest version using alternative methods:
+
+#### Direct Download
+
+Download and extract the relevant file for your platform and operating system from the list of assets included in the [latest release](https://github.com/emilevr/space/releases)
+
+#### Bash
+
+```
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/emilevr/space/main/install/install.sh)"
+```
+
+#### PowerShell
+
+If you have PowerShell installed on either Windows, Linux or MacOS, you can run the following in a PowerShell terminal to install (or reinstall) the latest version of space:
+
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser # Optional if your current execution policy already allows local scripts
+Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/emilevr/space/main/install/install.ps1 | Invoke-Expression
+```
+
+#### Scoop (Windows)
+
+A PR has been submitted to merge space into the extras bucket, but is still pending review. In the meantime, you can use the following command to install space via scoop:
+
+```plaintext
+scoop install https://emilevr.github.io/space/scoop/space.json
+```
 
 ### Notes
 

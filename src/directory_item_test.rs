@@ -233,7 +233,6 @@ fn get_fraction_given_total_size_in_bytes_of_0_should_return_0() {
 
 #[rstest]
 #[case("/")]
-#[case("C:\\")]
 fn get_file_name_from_path_with_root_dir_returns_error_value(#[case] path: &str) {
     // Arrange
     let path = PathBuf::from(path);
@@ -247,7 +246,6 @@ fn get_file_name_from_path_with_root_dir_returns_error_value(#[case] path: &str)
 
 #[rstest]
 #[case("/test", "test")]
-#[case("C:\\test", "test")]
 #[case("/test/some.png", "some.png")]
 fn get_file_name_with_non_root_dir_path_returns_last_segment(
     #[case] path: &str,

@@ -17,7 +17,7 @@ use std::{
 #[path = "./view_state_test.rs"]
 mod view_state_test;
 
-const CONFIG_FILE_NAME: &str = ".space.yaml";
+const CONFIG_FILE_NAME: &str = "config.yaml";
 
 pub(crate) const APPARENT_SIZE_COLUMN_WIDTH: u16 = 7;
 pub(crate) const EXPAND_INDICATOR_COLUMN_WIDTH: u16 = 1;
@@ -416,8 +416,8 @@ impl ViewState {
             return Ok(());
         }
 
-        if let Some(home_dir) = dirs::home_dir() {
-            self.config_file_path = Some(home_dir.join(PathBuf::from(CONFIG_FILE_NAME)));
+        if let Some(user_home_dir) = dirs::home_dir() {
+            self.config_file_path = Some(user_home_dir.join(".space").join(CONFIG_FILE_NAME));
             Ok(())
         } else {
             bail!("Could not determine the home directory in order to write the config file.");
