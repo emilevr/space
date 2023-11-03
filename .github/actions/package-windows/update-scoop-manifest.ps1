@@ -5,7 +5,7 @@ param(
     [Parameter(Mandatory=$true)][string]$Version
 )
 
-$artifactsDir = 'artifacts/dist/pages/scoop'
+$artifactsDir = 'artifacts/pages/scoop'
 $sourceTemplatePath = 'install/scoop/space.json'
 
 New-Item -Type Directory -Path $artifactsDir -Force | Out-Null

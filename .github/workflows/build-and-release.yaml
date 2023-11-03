@@ -160,15 +160,23 @@ jobs:
       url: https://emilevr.github.io/space
 
     steps:
-      - name: Fix permissions
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Package pages artifacts
         run: |
-          chmod -c -R +rX "./artifacts/dist/pages/" | while read line; do
+          TARGET=dist-x86_64-pc-windows-msvc
+          TARGET_ARTIFACTS_DIR="./dist-${TARGET}"
+          PAGES_ARTIFACTS_DIR="${TARGET_ARTIFACTS_DIR}/pages"
+
+          ls $PAGES_ARTIFACTS_DIR -la
+
+          echo "Setting pages file permissions"
+          chmod -c -R +rX "${PAGES_ARTIFACTS_DIR}/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
 
-      - name: Compress pages
-        run: |
-          tar -C ./artifacts/dist/pages/ -czf github-pages
+          tar -C "${PAGES_ARTIFACTS_DIR}/" -czf github-pages
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2

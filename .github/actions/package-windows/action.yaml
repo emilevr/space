@@ -21,3 +21,9 @@ runs:
           -Target ${{ inputs.target }} `
           -ArchiveFileHash $env:ARCHIVE_FILE_HASH `
           -Version $env:CALCULATED_VERSION
+
+    - name: Upload pages artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: pages-${{ inputs.target }}
+        path: ./artifacts/pages
