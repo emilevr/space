@@ -56,7 +56,6 @@ jobs:
             exit $EXITCODE
 
       - name: Upload code coverage badge
-        if: ${{ env.IS_PRE_RELEASE == 'false' }}
         uses: actions/upload-artifact@v3
         with:
           name: coverage-badge

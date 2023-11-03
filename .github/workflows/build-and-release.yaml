@@ -83,7 +83,7 @@ jobs:
           path: ./artifacts/dist
 
       - name: Upload Scoop artifacts
-        if: ${{ matrix.runs-on == 'windows-latest' }}
+        if: ${{ matrix.runs-on == 'windows-latest' && env.IS_PRE_RELEASE == 'false' }}
         uses: actions/upload-artifact@v3
         with:
           name: scoop-manifest
@@ -171,7 +171,7 @@ jobs:
         if: ${{ env.IS_PRE_RELEASE == 'false' }}
         uses: actions/download-artifact@v3
 
-      - name: Package pages artifacts
+      - name: Package Pages artifacts
         if: ${{ env.IS_PRE_RELEASE == 'false' }}
         run: |
           SITE_DIRECTORY=_site
