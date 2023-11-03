@@ -175,12 +175,12 @@ jobs:
           TARGET=x86_64-pc-windows-msvc
           TARGET_ARTIFACTS_DIR="./pages-${TARGET}"
 
-          ls $TARGET_ARTIFACTS_DIR -la
-
           echo "Setting pages file permissions"
           chmod -c -R +rX "${TARGET_ARTIFACTS_DIR}/" | while read line; do
             echo "::warning title=Invalid file permissions automatically fixed::$line"
           done
+
+          ls $TARGET_ARTIFACTS_DIR -la -R
 
           tar -C "${TARGET_ARTIFACTS_DIR}/" -czf github-pages
 
