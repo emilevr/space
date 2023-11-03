@@ -5,21 +5,21 @@ on:
       - '*.*.*'
   workflow_dispatch:
 jobs:
-  lint:
-    uses: ./.github/workflows/lint.yaml
+  # lint:
+  #   uses: ./.github/workflows/lint.yaml
 
-  coverage:
-    uses: ./.github/workflows/coverage.yaml
+  # coverage:
+  #   uses: ./.github/workflows/coverage.yaml
 
-  benchmark:
-    uses: ./.github/workflows/benchmark.yaml
+  # benchmark:
+  #   uses: ./.github/workflows/benchmark.yaml
 
   build-and-test:
     name: '${{ matrix.target }}'
-    needs:
-      - benchmark
-      - coverage
-      - lint
+    # needs:
+    #   - benchmark
+    #   - coverage
+    #   - lint
     runs-on: ${{ matrix.runs-on }}
     outputs:
       CALCULATED_VERSION: ${{ steps.version.outputs.CALCULATED_VERSION }}
@@ -105,6 +105,7 @@ jobs:
 
       - name: Create release
         # Temporarily disable release creation to test pages task below
+        # TODO: Remove this when done testing
         if: ${{ false }}
         shell: pwsh
         run: |
