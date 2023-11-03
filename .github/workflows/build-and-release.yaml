@@ -83,6 +83,7 @@ jobs:
           path: ./artifacts/dist
 
       - name: Upload Scoop artifacts
+        if: ${{ matrix.runs-on == 'windows-latest' }}
         uses: actions/upload-artifact@v3
         with:
           name: pages-${{ matrix.target }}
