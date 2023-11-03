@@ -1,0 +1,20 @@
+name: Cache BuildIt
+on:
+  - workflow_dispatch
+jobs:
+  cache:
+    name: 'Cache on ${{ matrix.runs-on }}'
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/detect-and-install-rust-toolchain
+
+      - uses: ./.github/actions/install-buildit

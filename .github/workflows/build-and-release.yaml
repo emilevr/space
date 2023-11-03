@@ -7,10 +7,13 @@ on:
 jobs:
   lint:
     uses: ./.github/workflows/lint.yaml
+
   coverage:
     uses: ./.github/workflows/coverage.yaml
+
   benchmark:
     uses: ./.github/workflows/benchmark.yaml
+
   build-and-test:
     name: '${{ matrix.target }}'
     needs:
@@ -58,60 +61,20 @@ jobs:
       - name: Build binaries for packaging
         run: cargo build --release --all-features
 
-      - name: Package for distribution (Linux and MacOS)
-        if: ${{ matrix.runs-on == 'ubuntu-latest' || matrix.runs-on == 'macos-latest' }}
-        run: |
-          ARCHIVE_FILE_DIR=./artifacts/dist
-          mkdir -p $ARCHIVE_FILE_DIR
+      - uses: ./.github/actions/package-linux
+        if: ${{ matrix.runs-on == 'ubuntu-latest' }}
+        with:
+          target: ${{ matrix.target }}
 
-          BIN_FILE_NAMES=(space space-bench)
-          for BIN_FILE_NAME in "${BIN_FILE_NAMES[@]}"
-          do
-            BIN_DIR_PATH=./target/release
-            BIN_FILE_PATH=./target/release/${BIN_FILE_NAME}
-            ARCHIVE_FILE_NAME=${BIN_FILE_NAME}-${{ matrix.target }}.tar.gz
-            ARCHIVE_FILE_PATH=${ARCHIVE_FILE_DIR}/${ARCHIVE_FILE_NAME}
-            ACHIVE_HASH_FILE_NAME=${ARCHIVE_FILE_NAME}.sha256
+      - uses: ./.github/actions/package-macos
+        if: ${{ matrix.runs-on == 'macos-latest' }}
+        with:
+          target: ${{ matrix.target }}
 
-            echo "Stripping debug symbols from ${BIN_FILE_PATH}"
-            strip ${BIN_FILE_PATH}
-
-            echo "Compressing ${BIN_FILE_PATH} to ${ARCHIVE_FILE_PATH}"
-            tar -C $BIN_DIR_PATH -czf $ARCHIVE_FILE_PATH $BIN_FILE_NAME
-
-            pushd $ARCHIVE_FILE_DIR > /dev/null
-
-            echo "Calculating SHA256 hash of ${ARCHIVE_FILE_NAME} to ${ACHIVE_HASH_FILE_NAME}"
-            shasum -a 256 $ARCHIVE_FILE_NAME > $ACHIVE_HASH_FILE_NAME
-
-            popd > /dev/null
-          done
-
-      - name: Package for distribution (Windows)
+      - uses: ./.github/actions/package-windows
         if: ${{ matrix.runs-on == 'windows-latest' }}
-        run: |
-          New-Item -Type Directory -Path ./artifacts/dist -Force
-
-          $binFileNames = @('space', 'space-bench')
-          foreach ($fileName in $binFileNames) {
-            $binFilePath = "./target/release/${fileName}.exe"
-            $archiveFilePath = "./artifacts/dist/${fileName}-${{ matrix.target }}.zip"
-            $archiveHashFilePath = "${archiveFilePath}.sha256"
-
-            Write-Host "Compressing ${binFilePath} to ${archiveFilePath}"
-            $compress = @{
-              Path = $binFilePath
-              DestinationPath = $archiveFilePath
-              CompressionLevel = "Optimal"
-            }
-            Compress-Archive @compress
-
-            Write-Host "Calculating SHA256 of ${archiveFilePath} to ${archiveHashFilePath}"
-            Get-FileHash -Path $archiveFilePath -Algorithm SHA256 `
-              | Select-Object @{Label='Hash';Expression={$_.Hash.ToLower()}} `
-              | Select-Object -ExpandProperty Hash `
-              > $archiveHashFilePath
-          }
+        with:
+          target: ${{ matrix.target }}
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v3
@@ -141,6 +104,8 @@ jobs:
         uses: actions/download-artifact@v3
 
       - name: Create release
+        # Temporarily disable release creation to test pages task below
+        if: ${{ false }}
         shell: pwsh
         run: |
           $isPreReleaseVar = '${{ env.IS_PRE_RELEASE }}'
@@ -177,3 +142,36 @@ jobs:
               gh release upload $calculatedVersion $targetArtifactsDir/*
             }
           }
+
+  publish-scoop-manifest:
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: https://emilevr.github.io/space
+
+    steps:
+      - name: Fix permissions
+        run: |
+          chmod -c -R +rX "./artifacts/dist/pages/" | while read line; do
+            echo "::warning title=Invalid file permissions automatically fixed::$line"
+          done
+
+      - name: Compress pages
+        run: |
+          tar -C ./artifacts/dist/pages/ -czf github-pages
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
