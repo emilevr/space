@@ -148,8 +148,8 @@ jobs:
             }
           }
 
-  publish-scoop-manifest:
-    if: ${{ github.ref == 'refs/heads/main' }}
+  publish-pages:
+    if: github.ref == 'refs/heads/main'
     needs: build-and-test
     runs-on: ubuntu-latest
 

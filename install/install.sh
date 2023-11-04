@@ -7,21 +7,23 @@ case "${UNAME_OUTPUT}" in
 esac
 
 ARCHIVE_FILE_URL=https://github.com/emilevr/space/releases/latest/download/$ARCHIVE_FILENAME
-ARCHIVE_FILE_PATH=~/$ARCHIVE_FILENAME
-BINARY_FILE_PATH=~/space
+ARCHIVE_DIR=$HOME
+ARCHIVE_FILE_PATH=$ARCHIVE_DIR/$ARCHIVE_FILENAME
+BINARY_FILE_PATH=$ARCHIVE_DIR/space
 INSTALL_DIR=/usr/local/bin
+INSTALL_FILE_PATH=$INSTALL_DIR/space
 
 echo "Downloading the latest binary from $ARCHIVE_FILE_URL ..."
 curl -L -o $ARCHIVE_FILE_PATH $ARCHIVE_FILE_URL
 
 echo "Extacting downloaded file $ARCHIVE_FILE_PATH"
-tar -xzvf $ARCHIVE_FILE_PATH
+tar -xzvf $ARCHIVE_FILE_PATH -C $ARCHIVE_DIR/
 
 echo "Making the binary executable"
 chmod +x $BINARY_FILE_PATH
 
 echo "Moving $BINARY_FILE_PATH to $INSTALL_DIR"
-sudo mv $BINARY_FILE_PATH "${INSTALL_DIR}/space"
+sudo mv $BINARY_FILE_PATH $INSTALL_FILE_PATH
 
 echo "Cleaning up..."
 rm -f $ARCHIVE_FILE_PATH
