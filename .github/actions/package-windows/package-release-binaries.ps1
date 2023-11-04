@@ -27,5 +27,7 @@ foreach ($fileName in $binFileNames) {
 
     Write-Host "The SHA256 hash of ${archiveFilePath} is: $hash"
 
-    "ARCHIVE_FILE_HASH=$hash" >> $env:GITHUB_ENV
+    if ('space' -eq $fileName) {
+        "SPACE_X86_64_PC_WINDOWS_MSVC_ZIP_FILE_HASH=$hash" >> $env:GITHUB_ENV
+    }
 }

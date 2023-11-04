@@ -15,14 +15,14 @@ runs:
       if: ${{ env.IS_PRE_RELEASE == 'false' }}
       shell: pwsh
       run: |
-        # The ARCHIVE_FILE_HASH env var is set by package-release-binaries.ps1 called above.
+        # The SPACE_X86_64_PC_WINDOWS_MSVC_ZIP_FILE_HASH env var is set by package-release-binaries.ps1 called above.
         # The CALCULATED_VERSION env var is set by the buildit coverage command.
 
-        Write-Host "The SHA256 hash of space-x86_64-pc-windows-msvc.zip is: $($env:ARCHIVE_FILE_HASH)"
+        Write-Host "The SHA256 hash of space-x86_64-pc-windows-msvc.zip is: $($env:SPACE_X86_64_PC_WINDOWS_MSVC_ZIP_FILE_HASH)"
 
         .github/actions/package-windows/update-scoop-manifest.ps1 `
           -Target ${{ inputs.target }} `
-          -ArchiveFileHash $env:ARCHIVE_FILE_HASH `
+          -ArchiveFileHash $env:SPACE_X86_64_PC_WINDOWS_MSVC_ZIP_FILE_HASH `
           -Version $env:CALCULATED_VERSION
 
     - name: Upload Scoop artifacts
