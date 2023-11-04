@@ -12,7 +12,7 @@ BINARY_FILE_PATH=~/space
 INSTALL_DIR=/usr/local/bin
 
 echo "Downloading the latest binary from $ARCHIVE_FILE_URL ..."
-curl -o $ARCHIVE_FILE_PATH $ARCHIVE_FILE_URL
+curl -L -o $ARCHIVE_FILE_PATH $ARCHIVE_FILE_URL
 
 echo "Extacting downloaded file $ARCHIVE_FILE_PATH"
 tar -xzvf $ARCHIVE_FILE_PATH
@@ -21,7 +21,7 @@ echo "Making the binary executable"
 chmod +x $BINARY_FILE_PATH
 
 echo "Moving $BINARY_FILE_PATH to $INSTALL_DIR"
-sudo mv $BINARY_FILE_PATH $INSTALL_DIR
+sudo mv $BINARY_FILE_PATH "${INSTALL_DIR}/space"
 
 echo "Cleaning up..."
 rm -f $ARCHIVE_FILE_PATH
