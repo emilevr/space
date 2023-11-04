@@ -19,7 +19,7 @@ function Install-LinuxOrMacOS {
     $installedBinaryPath = "$installDirPath/space"
 
     try {
-        Write-Host "⭳⭳ Downloading the latest version from $latestReleaseArchive"
+        Write-Host "⬇⬇ Downloading the latest version from $latestReleaseArchive"
         Invoke-WebRequest -Uri $latestReleaseArchive -OutFile $archiveFilePath | Out-Null
 
         Write-Host "👷 Extracting archive $archiveFilePath to $extractDirPath"
@@ -58,7 +58,7 @@ function Install-Windows {
     $pathSeparator = ';'
 
     try {
-        Write-Host "⭳⭳ Downloading the latest version from $latestReleaseArchive"
+        Write-Host "⬇⬇ Downloading the latest version from $latestReleaseArchive"
         Invoke-WebRequest -Uri $latestReleaseArchive -OutFile $archiveFilePath | Out-Null
 
         Write-Host "👷 Extracting archive $archiveFilePath to $installDirPath"

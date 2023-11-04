@@ -15,7 +15,7 @@ INSTALL_FILE_PATH=$INSTALL_DIR/space
 
 echo "Installing space CLI to $INSTALL_DIR"
 
-echo "⭳⭳ Downloading the latest binary from $ARCHIVE_FILE_URL ..."
+echo "⬇⬇ Downloading the latest binary from $ARCHIVE_FILE_URL ..."
 (curl -L -o $ARCHIVE_FILE_PATH $ARCHIVE_FILE_URL) || \
     { echo "❌ Download failed!"; exit 1; }
 
