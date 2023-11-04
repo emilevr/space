@@ -25,5 +25,7 @@ foreach ($fileName in $binFileNames) {
         | Select-Object -ExpandProperty Hash
     $hash > $archiveHashFilePath
 
-    "ARCHIVE_FILE_HASH=$hash" >> "${env:GITHUB_ENV}"
+    Write-Host "The SHA256 hash of ${archiveFilePath} is: $hash"
+
+    "ARCHIVE_FILE_HASH=$hash" >> $env:GITHUB_ENV
 }
