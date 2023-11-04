@@ -48,7 +48,7 @@ Two operating modes are supported:
 brew install emilevr/space/space
 ```
 
-Once installed, `space` may be upgraded via:
+In future, `space` may be upgraded via:
 
 ```plaintext
 brew upgrade emilevr/space/space
@@ -62,7 +62,7 @@ A PR has been submitted to merge space into the extras bucket, but is still pend
 scoop install https://emilevr.github.io/space/scoop/space.json
 ```
 
-Once installed, `space` may be upgraded via:
+In future, `space` may be upgraded via:
 
 ```plaintext
 scoop update space
