@@ -44,7 +44,9 @@ const VALUE_FG_COLOR: Color = Color::Rgb(88, 144, 255);
 pub(crate) const HELP_KEY: char = '?';
 pub(crate) const QUIT_KEY_1: char = 'q';
 pub(crate) const COLLAPSE_SELECTED_CHILDREN_KEY: char = '-';
+pub(crate) const COLLAPSE_SELECTED_CHILDREN_KEY_ALT: char = '_';
 pub(crate) const EXPAND_SELECTED_CHILDREN_KEY: char = '+';
+pub(crate) const EXPAND_SELECTED_CHILDREN_KEY_ALT: char = '=';
 pub(crate) const VIEW_SIZE_THRESHOLD_0_PERCENT_KEY: char = '0';
 pub(crate) const VIEW_SIZE_THRESHOLD_10_PERCENT_KEY: char = '1';
 pub(crate) const VIEW_SIZE_THRESHOLD_20_PERCENT_KEY: char = '2';
@@ -189,10 +191,12 @@ fn render_loop<B: Backend, I: InputEventSource>(
                     KeyCode::PageDown => view_state.next(view_state.visible_height),
                     KeyCode::Home => view_state.first(),
                     KeyCode::End => view_state.last(),
-                    KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY) => {
+                    KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY)
+                    | KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY_ALT) => {
                         view_state.collapse_selected_children()
                     }
-                    KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY) => {
+                    KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY)
+                    | KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY_ALT) => {
                         view_state.expand_selected_children()
                     }
                     _ => {}
@@ -241,7 +245,7 @@ fn render_title_bar<B: Backend>(
     area: &Rect,
     title_style: Style,
 ) {
-    let version_style = title_style.gray().dim();
+    let version_style = title_style.gray();
 
     let title = "Space";
     let version_display = format!("v{VERSION}");
@@ -290,7 +294,7 @@ fn render_title_bar<B: Backend>(
 fn get_key_help<'a>(title_style: Style, available_width: i32) -> (Line<'a>, i32) {
     let mut available_width = available_width;
     let key_style = title_style.fg(KEY_HELP_KEY_FG_COLOR);
-    let key_help_style = title_style.gray().dim();
+    let key_help_style = title_style.gray();
 
     #[rustfmt::skip]
     let all_key_help = vec![
