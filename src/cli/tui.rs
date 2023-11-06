@@ -213,14 +213,10 @@ fn render_loop<B: Backend, I: InputEventSource>(
                     KeyCode::PageDown => view_state.next(view_state.visible_height),
                     KeyCode::Home => view_state.first(),
                     KeyCode::End => view_state.last(),
-                    KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY)
-                    | KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY_ALT) => {
-                        view_state.collapse_selected_children()
-                    }
-                    KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY)
-                    | KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY_ALT) => {
-                        view_state.expand_selected_children()
-                    }
+                    #[rustfmt::skip]
+                    KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY) | KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY_ALT) => { view_state.collapse_selected_children() },
+                    #[rustfmt::skip]
+                    KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY) | KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY_ALT) => { view_state.expand_selected_children() },
                     _ => {}
                 }
             }
