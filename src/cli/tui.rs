@@ -34,11 +34,33 @@ mod tui_test;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[cfg(target_os = "macos")]
+const KEY_HELP_KEY_FG_COLOR: Color = Color::Rgb(0, 0, 64);
+#[cfg(not(target_os = "macos"))]
 const KEY_HELP_KEY_FG_COLOR: Color = Color::Rgb(88, 144, 255);
+
+#[cfg(target_os = "macos")]
+const TABLE_HEADER_BG_COLOR: Color = Color::Rgb(64, 64, 64);
+#[cfg(not(target_os = "macos"))]
 const TABLE_HEADER_BG_COLOR: Color = Color::Rgb(64, 64, 192);
+
+#[cfg(target_os = "macos")]
+const TABLE_HEADER_FG_COLOR: Color = Color::Rgb(0, 0, 0);
+#[cfg(not(target_os = "macos"))]
+const TABLE_HEADER_FG_COLOR: Color = Color::White;
+
 const DANGER_BG_COLOR: Color = Color::Rgb(192, 64, 64);
+
+#[cfg(target_os = "macos")]
+const TITLE_FG_COLOR: Color = Color::Black;
+#[cfg(not(target_os = "macos"))]
 const TITLE_FG_COLOR: Color = Color::White;
+
+#[cfg(target_os = "macos")]
+const TITLE_BG_COLOR: Color = Color::Rgb(128, 128, 128);
+#[cfg(not(target_os = "macos"))]
 const TITLE_BG_COLOR: Color = Color::Rgb(64, 64, 64);
+
 const VALUE_FG_COLOR: Color = Color::Rgb(88, 144, 255);
 
 pub(crate) const HELP_KEY: char = '?';
@@ -245,7 +267,7 @@ fn render_title_bar<B: Backend>(
     area: &Rect,
     title_style: Style,
 ) {
-    let version_style = title_style.gray();
+    let version_style = title_style;
 
     let title = "Space";
     let version_display = format!("v{VERSION}");
@@ -294,7 +316,7 @@ fn render_title_bar<B: Backend>(
 fn get_key_help<'a>(title_style: Style, available_width: i32) -> (Line<'a>, i32) {
     let mut available_width = available_width;
     let key_style = title_style.fg(KEY_HELP_KEY_FG_COLOR);
-    let key_help_style = title_style.gray();
+    let key_help_style = title_style;
 
     #[rustfmt::skip]
     let all_key_help = vec![
@@ -323,14 +345,16 @@ fn get_key_help<'a>(title_style: Style, available_width: i32) -> (Line<'a>, i32)
 }
 
 fn render_table<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState, area: &Rect) {
-    let table_header_style = Style::default().bg(TABLE_HEADER_BG_COLOR);
+    let table_header_style = Style::default()
+        .bg(TABLE_HEADER_BG_COLOR)
+        .fg(TABLE_HEADER_FG_COLOR);
     let selected_style = Style::default().add_modifier(Modifier::REVERSED);
 
     let table_selected_index = view_state.table_selected_index;
 
     let header_cells = ["Size", "", "Path", "", "Incl"]
         .iter()
-        .map(|h| Cell::from(*h).style(Style::default().fg(Color::White)));
+        .map(|h| Cell::from(*h));
     let header = Row::new(header_cells)
         .style(table_header_style)
         .height(1)
