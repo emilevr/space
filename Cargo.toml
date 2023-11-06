@@ -43,6 +43,10 @@ harness = false
 name = "directory_item_build_x2"
 harness = false
 
+[[bench]]
+name = "directory_item_build_x3"
+harness = false
+
 [features]
 # Uncomment the "default = ..." below to include the nightly features in the build by default, and in the Rust
 # analyzer. If you do so then you will have to add "+nightly" to cargo commands, e.g. "cargo +nightly build".

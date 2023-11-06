@@ -4,11 +4,11 @@ use std::path::Path;
 
 const DIRECTORY_PATH: &str = "./tmp.sample";
 
-pub fn directory_item_build_x2(c: &mut Criterion) {
+pub fn directory_item_build_x3(c: &mut Criterion) {
     let path = &Path::new(DIRECTORY_PATH).to_path_buf();
 
     use std::thread::available_parallelism;
-    let thread_count = available_parallelism().unwrap().get() * 2;
+    let thread_count = available_parallelism().unwrap().get() * 3;
     println!("Using {} Rayon threads", thread_count);
 
     rayon::ThreadPoolBuilder::new()
@@ -17,7 +17,7 @@ pub fn directory_item_build_x2(c: &mut Criterion) {
         .unwrap();
 
     c.bench_function(
-        &format!("DirectoryItem::build() x2 on {}", path.display()),
+        &format!("DirectoryItem::build() x3 on {}", path.display()),
         |b| {
             b.iter(|| {
                 black_box(DirectoryItem::build(vec![path.clone()]));
@@ -29,6 +29,6 @@ pub fn directory_item_build_x2(c: &mut Criterion) {
 criterion_group! {
     name = benches;
     config = Criterion::default().sample_size(10);
-    targets = directory_item_build_x2
+    targets = directory_item_build_x3
 }
 criterion_main!(benches);
