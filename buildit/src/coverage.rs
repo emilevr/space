@@ -132,20 +132,22 @@ impl BuildItCommand for CoverageCommand {
             //  ^\\s*#!\\[.*$                                                               => lines containing only a crate attribute
             //  ^\\s*\\}\\s*else\\s*\\{\\s*$                                                => lines containing only "} else {"
             //  ^\\s*//.*$                                                                  => lines containing only a comment
+            //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*struct\\s+[^ ]+\\s*{\\s*$     => lines containing only a struct definition
             //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$      => lines containing only a fn definition
             //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*[^ ]+\\s*:\\s*[^ ]+\\s*,\\s*$ => lines containing only a property declaration
             //  ^\\s*loop\\s*\\{\\s*$                                                       => lines containing only 'loop {'
             //  ^\\s*[^ ]+\\s*=>\\s*(\\{)?\\s*$                                             => lines only containing the expression part of a match clause
             //  ^\\s*\\)\\s*->\\s*[^ ]+\\s*\\{\\s*$                                         => lines only ') -> some_return_type {'
             //  ^\\s*[{}(),;\\[\\] ]*\\s*$                                                  => lines with only delimiters or whitespace, no logic
-            //  ^\\s*impl\\s+[^ ]+\\s*\\{\\s*$                                              => lines containing only an impl declaration
-            //  ^\\s*impl\\s+[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$                              => lines containing only an impl for declaration
+            //  ^\\s*impl\\s*[^ ]+\\s*\\{\\s*$                                              => lines containing only an impl declaration
+            //  ^\\s*impl\\s*[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$                              => lines containing only an impl for declaration
             //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*const\\s+.*\\s*[(){}]*\\s*$   => lines containing only a const definition
             "^\\s*(debug_)?assert(_eq|_ne)?!\
                 |^\\s*#\\[.*$\
                 |^\\s*#!\\[.*$\
                 |^\\s*\\}\\s*else\\s*\\{\\s*$\
                 |^\\s*//.*$\
+                |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*struct\\s+[^ ]+\\s*{\\s*$\
                 |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*fn\\s+.*\\s*[(){}]*\\s*$\
                 |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*[^ ]+\\s*:\\s*[^ ]+\\s*,\\s*$\
                 |^\\s*loop\\s*\\{\\s*$\
@@ -153,8 +155,8 @@ impl BuildItCommand for CoverageCommand {
                 |^\\s*\\)\\s*->\\s*[^ ]+\\s*\\{\\s*$\
                 |^\\s[});({]*\\s*$\
                 |^\\s*[{}(),;\\[\\] ]*\\s*$\
-                |^\\s*impl\\s+[^ ]+\\s*\\{\\s*$\
-                |^\\s*impl\\s+[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$\
+                |^\\s*impl\\s*[^ ]+\\s*\\{\\s*$\
+                |^\\s*impl\\s*[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$\
                 |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*const\\s+.*\\s*[(){}]*\\s*$",
             "--ignore-not-existing",
             "--ignore",
