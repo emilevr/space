@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 use clap::{ColorChoice, Parser};
 use cli::cli_command::CliCommand;
 use cli::view_command::ViewCommand;
@@ -22,7 +24,7 @@ mod test_utils;
 
 mod logging;
 
-pub(crate) const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
+const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
 
 #[derive(Clone, Debug, Parser)]
 #[clap(

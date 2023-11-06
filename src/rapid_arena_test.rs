@@ -1,40 +1,53 @@
-use rstest::rstest;
-
 use super::*;
+use criterion::black_box;
+use rayon::prelude::{ParallelBridge, ParallelIterator};
+use rstest::rstest;
+use std::{thread, time::Duration};
 
 #[derive(Debug, PartialEq)]
 struct Something {
-    value1: usize,
-    value2: String,
+    some_value: usize,
+    some_string: String,
+}
+
+fn alloc_items(arena: &mut RapIdArena<Something>, count: usize) -> Vec<RapId<Something>> {
+    let mut ids = vec![];
+    for i in 0..count {
+        ids.push(arena.alloc(Something {
+            some_value: i,
+            some_string: format!("i = {}", i),
+        }));
+    }
+    ids
 }
 
 #[test]
 fn new_creates_single_bucket_with_expected_bucket_size() {
     // Arrange
-    let items_per_bucket =
-        max(page_size::get(), page_size::get_granularity()) / size_of::<Something>();
+    let items_per_bucket = DEFAULT_BUCKET_SIZE_IN_BYTES / size_of::<Something>();
 
     // Act
     let arena = RapIdArena::<Something>::new();
 
     // Assert
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(0, arena.bucket_index);
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(1, internals.buckets.len());
+    assert_eq!(0, internals.bucket_index);
     assert_eq!(items_per_bucket, arena.items_per_bucket());
 }
 
 #[test]
 fn default_creates_single_bucket_with_expected_bucket_size() {
     // Arrange
-    let items_per_bucket =
-        max(page_size::get(), page_size::get_granularity()) / size_of::<Something>();
+    let items_per_bucket = DEFAULT_BUCKET_SIZE_IN_BYTES / size_of::<Something>();
 
     // Act
     let arena = RapIdArena::<Something>::default();
 
     // Assert
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(0, arena.bucket_index);
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(1, internals.buckets.len());
+    assert_eq!(0, internals.bucket_index);
     assert_eq!(items_per_bucket, arena.items_per_bucket());
 }
 
@@ -47,72 +60,69 @@ fn new_with_bucket_size_creates_single_bucket_with_expected_bucket_size() {
     let arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
 
     // Assert
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(0, arena.bucket_index);
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(1, internals.buckets.len());
+    assert_eq!(0, internals.bucket_index);
     assert_eq!(items_per_bucket, arena.items_per_bucket());
 }
 
 #[test]
-fn alloc_then_get_returns_expected_item() {
+fn alloc_then_deref_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 123;
-    let value2 = "abc".to_string();
+    let v1 = 123;
+    let s1 = "abc".to_string();
 
     // Act
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Assert
-    let actual = arena.get(id).expect("The ID is expected to be valid!");
-    assert_eq!(value1, actual.value1);
-    assert_eq!(value2, actual.value2);
+    let actual = id.deref();
+    assert_eq!(v1, actual.some_value);
+    assert_eq!(s1, actual.some_string);
 }
 
 #[test]
 fn cloned_id_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 1024;
-    let value2 = "some string".to_string();
+    let v1 = 1024;
+    let s1 = "some string".to_string();
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Act
     let cloned_id = id.clone();
 
     // Assert
-    let entry = arena
-        .get(cloned_id)
-        .expect("The ID is expected to be valid!");
-    assert_eq!(value1, entry.value1);
-    assert_eq!(value2, entry.value2);
+    let entry = cloned_id.deref();
+    assert_eq!(v1, entry.some_value);
+    assert_eq!(s1, entry.some_string);
 }
 
 #[test]
 fn copied_id_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 1024;
-    let value2 = "some string".to_string();
+    let v1 = 1024;
+    let s1 = "some string".to_string();
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Act
     let copied_id = id;
 
     // Assert
-    let entry = arena
-        .get(copied_id)
-        .expect("The ID is expected to be valid!");
-    assert_eq!(value1, entry.value1);
-    assert_eq!(value2, entry.value2);
+    let entry = copied_id.deref();
+    assert_eq!(v1, entry.some_value);
+    assert_eq!(s1, entry.some_string);
 }
 
 #[rstest]
@@ -130,113 +140,66 @@ fn alloc_creates_correct_number_of_buckets(
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
 
     // Act
-    for i in 0..alloc_count {
-        arena.alloc(Something {
-            value1: i,
-            value2: format!("i = {}", i),
-        });
-    }
+    alloc_items(&mut arena, alloc_count);
 
     // Assert
     assert_eq!(alloc_count, arena.len());
-    assert_eq!(expected_bucket_count, arena.buckets.len());
+    let internals = arena.internals.read().unwrap();
+    assert_eq!(expected_bucket_count, internals.buckets.len());
 }
 
 #[test]
 fn index_operator_returns_expected_item() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let value1 = 777;
-    let value2 = "a string".to_string();
+    let v1 = 777;
+    let s1 = "a string".to_string();
 
     // Act
     let id = arena.alloc(Something {
-        value1,
-        value2: value2.clone(),
+        some_value: v1,
+        some_string: s1.clone(),
     });
 
     // Assert
-    let actual = &arena[id];
-    assert_eq!(value1, actual.value1);
-    assert_eq!(value2, actual.value2);
+    let actual = id.deref();
+    assert_eq!(v1, actual.some_value);
+    assert_eq!(s1, actual.some_string);
 }
 
 #[test]
-fn get_item_in_second_bucket_returns_expected_item() {
+fn deref_given_multiple_buckets_returns_each_item() {
     // Arrange
     let bucket_size = 5;
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(bucket_size);
-    let mut ids = vec![];
+    let count = (bucket_size as f32 * 111f32) as usize;
+    let ids = alloc_items(&mut arena, count);
 
-    for i in 0..=bucket_size {
-        ids.push(arena.alloc(Something {
-            value1: i,
-            value2: format!("i = {}", i),
-        }));
+    for i in 0..count {
+        // Act
+        let entry = ids[i].deref();
+
+        // Assert
+        assert_eq!(i, entry.some_value);
+        assert_eq!(format!("i = {}", i), entry.some_string);
     }
-
-    // Act
-    let entry = arena.get(ids[5]).expect("The ID is expected to be valid!");
-
-    // Assert
-    assert_eq!(bucket_size, entry.value1);
-    assert_eq!(format!("i = {}", bucket_size), entry.value2);
 }
 
 #[test]
-fn get_with_invalid_id_returns_none() {
-    // Arrange
-    let arena = RapIdArena::<Something>::new();
-    let id: RapId<Something> = RapId::<Something> {
-        index: 123,
-        _t: PhantomData,
-    };
-
-    // Act
-    let value = arena.get(id);
-
-    // Assert
-    assert!(value.is_none());
-}
-
-#[test]
-fn get_mut_with_invalid_id_returns_none() {
+fn get_then_modify_modifies_entry() {
     // Arrange
     let mut arena = RapIdArena::<Something>::new();
-    let id: RapId<Something> = RapId::<Something> {
-        index: 123,
-        _t: PhantomData,
-    };
+    let mut ids = alloc_items(&mut arena, 3);
 
     // Act
-    let value = arena.get_mut(id);
+    let something = ids[1].deref_mut();
+    something.some_value += 1;
+    something.some_string = "world".to_string();
 
     // Assert
-    assert!(value.is_none());
-}
-
-#[test]
-fn get_mut_then_modified_modifies_correct_entry() {
-    // Arrange
-    let mut arena = RapIdArena::<Something>::new();
-    let mut ids = vec![];
-    let value1 = 111;
-    for i in 0..=2 {
-        ids.push(arena.alloc(Something {
-            value1: value1 + i * 111,
-            value2: format!("i = {}", i),
-        }));
-    }
-
-    // Act
-    let mut something = arena.get_mut(ids[1]).expect("Expected ID to be valid!");
-    something.value1 += 1;
-    something.value2 = "world".to_string();
-
-    // Assert
-    let entry = arena.get(ids[1]).expect("Expected ID to be valid!");
-    assert_eq!(223, entry.value1);
-    assert_eq!("world", entry.value2);
+    let entry = ids[1].deref();
+    assert_eq!(2, entry.some_value);
+    assert_eq!("world", entry.some_string);
 }
 
 #[rstest]
@@ -249,12 +212,7 @@ fn len_with_allocs_returns_correct_length(
 ) {
     // Arrange
     let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
-    for i in 0..alloc_count {
-        arena.alloc(Something {
-            value1: i,
-            value2: format!("entry {}", i),
-        });
-    }
+    alloc_items(&mut arena, alloc_count);
 
     // Act
     let len = arena.len();
@@ -288,27 +246,83 @@ fn is_empty_given_non_empty_arena_returns_false() {
     assert!(!is_empty);
 }
 
-#[rstest]
-#[case(5, 0)]
-#[case(5, 503)]
-fn reset_results_in_single_empty_bucket(
-    #[case] items_per_bucket: usize,
-    #[case] alloc_count: usize,
-) {
-    // Arrange
-    let mut arena = RapIdArena::<Something>::new_with_bucket_size(items_per_bucket);
-    for i in 0..alloc_count {
-        arena.alloc(Something {
-            value1: i,
-            value2: format!("entry {}", i),
-        });
+#[test]
+fn deref_multi_threaded_test() {
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(1);
+    let ids = alloc_items(&mut arena, 7);
+    std::thread::scope(|s| {
+        for _ in 0..14 {
+            s.spawn(|| {
+                let item_count = arena.len();
+                for i in 0..item_count * 503 {
+                    let id = &ids[i % item_count];
+                    let item = id.deref();
+                    black_box({
+                        let _ = item.some_value + 1;
+                    })
+                }
+            });
+        }
+    });
+}
+
+#[test]
+fn deref_mut_multi_threaded_test() {
+    let mut arena = RapIdArena::<RwLock<Something>>::new_with_bucket_size(1);
+    const ITEM_COUNT: usize = 7;
+    let mut ids = vec![];
+    for i in 0..ITEM_COUNT {
+        ids.push(arena.alloc(RwLock::new(Something {
+            some_value: i,
+            some_string: format!("i = {}", i),
+        })));
     }
 
+    std::thread::scope(|s| {
+        for _ in 0..(ITEM_COUNT * 3) {
+            s.spawn(|| {
+                for i in 0..ITEM_COUNT * 11 {
+                    let mut id = ids[i % ITEM_COUNT];
+                    let mut item = id.deref_mut().write().unwrap();
+
+                    let some_value = item.some_value + 1;
+                    let some_string = format!("i = {}", some_value);
+
+                    item.some_value = some_value;
+                    item.some_string = some_string.clone();
+
+                    thread::sleep(Duration::from_millis(1));
+
+                    assert_eq!(some_value, item.some_value);
+                    assert_eq!(some_string, item.some_string)
+                }
+            });
+        }
+    });
+}
+
+#[test]
+fn rayon_test() {
+    // Arrange
+    let mut arena = RapIdArena::<Something>::new_with_bucket_size(5);
+    let count = 31;
+    alloc_items(&mut arena, count);
+    // Since we start from 0 not 1, our formula is n(n-1)/2 instead of n(n+1)/2
+    let expected_sum = count * (count - 1) / 2;
+
     // Act
-    arena.reset();
+    let sum: usize = arena
+        .iter()
+        .par_bridge()
+        .map(|id| id.deref().some_value)
+        .sum();
 
     // Assert
-    assert_eq!(0, arena.bucket_index);
-    assert_eq!(1, arena.buckets.len());
-    assert_eq!(items_per_bucket, arena.items_per_bucket);
+    assert_eq!(expected_sum, sum);
+}
+
+#[test]
+#[should_panic]
+fn new_with_bucket_size_of_zero_should_panic() {
+    RapIdArena::<Something>::new_with_bucket_size(0);
 }

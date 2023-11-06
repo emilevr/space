@@ -109,3 +109,10 @@ impl Size {
         config[config.len() - 1]
     }
 }
+
+impl From<Size> for u64 {
+    #[inline]
+    fn from(value: Size) -> Self {
+        value.get_value()
+    }
+}

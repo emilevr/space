@@ -62,6 +62,7 @@ impl DirectoryItem {
         items
     }
 
+    #[inline(always)]
     fn from_root(path: &PathBuf) -> DirectoryItem {
         let mut item = if let Ok(metadata) = fs::symlink_metadata(path) {
             if metadata.is_file() {
@@ -100,6 +101,7 @@ impl DirectoryItem {
         }
     }
 
+    #[inline(always)]
     fn from_failure(path: &Path) -> DirectoryItem {
         DirectoryItem {
             path_segment: get_file_name_from_path(path),
@@ -110,6 +112,7 @@ impl DirectoryItem {
         }
     }
 
+    #[inline(always)]
     fn from_directory(path: &Path) -> DirectoryItem {
         let children = {
             let mut children = Self::get_child_items(path);
@@ -130,6 +133,7 @@ impl DirectoryItem {
         }
     }
 
+    #[inline(always)]
     fn get_child_items(path: &Path) -> Vec<DirectoryItem> {
         fs::read_dir(path)
             .into_iter()
@@ -154,6 +158,7 @@ impl DirectoryItem {
     }
 
     /// Given the total size in bytes, returns the fraction of that total that his item uses.
+    #[inline(always)]
     pub fn get_fraction(&self, total_size_in_bytes: u64) -> f32 {
         if total_size_in_bytes == 0 {
             0f32
@@ -164,23 +169,27 @@ impl DirectoryItem {
 }
 
 impl Ord for DirectoryItem {
+    #[inline(always)]
     fn cmp(&self, other: &Self) -> Ordering {
         self.size_in_bytes.cmp(&other.size_in_bytes)
     }
 }
 
 impl PartialOrd for DirectoryItem {
+    #[inline(always)]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 impl PartialEq for DirectoryItem {
+    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
         self.size_in_bytes == other.size_in_bytes
     }
 }
 
+#[inline(always)]
 fn get_file_name_from_path(path: &Path) -> String {
     match path.file_name() {
         Some(file_name) => file_name.to_string_lossy().to_string(),

@@ -12,14 +12,22 @@ use zip::ZipArchive;
 use crate::command::BuildItCommand;
 
 #[derive(Args, Debug)]
-pub struct BenchmarkCommandArgs {}
+pub struct BenchmarkCommandArgs {
+    /// One or more optional benchmarks to run. If not specified then all benchmarks will be run.
+    #[arg(long = "bench-names", value_parser, num_args = 1.., value_delimiter = ' ')]
+    pub bench_names: Option<Vec<String>>,
+}
 
 #[derive(Debug)]
-pub struct BenchmarkCommand {}
+pub struct BenchmarkCommand {
+    bench_names: Option<Vec<String>>,
+}
 
 impl BenchmarkCommand {
-    pub fn new(_: BenchmarkCommandArgs) -> Self {
-        BenchmarkCommand {}
+    pub fn new(args: BenchmarkCommandArgs) -> Self {
+        BenchmarkCommand {
+            bench_names: args.bench_names,
+        }
     }
 }
 
@@ -57,7 +65,14 @@ impl BuildItCommand for BenchmarkCommand {
         }
 
         println!("👷 Running benchmarks ...");
-        cmd!("cargo", "bench").run()?;
+        let mut args = vec!["bench"];
+        if let Some(bench_names) = &self.bench_names {
+            bench_names.iter().for_each(|n| {
+                args.push("--bench");
+                args.push(n);
+            });
+        }
+        cmd("cargo", args).run()?;
         println!("✔️ Benchmarks completed successfully.");
 
         Ok(())

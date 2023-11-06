@@ -617,9 +617,13 @@ fn render_given_expand_input_for_collapsed_directory_item_expands_it() -> anyhow
     Ok(())
 }
 
-#[test]
+#[rstest]
 #[ignore]
+#[case(COLLAPSE_SELECTED_CHILDREN_KEY)]
+#[ignore]
+#[case(COLLAPSE_SELECTED_CHILDREN_KEY_ALT)]
 fn render_given_collapse_children_input_for_directory_item_collapses_all_children(
+    #[case] key: char,
 ) -> anyhow::Result<()> {
     // Arrange
     // NOTE: The real terminal height will be used when this test runs, so make sure the test is independent
@@ -627,10 +631,7 @@ fn render_given_collapse_children_input_for_directory_item_collapses_all_childre
     let (mut view_state, temp_dir_path) = make_test_view_state(0f32)?;
     let mut output = TestOut::new();
     let mut input_event_source = TestInputEventSource::new(vec![
-        Event::Key(KeyEvent::new(
-            KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY),
-            KeyModifiers::NONE,
-        )), // Collapses children
+        Event::Key(KeyEvent::new(KeyCode::Char(key), KeyModifiers::NONE)), // Collapses children
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
 
@@ -648,9 +649,13 @@ fn render_given_collapse_children_input_for_directory_item_collapses_all_childre
     Ok(())
 }
 
-#[test]
+#[rstest]
 #[ignore]
+#[case(EXPAND_SELECTED_CHILDREN_KEY)]
+#[ignore]
+#[case(EXPAND_SELECTED_CHILDREN_KEY_ALT)]
 fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_children(
+    #[case] key: char,
 ) -> anyhow::Result<()> {
     // Arrange
     // NOTE: The real terminal height will be used when this test runs, so make sure the test is independent
@@ -660,10 +665,7 @@ fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_c
     let mut input_event_source = TestInputEventSource::new(vec![
         Event::Key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)), // Select 1
         Event::Key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE)), // Collapses 1
-        Event::Key(KeyEvent::new(
-            KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY),
-            KeyModifiers::NONE,
-        )), // Expands children
+        Event::Key(KeyEvent::new(KeyCode::Char(key), KeyModifiers::NONE)), // Expands children
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
 
@@ -678,9 +680,13 @@ fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_c
     Ok(())
 }
 
-#[test]
+#[rstest]
 #[ignore]
+#[case(EXPAND_SELECTED_CHILDREN_KEY)]
+#[ignore]
+#[case(EXPAND_SELECTED_CHILDREN_KEY_ALT)]
 fn render_given_expand_children_input_for_expanded_directory_item_expands_all_children(
+    #[case] key: char,
 ) -> anyhow::Result<()> {
     // Arrange
     // NOTE: The real terminal height will be used when this test runs, so make sure the test is independent
@@ -690,14 +696,8 @@ fn render_given_expand_children_input_for_expanded_directory_item_expands_all_ch
     let mut input_event_source = TestInputEventSource::new(vec![
         Event::Key(KeyEvent::new(KeyCode::Down, KeyModifiers::NONE)), // Select 1
         Event::Key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE)), // Collapses 1
-        Event::Key(KeyEvent::new(
-            KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY),
-            KeyModifiers::NONE,
-        )), // Expands direct children
-        Event::Key(KeyEvent::new(
-            KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY),
-            KeyModifiers::NONE,
-        )), // Expands all children
+        Event::Key(KeyEvent::new(KeyCode::Char(key), KeyModifiers::NONE)), // Expands direct children
+        Event::Key(KeyEvent::new(KeyCode::Char(key), KeyModifiers::NONE)), // Expands all children
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
 

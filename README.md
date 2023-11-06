@@ -144,7 +144,12 @@ This repository contains:
 ### Enabling Git hooks (once off)
 
 After the initial checkout please run the post-checkout hook manually via:
-```git config core.hooksPath ./.git-hooks ; git hook run post-checkout```
+```bash
+git config core.hooksPath ./.git-hooks
+# On MacOS / Linux, make the hook scripts executable. On Windows, comment out the line below:
+chmod +x .git-hooks/*
+git hook run post-checkout
+```
 
 This will setup the hooks directory, enabling the pre-commit hook to run linting, code coverage and benchmarks.
 
