@@ -42,11 +42,31 @@ Two operating modes are supported:
 
 ### Installing the CLI
 
-The CLI is being added to several package managers, but in the mean time here are instructions to install the latest version using alternative methods:
+#### [Homebrew](https://brew.sh/) (Linux and MacOS)
 
-#### Direct Download
+```plaintext
+brew install emilevr/space/space
+```
 
-Download and extract the relevant file for your platform and operating system from the list of assets included in the [latest release](https://github.com/emilevr/space/releases)
+In future, `space` may be upgraded via:
+
+```plaintext
+brew upgrade emilevr/space/space
+```
+
+#### [Scoop](https://scoop.sh/) (Windows)
+
+A PR has been submitted to merge space into the extras bucket, but is still pending review. In the meantime, you can use the following command to install space via the Scoop manifest published by this repo:
+
+```plaintext
+scoop install https://emilevr.github.io/space/scoop/space.json
+```
+
+In future, `space` may be upgraded via:
+
+```plaintext
+scoop update space
+```
 
 #### Bash
 
@@ -63,13 +83,9 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser # Optional if your current e
 Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/emilevr/space/main/install/install.ps1 | Invoke-Expression
 ```
 
-#### Scoop (Windows)
+#### Direct Download
 
-A PR has been submitted to merge space into the extras bucket, but is still pending review. In the meantime, you can use the following command to install space via scoop:
-
-```plaintext
-scoop install https://emilevr.github.io/space/scoop/space.json
-```
+Download and extract the relevant file for your platform and operating system from the list of assets included in the [latest release](https://github.com/emilevr/space/releases)
 
 ### Notes
 
