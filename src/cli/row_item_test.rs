@@ -19,6 +19,7 @@ fn display_outputs_path_and_number_of_children() {
         path_segment: "/some/path".to_string(),
         children: vec![],
         parent: None,
+        descendant_count: 0,
         row_index: 0,
     };
 
@@ -49,6 +50,7 @@ fn get_path_returns_correct_path() {
         path_segment: format!("some{}path", path::MAIN_SEPARATOR_STR),
         children: vec![],
         parent: None,
+        descendant_count: 2,
         row_index: 0,
     }));
     let item2 = Rc::new(RefCell::new(RowItem {
@@ -61,6 +63,7 @@ fn get_path_returns_correct_path() {
         path_segment: "to".to_string(),
         children: vec![],
         parent: Some(Rc::downgrade(&item1)),
+        descendant_count: 1,
         row_index: 0,
     }));
     let item3 = Rc::new(RefCell::new(RowItem {
@@ -73,6 +76,7 @@ fn get_path_returns_correct_path() {
         path_segment: "file".to_string(),
         children: vec![],
         parent: Some(Rc::downgrade(&item2)),
+        descendant_count: 0,
         row_index: 0,
     }));
     {

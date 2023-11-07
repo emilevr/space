@@ -28,6 +28,7 @@ pub(crate) struct RowItem {
     pub path_segment: String,
     pub children: Vec<Rc<RefCell<RowItem>>>,
     pub parent: Option<Weak<RefCell<RowItem>>>,
+    pub descendant_count: usize,
     pub row_index: usize,
 }
 
@@ -61,6 +62,7 @@ impl RowItem {
             path_segment: dir_item.path_segment.clone(),
             children: vec![],
             parent,
+            descendant_count: dir_item.descendant_count,
             row_index: current_row_index,
         }));
 

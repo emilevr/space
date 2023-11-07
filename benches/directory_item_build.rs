@@ -18,7 +18,7 @@ pub fn directory_item_build(c: &mut Criterion) {
 
 criterion_group! {
     name = benches;
-    config = Criterion::default().sample_size(10);
+    config = Criterion::default().sample_size(20);
     targets = directory_item_build
 }
 criterion_main!(benches);

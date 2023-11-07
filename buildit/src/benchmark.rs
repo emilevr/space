@@ -43,7 +43,6 @@ impl BuildItCommand for BenchmarkCommand {
                 "✔️ Sample files and directories found at {}",
                 temp_dir_path.display()
             );
-            println!("Containing {}", read_dir(&temp_dir_path)?.count());
         } else {
             println!("👷 Creating directory {}", temp_dir_path.display());
             create_dir_all(&temp_dir_path)?;

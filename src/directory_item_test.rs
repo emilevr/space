@@ -22,12 +22,12 @@ fn cmp_with_given_size_in_bytes_returns_correct_ordering(
         path_segment: "/1".to_string(),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_1),
-        child_count: 1,
+        descendant_count: 1,
         children: vec![DirectoryItem {
             path_segment: "1".to_string(),
             size_in_bytes: Size::new(size_in_bytes_1),
             children: vec![],
-            child_count: 0,
+            descendant_count: 0,
             item_type: DirectoryItemType::File,
         }],
     };
@@ -35,7 +35,7 @@ fn cmp_with_given_size_in_bytes_returns_correct_ordering(
         path_segment: "/2".to_string(),
         size_in_bytes: Size::new(size_in_bytes_2),
         children: vec![],
-        child_count: 0,
+        descendant_count: 0,
         item_type: DirectoryItemType::Directory,
     };
 
@@ -60,12 +60,12 @@ fn partial_cmp_with_given_size_in_bytes_returns_correct_ordering(
         path_segment: "/2".to_string(),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_1),
-        child_count: 1,
+        descendant_count: 1,
         children: vec![DirectoryItem {
             path_segment: "1".to_string(),
             item_type: DirectoryItemType::File,
             size_in_bytes: Size::new(size_in_bytes_1),
-            child_count: 0,
+            descendant_count: 0,
             children: vec![],
         }],
     };
@@ -73,7 +73,7 @@ fn partial_cmp_with_given_size_in_bytes_returns_correct_ordering(
         path_segment: "/3".to_string(),
         item_type: DirectoryItemType::File,
         size_in_bytes: Size::new(size_in_bytes_2),
-        child_count: 0,
+        descendant_count: 0,
         children: vec![],
     };
 
@@ -98,12 +98,12 @@ fn eq_with_given_size_in_bytes_returns_correct_result(
         path_segment: "/3".to_string(),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_1),
-        child_count: 1,
+        descendant_count: 1,
         children: vec![DirectoryItem {
             path_segment: "1".to_string(),
             item_type: DirectoryItemType::Directory,
             size_in_bytes: Size::new(size_in_bytes_1),
-            child_count: 0,
+            descendant_count: 0,
             children: vec![],
         }],
     };
@@ -111,7 +111,7 @@ fn eq_with_given_size_in_bytes_returns_correct_result(
         path_segment: "/4".to_string(),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(size_in_bytes_2),
-        child_count: 0,
+        descendant_count: 0,
         children: vec![],
     };
 
@@ -167,12 +167,12 @@ fn debug_succeeds() {
         path_segment: "/1".to_string(),
         item_type: DirectoryItemType::Directory,
         size_in_bytes: Size::new(777),
-        child_count: 1,
+        descendant_count: 1,
         children: vec![DirectoryItem {
             path_segment: "2".to_string(),
             item_type: DirectoryItemType::Directory,
             size_in_bytes: Size::new(778),
-            child_count: 0,
+            descendant_count: 0,
             children: vec![],
         }],
     };
@@ -210,7 +210,7 @@ fn get_child_items_given_non_existent_path_does_not_panic() {
     let children = DirectoryItem::get_child_items(&path);
 
     // Assert
-    assert_eq!(0, children.len());
+    assert_eq!(1, children.len());
 }
 
 #[rstest]
@@ -220,7 +220,7 @@ fn get_fraction_given_total_size_in_bytes_of_0_should_return_0() {
         path_segment: "/1".to_string(),
         item_type: DirectoryItemType::File,
         size_in_bytes: Size::new(123),
-        child_count: 0,
+        descendant_count: 0,
         children: vec![],
     };
 

@@ -2,7 +2,7 @@
 
 use crate::Size;
 use rayon::{
-    prelude::{ParallelBridge, ParallelIterator},
+    prelude::{IntoParallelRefMutIterator, ParallelBridge, ParallelIterator},
     slice::ParallelSliceMut,
 };
 use std::{
@@ -39,8 +39,8 @@ pub struct DirectoryItem {
     pub item_type: DirectoryItemType,
     /// The size in bytes.
     pub size_in_bytes: Size,
-    /// If the item is a directory it may also have child items.
-    pub child_count: usize,
+    /// If the item is a directory it may also have descendants.
+    pub descendant_count: usize,
     /// If the item is a directory, it may also have child items.
     pub children: Vec<DirectoryItem>,
 }
@@ -75,7 +75,11 @@ impl DirectoryItem {
         } else {
             Self::from_failure(path)
         };
+
+        item.update_stats_from_descendant();
+
         item.path_segment = path.to_string_lossy().to_string();
+
         item
     }
 
@@ -85,7 +89,7 @@ impl DirectoryItem {
             path_segment: get_file_name_from_path(path),
             item_type: DirectoryItemType::File,
             size_in_bytes: Size::new(size_in_bytes),
-            child_count: 0,
+            descendant_count: 0,
             children: vec![],
         }
     }
@@ -96,7 +100,7 @@ impl DirectoryItem {
             path_segment: get_file_name_from_path(path),
             item_type: DirectoryItemType::SymbolicLink,
             size_in_bytes: Size::default(),
-            child_count: 0,
+            descendant_count: 0,
             children: vec![],
         }
     }
@@ -107,54 +111,51 @@ impl DirectoryItem {
             path_segment: get_file_name_from_path(path),
             item_type: DirectoryItemType::Unknown,
             size_in_bytes: Size::default(),
-            child_count: 0,
+            descendant_count: 0,
             children: vec![],
         }
     }
 
     #[inline(always)]
     fn from_directory(path: &Path) -> DirectoryItem {
-        let children = {
-            let mut children = Self::get_child_items(path);
-            children.par_sort_by(|a, b| b.partial_cmp(a).unwrap());
-            children
-        };
         DirectoryItem {
             path_segment: get_file_name_from_path(path),
             item_type: DirectoryItemType::Directory,
-            size_in_bytes: Size::new(
-                children
-                    .iter()
-                    .map(|child| child.size_in_bytes.get_value())
-                    .sum(),
-            ),
-            child_count: 0,
-            children,
+            size_in_bytes: Size::default(),
+            descendant_count: 0,
+            children: Self::get_child_items(path),
         }
     }
 
     #[inline(always)]
     fn get_child_items(path: &Path) -> Vec<DirectoryItem> {
-        fs::read_dir(path)
-            .into_iter()
-            .flatten()
-            .par_bridge()
-            .filter_map(|result| result.ok())
-            .map(|entry| {
-                let path = &entry.path();
-                if path.is_file() {
-                    let size_in_bytes = match path.metadata() {
-                        Ok(metadata) => metadata.len(),
-                        _ => 0,
-                    };
-                    Self::from_file_size(path, size_in_bytes)
-                } else if path.is_symlink() {
-                    Self::from_link(path)
-                } else {
-                    Self::from_directory(path)
-                }
-            })
-            .collect()
+        match fs::read_dir(path) {
+            Ok(entries) => entries,
+            Err(_) => return vec![Self::from_failure(path)], // TODO: report error
+        }
+        .par_bridge()
+        .filter_map(|result| match result {
+            Ok(entry) => Some(entry),
+            Err(_) => {
+                // TODO: report the error
+                None
+            }
+        })
+        .map(|entry| {
+            let path = &entry.path();
+            if path.is_file() {
+                let size_in_bytes = match path.symlink_metadata() {
+                    Ok(metadata) => metadata.len(),
+                    _ => 0,
+                };
+                Self::from_file_size(path, size_in_bytes)
+            } else if path.is_symlink() {
+                Self::from_link(path)
+            } else {
+                Self::from_directory(path)
+            }
+        })
+        .collect()
     }
 
     /// Given the total size in bytes, returns the fraction of that total that his item uses.
@@ -165,6 +166,41 @@ impl DirectoryItem {
         } else {
             self.size_in_bytes.get_value() as f32 / total_size_in_bytes as f32
         }
+    }
+
+    /// Updates all descendents
+    #[inline(always)]
+    fn update_stats_from_descendant(&mut self) {
+        let child_count = self.children.len();
+        if child_count == 0 {
+            return;
+        }
+
+        // First we update our descendants, so their sizes will be correct.
+        self.children.par_iter_mut().for_each(|child| {
+            if !child.children.is_empty() {
+                child.update_stats_from_descendant();
+            }
+        });
+
+        // Then we sort.
+        if child_count > 1 {
+            self.children.par_sort_by(|a, b| b.partial_cmp(a).unwrap());
+        }
+
+        // Update our own count and size from our descendants' stats.
+        let mut size_in_bytes = 0;
+        let mut descendant_count = 0;
+        self.children.iter().for_each(|child| {
+            if child.item_type == DirectoryItemType::Directory {
+                descendant_count += child.descendant_count;
+            }
+            descendant_count += 1;
+            size_in_bytes += child.size_in_bytes.get_value();
+        });
+
+        self.descendant_count = descendant_count;
+        self.size_in_bytes = Size::new(size_in_bytes);
     }
 }
 

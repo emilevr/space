@@ -54,7 +54,7 @@ fn add_row_item_given_item_of_size_below_threshold_does_not_add_item() {
         path_segment: "/some/path".to_string(),
         size_in_bytes: Size::default(),
         children: vec![],
-        child_count: 0,
+        descendant_count: 0,
         item_type: DirectoryItemType::Unknown,
     };
     let mut rows = vec![];
@@ -124,6 +124,7 @@ fn render_row_with_size_smaller_than_threshold_does_not_output_anything() -> any
         path_segment: "/some/path".to_string(),
         children: vec![],
         parent: None,
+        descendant_count: 0,
         row_index: 1,
     }));
 

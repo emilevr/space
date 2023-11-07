@@ -31,4 +31,4 @@ jobs:
           restore-keys: tmp.sample-${{ github.job }}
 
       - name: Run all benchmarks
-        run: buildit benchmark --bench-names directory_item_build directory_item_build_x2 directory_item_build_x3
+        run: buildit benchmark --bench-names directory_item_build directory_item_build_x2

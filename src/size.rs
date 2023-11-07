@@ -54,7 +54,7 @@ const METRIC_DISPLAY_DATA: [&SizeDisplayData; 3] = [
 ];
 
 /// A directory item size.
-#[derive(Clone, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Size {
     value: u64,
 }

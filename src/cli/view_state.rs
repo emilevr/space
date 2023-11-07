@@ -538,8 +538,13 @@ pub(crate) fn get_row_cell_content(
             Default::default()
         });
     }
+    let descendant_count_suffix = if item_ref.descendant_count > 0 {
+        format!(" [{}]", item_ref.descendant_count)
+    } else {
+        String::default()
+    };
     cells.push(format!(
-        "{}{}{}",
+        "{}{}{}{}",
         item_ref.tree_prefix,
         match item_ref.item_type {
             RowItemType::Directory => ITEM_TYPE_DIRECTORY_SYMBOL,
@@ -547,7 +552,8 @@ pub(crate) fn get_row_cell_content(
             RowItemType::SymbolicLink => ITEM_TYPE_SYMBOLIC_LINK_SYMBOL,
             RowItemType::Unknown => ITEM_TYPE_UNKNOWN_SYMBOL,
         },
-        item_ref.path_segment
+        item_ref.path_segment,
+        descendant_count_suffix
     ));
     cells.push("░".repeat(excl_filled_count));
     cells.push(format!(
