@@ -48,7 +48,7 @@ impl RowItem {
         };
 
         let current = Rc::new(RefCell::new(RowItem {
-            size: dir_item.size_in_bytes.clone(),
+            size: dir_item.size_in_bytes,
             has_children,
             expanded: has_children,
             tree_prefix: String::default(),
