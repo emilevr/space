@@ -2,7 +2,7 @@
 
 use crate::Size;
 use rayon::{
-    prelude::{IntoParallelRefMutIterator, ParallelBridge, ParallelIterator},
+    prelude::{IntoParallelRefIterator, IntoParallelRefMutIterator, ParallelIterator},
     slice::ParallelSliceMut,
 };
 use std::{
@@ -129,11 +129,10 @@ impl DirectoryItem {
 
     #[inline(always)]
     fn get_child_items(path: &Path) -> Vec<DirectoryItem> {
-        match fs::read_dir(path) {
+        let entries: Vec<_> = match fs::read_dir(path) {
             Ok(entries) => entries,
             Err(_) => return vec![Self::from_failure(path)], // TODO: report error
         }
-        .par_bridge()
         .filter_map(|result| match result {
             Ok(entry) => Some(entry),
             Err(_) => {
@@ -141,21 +140,42 @@ impl DirectoryItem {
                 None
             }
         })
-        .map(|entry| {
-            let path = &entry.path();
-            if path.is_file() {
-                let size_in_bytes = match path.symlink_metadata() {
-                    Ok(metadata) => metadata.len(),
-                    _ => 0,
-                };
-                Self::from_file_size(path, size_in_bytes)
-            } else if path.is_symlink() {
-                Self::from_link(path)
-            } else {
-                Self::from_directory(path)
+        .collect();
+
+        match entries.len() {
+            0 => vec![],
+            1 => {
+                let path = &entries[0].path();
+                if path.is_file() {
+                    let size_in_bytes = match path.symlink_metadata() {
+                        Ok(metadata) => metadata.len(),
+                        _ => 0,
+                    };
+                    vec![Self::from_file_size(path, size_in_bytes)]
+                } else if path.is_symlink() {
+                    vec![Self::from_link(path)]
+                } else {
+                    vec![Self::from_directory(path)]
+                }
             }
-        })
-        .collect()
+            _ => entries
+                .par_iter()
+                .map(|entry| {
+                    let path = &entry.path();
+                    if path.is_file() {
+                        let size_in_bytes = match path.symlink_metadata() {
+                            Ok(metadata) => metadata.len(),
+                            _ => 0,
+                        };
+                        Self::from_file_size(path, size_in_bytes)
+                    } else if path.is_symlink() {
+                        Self::from_link(path)
+                    } else {
+                        Self::from_directory(path)
+                    }
+                })
+                .collect(),
+        }
     }
 
     /// Given the total size in bytes, returns the fraction of that total that his item uses.
