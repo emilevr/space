@@ -192,28 +192,47 @@ impl ViewCommand {
 }
 
 fn select_skin() -> Skin {
-    let skin = if let Ok(luma) = terminal_light::luma() {
-        if luma > 0.6 {
-            println!("Selected light skin based on terminal colors");
-            Skin {
-                table_header_bg_color: Color::Rgb(206, 206, 232),
+    let default = Skin::default();
+    if let Some(color_count) = get_color_count() {
+        match color_count {
+            ..=16 => Skin {
+                table_header_bg_color: Color::Blue,
                 table_header_fg_color: Color::White,
                 title_fg_color: Color::White,
-                title_bg_color: Color::Rgb(64, 64, 64),
-                value_fg_color: Color::Rgb(88, 144, 255),
-                key_help_danger_bg_color: Color::Rgb(192, 64, 64),
-                key_help_key_fg_color: Color::Rgb(88, 144, 255),
+                title_bg_color: Color::DarkGray,
+                value_fg_color: Color::LightBlue,
+                key_help_danger_bg_color: Color::LightRed,
+                key_help_key_fg_color: Color::Red,
                 ..Default::default()
-            }
-        } else {
-            println!("Selected dark skin based on terminal colors");
-            Skin::default()
+            },
+            _ => default,
         }
     } else {
-        println!("Selected default dark skin");
-        Skin::default()
-    };
-    skin
+        default
+    }
+}
+
+fn get_color_count() -> Option<u32> {
+    if let Ok(colorterm) = env::var("COLORTERM") {
+        match colorterm.to_lowercase().as_str() {
+            "truecolor" | "24bit" | "24-bit" => Some(16_777_216), // 24-bit color
+            "xterm-256color" | "xterm256" => Some(256),           // 256 colors
+            "xterm" => Some(16),                                  // 16 colors
+            "ansi" => Some(16),                                   // 16 colors
+            "dumb" => None,                                       // No color support
+            "screen" => Some(16),                                 // 16 colors
+            "screen-256color" => Some(256),                       // 256 colors
+            "tmux" => Some(16),                                   // 16 colors
+            "tmux-256color" => Some(256),                         // 256 colors
+            "konsole" => Some(256),                               // 256 colors
+            "rxvt-unicode" => Some(8),                            // 8 colors (customizable)
+            "rxvt-unicode-256color" => Some(256),                 // 256 colors
+            "kitty" | "kitty-256color" => Some(256),              // 256 colors
+            _ => None,                                            // Unknown or custom value
+        }
+    } else {
+        None
+    }
 }
 
 fn render_rows<W: Write>(
