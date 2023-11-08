@@ -50,7 +50,12 @@ fn render_outputs_crate_version_number() -> anyhow::Result<()> {
     ))]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     output.matches(Regex::new(format!("Space\\s+.*v{}", VERSION).as_str())?)?;
@@ -72,7 +77,12 @@ fn render_outputs_full_path_as_first_row_with_100_percent_size() -> anyhow::Resu
     ))]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     let regex_safe_path = view_state.visible_row_items[0]
@@ -126,7 +136,12 @@ fn render_with_delete_input_without_license_terms_accepted_shows_license_dialog(
     let mut input_event_source = TestInputEventSource::new(input_events);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     output.expect("Before you are able to delete")?;
@@ -187,7 +202,12 @@ fn render_with_cancelled_delete_does_not_delete_item(
     let mut input_event_source = TestInputEventSource::new(input_events);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert_selected_item_name_eq(expected_selected_item_name, &view_state);
@@ -252,7 +272,12 @@ fn render_with_confirmed_delete_deletes_selected_item(
     let mut input_event_source = TestInputEventSource::new(input_events);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     // The collected item and all children should be gone.
@@ -315,7 +340,12 @@ fn render_with_navigation_input_selects_correct_item(
     let mut input_event_source = TestInputEventSource::new(input_events);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert_selected_item_name_eq(expected_selected_item_name, &view_state);
@@ -382,7 +412,12 @@ fn render_with_page_up_or_down_navigation_input_selects_correct_item(
     let mut input_event_source = TestInputEventSource::new(input_events);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert_selected_item_name_eq(expected_selected_item_name, &view_state);
@@ -426,7 +461,12 @@ fn render_with_first_navigation_input_selects_first_item(
     let mut input_event_source = TestInputEventSource::new(input_events);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert_selected_item_name_eq(expected_selected_item_name, &view_state);
@@ -470,7 +510,12 @@ fn render_with_last_navigation_input_selects_last_item(
     let mut input_event_source = TestInputEventSource::new(input_events);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert_selected_item_name_eq(expected_selected_item_name, &view_state);
@@ -493,7 +538,12 @@ fn render_with_help_key_input_outputs_help() -> anyhow::Result<()> {
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     output.matches(Regex::new(
@@ -544,7 +594,12 @@ fn render_with_view_size_threshold_input_shows_percentage_on_top_line(
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     output.matches(Regex::new(
@@ -576,7 +631,12 @@ fn render_given_collapse_input_for_expanded_directory_item_collapses_it() -> any
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     let item = view_state.visible_row_items[1].borrow();
@@ -605,7 +665,12 @@ fn render_given_expand_input_for_collapsed_directory_item_expands_it() -> anyhow
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     let item = view_state.visible_row_items[1].borrow();
@@ -636,7 +701,12 @@ fn render_given_collapse_children_input_for_directory_item_collapses_all_childre
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     let item = view_state.visible_row_items[1].borrow();
@@ -670,7 +740,12 @@ fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_c
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert_eq!(12, view_state.displayable_item_count);
@@ -702,7 +777,12 @@ fn render_given_expand_children_input_for_expanded_directory_item_expands_all_ch
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert_eq!(
@@ -738,7 +818,12 @@ fn render_with_accept_license_input_updates_view_state_and_writes_config_file() 
     ]);
 
     // Act
-    render(&mut view_state, &mut output, &mut input_event_source)?;
+    render(
+        &mut view_state,
+        &mut output,
+        &mut input_event_source,
+        &Skin::default(),
+    )?;
 
     // Assert
     assert!(view_state.accepted_license_terms);

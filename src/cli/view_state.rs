@@ -1,4 +1,7 @@
-use super::row_item::{RowItem, RowItemType};
+use super::{
+    row_item::{RowItem, RowItemType},
+    skin::Skin,
+};
 use anyhow::bail;
 use log::error;
 use ratatui::widgets::Row;
@@ -24,11 +27,6 @@ pub(crate) const EXPAND_INDICATOR_COLUMN_WIDTH: u16 = 1;
 pub(crate) const INCL_PERCENTAGE_COLUMN_WIDTH: u16 = 4;
 
 pub(crate) const EXCL_PERCENTAGE_MAX_COLUMN_WIDTH: u16 = 20;
-
-pub(crate) const ITEM_TYPE_DIRECTORY_SYMBOL: char = '📁';
-pub(crate) const ITEM_TYPE_FILE_SYMBOL: char = '📄';
-pub(crate) const ITEM_TYPE_SYMBOLIC_LINK_SYMBOL: char = '🔗';
-pub(crate) const ITEM_TYPE_UNKNOWN_SYMBOL: char = '❓';
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 struct Config {
@@ -62,6 +60,7 @@ pub(crate) struct ViewState {
     pub accepted_license_terms: bool,
     pub table_width: u16,
     pub config_file_path: Option<PathBuf>,
+    pub skin: Skin,
 }
 
 impl Default for ViewState {
@@ -81,6 +80,7 @@ impl Default for ViewState {
             accepted_license_terms: false,
             table_width: 0,
             config_file_path: None,
+            skin: Skin::default(),
         }
     }
 }
@@ -90,11 +90,13 @@ impl ViewState {
         item_tree: Vec<Rc<RefCell<RowItem>>>,
         size_display_format: SizeDisplayFormat,
         size_threshold_fraction: f32,
+        skin: &Skin,
     ) -> ViewState {
         let mut view_state = ViewState {
             item_tree,
             size_display_format,
             size_threshold_fraction,
+            skin: *skin,
             ..Default::default()
         };
         view_state.update_total_items_in_tree();
@@ -124,6 +126,7 @@ impl ViewState {
                 &mut added_count,
                 &mut displayable_item_count,
                 self.table_width,
+                &self.skin,
             );
         }
 
@@ -450,6 +453,7 @@ fn add_table_row(
     added_count: &mut usize,
     displayable_item_count: &mut usize,
     table_width: u16,
+    skin: &Skin,
 ) {
     let item_incl_fraction = item.as_ref().borrow().incl_fraction;
     if item_incl_fraction < size_threshold_fraction {
@@ -463,7 +467,7 @@ fn add_table_row(
         // We allow one more row than the visible_height so we can use it as a lookahead, therefore we
         // check against <= visible_height rather than < visible_height.
         if *added_count <= visible_height {
-            let cells = get_row_cell_content(&item, size_display_format, table_width, false);
+            let cells = get_row_cell_content(&item, size_display_format, table_width, false, skin);
             rows.push(Row::new(cells).height(1));
             row_items.push(item.clone());
 
@@ -494,6 +498,7 @@ fn add_table_row(
                 added_count,
                 displayable_item_count,
                 table_width,
+                skin,
             );
 
             // We don't exit early here as we need to count the total number of visible items.
@@ -516,6 +521,7 @@ pub(crate) fn get_row_cell_content(
     size_display_format: SizeDisplayFormat,
     table_width: u16,
     is_non_interactive_output: bool,
+    skin: &Skin,
 ) -> Vec<String> {
     let item_ref = item.borrow();
     let excl_filled_count =
@@ -547,10 +553,10 @@ pub(crate) fn get_row_cell_content(
         "{}{}{}{}",
         item_ref.tree_prefix,
         match item_ref.item_type {
-            RowItemType::Directory => ITEM_TYPE_DIRECTORY_SYMBOL,
-            RowItemType::File => ITEM_TYPE_FILE_SYMBOL,
-            RowItemType::SymbolicLink => ITEM_TYPE_SYMBOLIC_LINK_SYMBOL,
-            RowItemType::Unknown => ITEM_TYPE_UNKNOWN_SYMBOL,
+            RowItemType::Directory => skin.item_type_directory_symbol,
+            RowItemType::File => skin.item_type_file_symbol,
+            RowItemType::SymbolicLink => skin.item_type_symbolic_link_symbol,
+            RowItemType::Unknown => skin.item_type_unknown_symbol,
         },
         item_ref.path_segment,
         descendant_count_suffix

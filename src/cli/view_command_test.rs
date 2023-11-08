@@ -2,6 +2,7 @@ use crate::{
     cli::{
         cli_command::CliCommand,
         row_item::{RowItem, RowItemType},
+        skin::Skin,
         view_command::ViewCommand,
         view_state_test_utils::make_test_view_state,
     },
@@ -136,6 +137,7 @@ fn render_row_with_size_smaller_than_threshold_does_not_output_anything() -> any
         80,
         SizeDisplayFormat::Metric,
         &mut backend,
+        &Skin::default(),
     )?;
 
     // Assert
@@ -166,7 +168,12 @@ fn render_rows_given_size_threshold_should_render_correct_rows(
     let (view_state, temp_dir_path) = make_test_view_state(0f32)?;
 
     // Act
-    let rendered_count = render_rows(view_state, size_threshold_fraction, &mut output)?;
+    let rendered_count = render_rows(
+        view_state,
+        size_threshold_fraction,
+        &mut output,
+        &Skin::default(),
+    )?;
 
     // Assert
     if expected_rendered_count != rendered_count {

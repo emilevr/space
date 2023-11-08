@@ -1,4 +1,4 @@
-use super::{row_item::RowItem, view_state::ViewState};
+use super::{row_item::RowItem, skin::Skin, view_state::ViewState};
 use crate::{cli::view_command::ViewCommand, test_directory_utils::create_test_directory_tree};
 use space_rs::SizeDisplayFormat;
 use std::{cell::RefCell, path::PathBuf, rc::Rc};
@@ -49,7 +49,12 @@ pub(crate) fn make_test_view_state_from_path(
     let items = view_command.get_directory_items();
     let items = view_command.get_row_items(items, 0f32);
 
-    let mut view_state = ViewState::new(items, size_display_format, size_threshold_fraction);
+    let mut view_state = ViewState::new(
+        items,
+        size_display_format,
+        size_threshold_fraction,
+        &Skin::default(),
+    );
     view_state.visible_height = visible_height;
     view_state.visible_offset = visible_offset;
     view_state.table_width = 80;

@@ -3,6 +3,7 @@ use super::crossterm_input_event_source::CrosstermInputEventSource;
 use super::{
     cli_command::CliCommand,
     row_item::RowItem,
+    skin::Skin,
     tui,
     view_state::{self, ViewState},
 };
@@ -77,7 +78,11 @@ impl CliCommand for ViewCommand {
 
         let size_threshold_fraction = self.size_threshold_percentage as f32 / 100f32;
         let items = self.get_row_items(items, size_threshold_fraction);
-        let mut view_state = ViewState::new(items, size_display_format, size_threshold_fraction);
+
+        let skin = select_skin();
+
+        let mut view_state =
+            ViewState::new(items, size_display_format, size_threshold_fraction, &skin);
 
         // TODO: Push any error into some sort of error stream and expose in UI.
         let _ = view_state.read_config_file();
@@ -88,12 +93,13 @@ impl CliCommand for ViewCommand {
                 &mut view_state,
                 writer,
                 &mut CrosstermInputEventSource::new(),
+                &skin,
             )?;
             writeln!(writer, "Done.")?;
             return Ok(());
         }
 
-        render_rows(view_state, size_threshold_fraction, writer)?;
+        render_rows(view_state, size_threshold_fraction, writer, &skin)?;
         writer.flush()?;
 
         Ok(())
@@ -185,10 +191,36 @@ impl ViewCommand {
     }
 }
 
+fn select_skin() -> Skin {
+    let skin = if let Ok(luma) = terminal_light::luma() {
+        if luma > 0.6 {
+            println!("Selected light skin based on terminal colors");
+            Skin {
+                table_header_bg_color: Color::Rgb(206, 206, 232),
+                table_header_fg_color: Color::White,
+                title_fg_color: Color::White,
+                title_bg_color: Color::Rgb(64, 64, 64),
+                value_fg_color: Color::Rgb(88, 144, 255),
+                key_help_danger_bg_color: Color::Rgb(192, 64, 64),
+                key_help_key_fg_color: Color::Rgb(88, 144, 255),
+                ..Default::default()
+            }
+        } else {
+            println!("Selected dark skin based on terminal colors");
+            Skin::default()
+        }
+    } else {
+        println!("Selected default dark skin");
+        Skin::default()
+    };
+    skin
+}
+
 fn render_rows<W: Write>(
     view_state: ViewState,
     size_threshold_fraction: f32,
     writer: &mut W,
+    skin: &Skin,
 ) -> anyhow::Result<usize> {
     let mut rendered_count = 0;
     let backend = CrosstermBackend::new(writer);
@@ -222,6 +254,7 @@ fn render_rows<W: Write>(
                 width,
                 view_state.size_display_format,
                 terminal.backend_mut(),
+                skin,
             )?;
             anyhow::Ok(())
         })
@@ -239,6 +272,7 @@ fn render_row<W: Write>(
     terminal_width: u16,
     size_display_format: SizeDisplayFormat,
     backend: &mut CrosstermBackend<W>,
+    skin: &Skin,
 ) -> anyhow::Result<usize> {
     let mut rendered_count = 0;
     let item_ref = item.borrow();
@@ -247,7 +281,8 @@ fn render_row<W: Write>(
         return Ok(rendered_count);
     }
 
-    let cells = view_state::get_row_cell_content(item, size_display_format, terminal_width, true);
+    let cells =
+        view_state::get_row_cell_content(item, size_display_format, terminal_width, true, skin);
 
     let column_count = constraints.len();
     for col_index in 0..column_count {
@@ -284,6 +319,7 @@ fn render_row<W: Write>(
                 terminal_width,
                 size_display_format,
                 backend,
+                skin,
             )
             .unwrap();
         }
