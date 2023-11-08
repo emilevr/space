@@ -20,14 +20,14 @@ impl Default for Skin {
     fn default() -> Self {
         // The default dark mode skin
         Self {
-            table_header_bg_color: Color::Rgb(64, 64, 176),
-            table_header_fg_color: Color::White,
             title_fg_color: Color::White,
             title_bg_color: Color::Rgb(64, 64, 64),
             version_fg_color: Color::Rgb(192, 192, 192),
+            table_header_bg_color: Color::Rgb(64, 64, 176),
+            table_header_fg_color: Color::White,
             value_fg_color: Color::Rgb(88, 144, 255),
             key_help_danger_bg_color: Color::Rgb(192, 64, 64),
-            key_help_key_fg_color: Color::Rgb(88, 144, 255),
+            key_help_key_fg_color: Color::Rgb(192, 192, 192),
             item_type_directory_symbol: '📁',
             item_type_file_symbol: '📄',
             item_type_symbolic_link_symbol: '🔗',
