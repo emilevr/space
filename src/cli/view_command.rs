@@ -192,28 +192,30 @@ impl ViewCommand {
 }
 
 fn select_skin() -> Skin {
-    let default = Skin::default();
+    let low_color = Skin {
+        title_fg_color: Color::White,
+        title_bg_color: Color::Blue,
+        version_fg_color: Color::Gray,
+        table_header_bg_color: Color::DarkGray,
+        table_header_fg_color: Color::White,
+        value_fg_color: Color::LightBlue,
+        key_help_danger_bg_color: Color::LightRed,
+        key_help_key_fg_color: Color::Gray,
+        ..Default::default()
+    };
+
     if let Some(color_count) = get_color_count() {
         match color_count {
-            ..=16 => Skin {
-                table_header_bg_color: Color::Blue,
-                table_header_fg_color: Color::White,
-                title_fg_color: Color::White,
-                title_bg_color: Color::DarkGray,
-                value_fg_color: Color::LightBlue,
-                key_help_danger_bg_color: Color::LightRed,
-                key_help_key_fg_color: Color::Red,
-                ..Default::default()
-            },
-            _ => default,
+            ..=256 => low_color,
+            _ => Skin::default(),
         }
     } else {
-        default
+        low_color
     }
 }
 
 fn get_color_count() -> Option<u32> {
-    if let Ok(colorterm) = env::var("COLORTERM") {
+    if let Ok(colorterm) = env::var("COLORTERM").or(env::var("TERM")) {
         match colorterm.to_lowercase().as_str() {
             "truecolor" | "24bit" | "24-bit" => Some(16_777_216), // 24-bit color
             "xterm-256color" | "xterm256" => Some(256),           // 256 colors

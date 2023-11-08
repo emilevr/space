@@ -237,7 +237,9 @@ fn render_title_bar<B: Backend>(f: &mut Frame<B>, data: &ViewState, area: &Rect,
     let title_style = Style::default()
         .fg(skin.title_fg_color)
         .bg(skin.title_bg_color);
-    let version_style = title_style;
+    let version_style = Style::default()
+        .fg(skin.version_fg_color)
+        .bg(skin.title_bg_color);
 
     let title = "Space";
     let version_display = format!("v{VERSION}");
