@@ -17,7 +17,7 @@ use crossterm::{
 use ratatui::{
     layout::{Constraint, Layout},
     prelude::*,
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     widgets::{
         Block, Borders, Cell, Clear, Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Table, TableState, Widget, Wrap,
@@ -716,7 +716,7 @@ macro_rules! measure_height {
 
 fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState, skin: &Skin) {
     if let Some(selected_item) = view_state.get_selected_item() {
-        let value_style = Style::default().fg(skin.value_fg_color);
+        let value_style = skin.value_style();
         let selected_item_ref = selected_item.borrow();
         let is_dir = selected_item_ref.item_type == RowItemType::Directory;
 
@@ -755,7 +755,7 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
                     } else {
                         "".into()
                     }),
-                Style::default().fg(Color::Rgb(255, 165, 0)),
+                Style::default().fg(skin.delete_warning_text_fg_color),
             )),
             Line::default(),
             Line::from(vec![
@@ -779,7 +779,6 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
                     .borders(Borders::ALL)
                     .padding(Padding::uniform(1)),
             )
-            .style(Style::default().fg(Color::White))
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true });
 
@@ -791,7 +790,7 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
 }
 
 fn render_accept_license_terms_dialog<B: Backend>(f: &mut Frame<B>, skin: &Skin) {
-    let value_style = Style::default().fg(skin.value_fg_color);
+    let value_style = skin.value_style();
     let bold_style = Style::default().add_modifier(Modifier::BOLD);
 
     #[rustfmt::skip]
@@ -841,7 +840,6 @@ r#"By accepting, you agree to be bound by the terms of the MIT License. You can 
                 .borders(Borders::ALL)
                 .padding(Padding::uniform(1)),
         )
-        .style(Style::default().fg(Color::White))
         .alignment(Alignment::Left)
         .wrap(Wrap { trim: true });
 

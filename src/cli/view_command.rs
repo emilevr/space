@@ -198,7 +198,9 @@ fn select_skin() -> Skin {
         version_fg_color: Color::Gray,
         table_header_bg_color: Color::DarkGray,
         table_header_fg_color: Color::White,
-        value_fg_color: Color::LightBlue,
+        value_fg_color: None,
+        value_style_invert: true,
+        delete_warning_text_fg_color: Color::LightRed,
         key_help_danger_bg_color: Color::LightRed,
         key_help_key_fg_color: Color::Gray,
         ..Default::default()
