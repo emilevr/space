@@ -2,6 +2,7 @@
 use super::crossterm_input_event_source::CrosstermInputEventSource;
 use super::{
     cli_command::CliCommand,
+    environment::EnvServiceTrait,
     row_item::RowItem,
     skin::Skin,
     tui,
@@ -11,19 +12,24 @@ use anyhow::{bail, Context};
 use crossterm::{style::Print, QueueableCommand};
 use ratatui::prelude::*;
 use space_rs::{DirectoryItem, SizeDisplayFormat};
-use std::{cell::RefCell, env, io::Write, path::PathBuf, rc::Rc};
+use std::{cell::RefCell, io::Write, path::PathBuf, rc::Rc};
 use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
 #[path = "./view_command_test.rs"]
 mod view_command_test;
 
-pub struct ViewCommand {
-    pub target_paths: Option<Vec<PathBuf>>,
-    pub size_display_format: Option<SizeDisplayFormat>,
-    pub size_threshold_percentage: u8,
-    pub non_interactive: bool,
+const COLORTERM_ENV_VAR: &str = "COLORTERM";
+const TERM_ENV_VAR: &str = "TERM";
+
+pub(crate) struct ViewCommand {
+    target_paths: Option<Vec<PathBuf>>,
+    size_display_format: Option<SizeDisplayFormat>,
+    size_threshold_percentage: u8,
+    #[cfg(not(test))]
+    non_interactive: bool,
     total_size_in_bytes: u64,
+    env_service: Box<dyn EnvServiceTrait>,
 }
 
 impl CliCommand for ViewCommand {
@@ -46,7 +52,7 @@ impl CliCommand for ViewCommand {
             // Update args with cleaned target paths.
             self.target_paths = Some(target_paths);
         } else {
-            self.target_paths = Some(vec![env::current_dir()?]);
+            self.target_paths = Some(vec![self.env_service.current_dir()?]);
         }
 
         Ok(self)
@@ -79,7 +85,7 @@ impl CliCommand for ViewCommand {
         let size_threshold_fraction = self.size_threshold_percentage as f32 / 100f32;
         let items = self.get_row_items(items, size_threshold_fraction);
 
-        let skin = select_skin();
+        let skin = self.select_skin();
 
         let mut view_state =
             ViewState::new(items, size_display_format, size_threshold_fraction, &skin);
@@ -107,6 +113,30 @@ impl CliCommand for ViewCommand {
 }
 
 impl ViewCommand {
+    pub fn new(
+        target_paths: Option<Vec<PathBuf>>,
+        size_display_format: Option<SizeDisplayFormat>,
+        size_threshold_percentage: u8,
+        #[cfg(not(test))] non_interactive: bool,
+        env_service: Box<dyn EnvServiceTrait>,
+    ) -> Self {
+        ViewCommand {
+            target_paths,
+            size_display_format,
+            size_threshold_percentage,
+            #[cfg(not(test))]
+            non_interactive,
+            total_size_in_bytes: 0,
+            env_service,
+        }
+    }
+
+    #[cfg(test)]
+    #[allow(dead_code)]
+    pub(crate) fn target_paths(&self) -> &Option<Vec<PathBuf>> {
+        &self.target_paths
+    }
+
     #[inline(always)]
     pub fn get_directory_items(&mut self) -> Vec<DirectoryItem> {
         self.analyze_space()
@@ -120,21 +150,6 @@ impl ViewCommand {
             !self.non_interactive
         } else {
             !self.non_interactive && io::stdout().is_tty()
-        }
-    }
-
-    pub fn new(
-        target_paths: Option<Vec<PathBuf>>,
-        size_display_format: Option<SizeDisplayFormat>,
-        size_threshold_percentage: u8,
-        non_interactive: bool,
-    ) -> Self {
-        ViewCommand {
-            target_paths,
-            size_display_format,
-            size_threshold_percentage,
-            non_interactive,
-            total_size_in_bytes: 0,
         }
     }
 
@@ -178,7 +193,7 @@ impl ViewCommand {
                 }
             }
             sanitized_paths.sort();
-        } else if let Ok(current_dir) = env::current_dir() {
+        } else if let Ok(current_dir) = self.env_service.current_dir() {
             sanitized_paths.push(current_dir);
         }
 
@@ -189,53 +204,65 @@ impl ViewCommand {
 
         items
     }
-}
 
-fn select_skin() -> Skin {
-    let low_color = Skin {
-        title_fg_color: Color::White,
-        title_bg_color: Color::Blue,
-        version_fg_color: Color::Gray,
-        table_header_bg_color: Color::DarkGray,
-        table_header_fg_color: Color::White,
-        value_fg_color: None,
-        value_style_invert: true,
-        delete_warning_text_fg_color: Color::LightRed,
-        key_help_danger_bg_color: Color::LightRed,
-        key_help_key_fg_color: Color::Gray,
-        ..Default::default()
-    };
+    fn select_skin(&self) -> Skin {
+        let low_color = Skin {
+            title_fg_color: Color::White,
+            title_bg_color: Color::Blue,
+            version_fg_color: Color::Gray,
+            table_header_bg_color: Color::DarkGray,
+            table_header_fg_color: Color::White,
+            value_fg_color: None,
+            value_style_reversed: true,
+            delete_warning_text_fg_color: Color::LightRed,
+            key_help_danger_bg_color: Color::LightRed,
+            key_help_key_fg_color: Color::Gray,
+            ..Default::default()
+        };
 
-    if let Some(color_count) = get_color_count() {
-        match color_count {
-            ..=256 => low_color,
-            _ => Skin::default(),
+        if let Some(color_count) = self.get_color_count() {
+            match color_count {
+                ..=256 => low_color,
+                _ => Skin::default(),
+            }
+        } else {
+            low_color
         }
-    } else {
-        low_color
     }
-}
 
-fn get_color_count() -> Option<u32> {
-    if let Ok(colorterm) = env::var("COLORTERM").or(env::var("TERM")) {
-        match colorterm.to_lowercase().as_str() {
-            "truecolor" | "24bit" | "24-bit" => Some(16_777_216), // 24-bit color
-            "xterm-256color" | "xterm256" => Some(256),           // 256 colors
-            "xterm" => Some(16),                                  // 16 colors
-            "ansi" => Some(16),                                   // 16 colors
-            "dumb" => None,                                       // No color support
-            "screen" => Some(16),                                 // 16 colors
-            "screen-256color" => Some(256),                       // 256 colors
-            "tmux" => Some(16),                                   // 16 colors
-            "tmux-256color" => Some(256),                         // 256 colors
-            "konsole" => Some(256),                               // 256 colors
-            "rxvt-unicode" => Some(8),                            // 8 colors (customizable)
-            "rxvt-unicode-256color" => Some(256),                 // 256 colors
-            "kitty" | "kitty-256color" => Some(256),              // 256 colors
-            _ => None,                                            // Unknown or custom value
+    fn get_color_count(&self) -> Option<u32> {
+        if let Some(colorterm) = self
+            .env_service
+            .var(COLORTERM_ENV_VAR)
+            .ok()
+            .filter(|colorterm| !colorterm.is_empty())
+            .or_else(|| {
+                self.env_service
+                    .var(TERM_ENV_VAR)
+                    .ok()
+                    .filter(|term| !term.is_empty())
+            })
+        {
+            match colorterm.to_lowercase().as_str() {
+                "truecolor" | "24bit" | "24-bit" => Some(16_777_216), // 24-bit color
+                "kitty" | "kitty-256color" => Some(256),              // 256 colors
+                "konsole" => Some(256),                               // 256 colors
+                "rxvt-unicode-256color" => Some(256),                 // 256 colors
+                "screen-256color" => Some(256),                       // 256 colors
+                "tmux-256color" => Some(256),                         // 256 colors
+                "xterm-256color" | "xterm256" => Some(256),           // 256 colors
+                "ansi" => Some(16),                                   // 16 colors
+                "screen" => Some(16),                                 // 16 colors
+                "tmux" => Some(16),                                   // 16 colors
+                "xterm" => Some(16),                                  // 16 colors
+                "rxvt-unicode" => Some(8),                            // 8 colors (customizable)
+                "dumb" => None,                                       // No color support
+                "monochrome" => None,                                 // No color support
+                _ => None,                                            // Unknown or custom value
+            }
+        } else {
+            None
         }
-    } else {
-        None
     }
 }
 

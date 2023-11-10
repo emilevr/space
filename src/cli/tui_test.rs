@@ -85,6 +85,9 @@ fn render_outputs_full_path_as_first_row_with_100_percent_size() -> anyhow::Resu
     )?;
 
     // Assert
+    // NOTE: If this test fails locally then make sure that the console window where this is running is wide
+    //       enough for the path to not be chopped off. On the build agent a virtual terminal 125 characters
+    //       wide is used.
     let regex_safe_path = view_state.visible_row_items[0]
         .borrow()
         .path_segment
@@ -226,11 +229,11 @@ fn render_with_cancelled_delete_does_not_delete_item(
 #[ignore]
 #[case(0f32, 0, "", 0)] // First item
 #[ignore]
-#[case(0f32, 3, "1.2", 24)] // File
+#[case(0f32, 3, "1.2", 28)] // File
 #[ignore]
-#[case(0f32, 4, "1.3", 21)] // Directory
+#[case(0f32, 4, "1.3", 25)] // Directory
 #[ignore]
-#[case(0.1f32, 4, "1.3", 21)] // Directory, with 10% size threshold fraction.
+#[case(0.1f32, 4, "1.3", 25)] // Directory, with 10% size threshold fraction.
 fn render_with_confirmed_delete_deletes_selected_item(
     #[case] size_threshold_fraction: f32,
     #[case] down_count: usize,
@@ -309,9 +312,9 @@ fn render_with_confirmed_delete_deletes_selected_item(
 #[ignore]
 #[case(23, 22, "1")] // down x23 to 1.9 + 22x up -> 1 selected
 #[ignore]
-#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 1, 0, "1.10")] // down number of items in tree -> 1.10 selected
+#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 1, 0, "1.12.1")] // down number of items in tree -> 1.12.1 selected
 #[ignore]
-#[case(TEST_DIRECTORY_TREE_ITEM_COUNT, 0, "1.10")] // down more than number of items in tree -> 1.10 selected
+#[case(TEST_DIRECTORY_TREE_ITEM_COUNT, 0, "1.12.1")] // down more than number of items in tree -> 1.12.1 selected
 fn render_with_navigation_input_selects_correct_item(
     #[case] down_count: usize,
     #[case] up_count: usize,
@@ -363,11 +366,11 @@ fn render_with_navigation_input_selects_correct_item(
 #[ignore]
 #[case(6, 0, 0, 1, "")] // down to 1st item on 2nd page + page up -> first item selected
 #[ignore]
-#[case(11, 0, TEST_DIRECTORY_TREE_ITEM_COUNT, 0, "1.10")] // down to 1.5.2 + page down xTEST_DIRECTORY_TREE_ITEM_COUNT -> 1.10 selected
+#[case(11, 0, TEST_DIRECTORY_TREE_ITEM_COUNT, 0, "1.12.1")] // down to 1.5.2 + page down xTEST_DIRECTORY_TREE_ITEM_COUNT -> 1.12.1 selected
 #[ignore]
-#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 2, 0, 1, 0, "1.10")] // down to 1.9 + page down -> 1.10 selected
+#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 2, 0, 1, 0, "1.12.1")] // down to 1.9 + page down -> 1.12.1 selected
 #[ignore]
-#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 1, 0, 1, 0, "1.10")] // down to 1.10 + page down -> 1.10 selected
+#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 1, 0, 1, 0, "1.12.1")] // down to 1.12.1 + page down -> 1.12.1 selected
 fn render_with_page_up_or_down_navigation_input_selects_correct_item(
     #[case] down_count: usize,
     #[case] up_count: usize,
@@ -478,11 +481,11 @@ fn render_with_first_navigation_input_selects_first_item(
 
 #[rstest]
 #[ignore]
-#[case(0, "1.10")] // first given no selection -> last item selected
+#[case(0, "1.12.1")] // first given no selection -> last item selected
 #[ignore]
-#[case(10, "1.10")] // down to 1.5 + last -> last item selected
+#[case(10, "1.12.1")] // down to 1.5 + last -> last item selected
 #[ignore]
-#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 1, "1.10")] // down to last item + last -> last item selected
+#[case(TEST_DIRECTORY_TREE_ITEM_COUNT - 1, "1.12.1")] // down to last item + last -> last item selected
 fn render_with_last_navigation_input_selects_last_item(
     #[case] down_count: usize,
     #[case] expected_selected_item_name: &str,
@@ -748,7 +751,7 @@ fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_c
     )?;
 
     // Assert
-    assert_eq!(12, view_state.displayable_item_count);
+    assert_eq!(14, view_state.displayable_item_count);
 
     delete_test_directory_tree(&temp_dir_path);
 

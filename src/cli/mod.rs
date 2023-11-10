@@ -1,4 +1,5 @@
 pub mod cli_command;
+pub mod environment;
 pub mod tui;
 pub mod view_command;
 

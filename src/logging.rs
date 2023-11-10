@@ -1,11 +1,9 @@
+use crate::cli::environment::EnvServiceTrait;
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::Config;
-#[cfg(not(test))]
-use std::env;
-use std::env::VarError;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -13,23 +11,14 @@ use std::str::FromStr;
 #[path = "./logging_test.rs"]
 mod logging_test;
 
-const SPACE_LOG_LEVEL_ENV_VAR_NAME: &str = "SPACE_LOG_LEVEL";
-
-type GetEnvVarFn = fn(key: &str) -> Result<String, VarError>;
-
-#[cfg(not(test))]
-fn get_env_var(key: &str) -> Result<String, VarError> {
-    env::var(key)
-}
+pub(crate) const SPACE_LOG_LEVEL_ENV_VAR_NAME: &str = "SPACE_LOG_LEVEL";
 
 // Set a logger. Do not panic or return an error if anything goes wrong.
-pub(crate) fn configure_logger(
+pub(crate) fn configure_logger<T: EnvServiceTrait>(
     user_home_dir: Option<PathBuf>,
-    get_env_var_fn: Option<GetEnvVarFn>,
+    env_service: &T,
 ) -> LevelFilter {
-    #[cfg(not(test))]
-    let get_env_var_fn = get_env_var_fn.or(Some(get_env_var));
-    let level = if let Ok(log_level) = get_env_var_fn.unwrap()(SPACE_LOG_LEVEL_ENV_VAR_NAME) {
+    let level = if let Ok(log_level) = env_service.var(SPACE_LOG_LEVEL_ENV_VAR_NAME) {
         if let Ok(level) = LevelFilter::from_str(log_level.as_str()) {
             level
         } else {

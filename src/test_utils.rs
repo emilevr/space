@@ -1,9 +1,12 @@
 use anyhow::bail;
 use regex::Regex;
 use std::{
+    env::VarError,
     fmt::Display,
     io::{self, Write},
 };
+
+use crate::cli::environment::MockEnvServiceTrait;
 
 // Custom type for capturing output
 pub(crate) struct TestOut {
@@ -50,7 +53,7 @@ impl TestOut {
 
 fn strip_ansi_escape_sequences(haystack: &str) -> String {
     let strip_ansi_regex = Regex::new("\x1B(?:[@-Z\\-_]|\\[[0-?]*[ -/]*[@-~])").unwrap();
-    strip_ansi_regex.replace_all(haystack, "").to_string()
+    strip_ansi_regex.replace_all(haystack, " ").to_string()
 }
 
 impl Write for TestOut {
@@ -73,4 +76,12 @@ impl Display for TestOut {
         )?;
         Ok(())
     }
+}
+
+pub(crate) fn env_service_mock_without_env_vars() -> MockEnvServiceTrait {
+    let mut env_service_mock = MockEnvServiceTrait::new();
+    env_service_mock
+        .expect_var()
+        .returning(|_| Err(VarError::NotPresent));
+    env_service_mock
 }
