@@ -39,8 +39,9 @@ pub struct CoverageCommandArgs {
     #[arg(long = "package")]
     pub package: Option<String>,
 
-    #[arg(long = "ignore-file-globs")]
-    pub ignore_file_globs: Option<Vec<String>>,
+    /// One or more glob patterns of files to exclude from coverage. Separate multiple glob patterns using spaces.
+    #[arg(long = "exclude-files", value_parser, num_args = 1.., value_delimiter = ' ')]
+    pub exclude_file_globs: Option<Vec<String>>,
 
     /// Optionally include the ignored tests
     #[arg(long = "include-ignored", default_value_t = false)]
@@ -51,6 +52,7 @@ pub struct CoverageCommand {
     output_types: Option<Vec<CoverageReportType>>,
     package: Option<String>,
     include_ignored: bool,
+    exclude_file_globs: Option<Vec<String>>,
 }
 
 impl CoverageCommand {
@@ -59,6 +61,7 @@ impl CoverageCommand {
             output_types: args.output_types,
             package: args.package,
             include_ignored: args.include_ignored,
+            exclude_file_globs: args.exclude_file_globs,
         }
     }
 }
@@ -107,14 +110,15 @@ impl BuildItCommand for CoverageCommand {
             _ => "html,lcov".to_string(),
         };
 
-        // Call grcov, which has to be available on the path.
+        let output_path_string = output_path.to_string_lossy().to_string();
+        let bin_path = format!("{}/debug/deps", target_coverage_dir);
+
         #[rustfmt::skip]
-        cmd!(
-            "grcov",
+        let mut grcov_args = vec![
             ".",
-            "--binary-path", format!("{}/debug/deps", target_coverage_dir),
+            "--binary-path", bin_path.as_str(),
             "-s", ".",
-            "-t", output_types,
+            "-t", output_types.as_str(),
             // Exclude the following lines:
             //  ^\\s*(debug_)?assert(_eq|_ne)?!                                             => debug_assert and assert variants
             //  ^\\s*#\\[.*$                                                                => lines containing only an attribute
@@ -156,9 +160,18 @@ impl BuildItCommand for CoverageCommand {
             "--ignore", "**/test_*.rs",
             "--ignore", "**/*_test_*.rs",
             "--ignore", "**/.cargo/*",
-            "-o", &output_path,
-        )
-        .run()?;
+            "-o", output_path_string.as_str(),
+        ];
+
+        if let Some(exclude_file_globs) = &self.exclude_file_globs {
+            exclude_file_globs.iter().for_each(|glob| {
+                grcov_args.push("--ignore");
+                grcov_args.push(glob);
+            });
+        }
+
+        // Call grcov, which has to be available on the path.
+        cmd("grcov", grcov_args).run()?;
         output_path.push("html");
         output_path.push("index.html");
         println!(
