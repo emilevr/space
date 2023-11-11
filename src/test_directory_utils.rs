@@ -32,7 +32,17 @@ pub(crate) fn create_test_directory_tree() -> Result<PathBuf, anyhow::Error> {
     create_test_file(d1.join("1.7"), 15000)?;
     create_test_file(d1.join("1.8"), 14000)?;
     create_test_file(d1.join("1.9"), 13000)?;
-    create_test_symlink_dir(d1_5_3, &d1.join("1.10"))?;
+
+    let d1_10 = &d1.join("1.10"); // directory with one file
+    fs::create_dir_all(d1_10)?;
+    create_test_file(d1_10.join("1.10.1"), 10000)?;
+
+    create_test_symlink_dir(d1_5_3, &d1.join("1.11"))?;
+
+    let d1_12 = &d1.join("1.12"); // directory with one symbolic link
+    fs::create_dir_all(d1_12)?;
+    create_test_symlink_dir(d1_10, &d1_12.join("1.12.1"))?;
+
     Ok(temp_dir)
 }
 

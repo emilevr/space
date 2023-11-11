@@ -1,9 +1,12 @@
-use super::{row_item::RowItem, view_state::ViewState};
+use super::{
+    environment::MockEnvServiceTrait, row_item::RowItem, skin::Skin, view_state::ViewState,
+};
 use crate::{cli::view_command::ViewCommand, test_directory_utils::create_test_directory_tree};
 use space_rs::SizeDisplayFormat;
 use std::{cell::RefCell, path::PathBuf, rc::Rc};
 
-pub(crate) const TEST_DIRECTORY_TREE_ITEM_COUNT: usize = 25;
+pub(crate) const TEST_DIRECTORY_TREE_ITEM_COUNT: usize = 29;
+pub(crate) const TEST_DIRECTORY_TREE_TOTAL_SIZE: u64 = 180000;
 
 pub(crate) fn make_test_view_state(
     size_threshold_fraction: f32,
@@ -40,16 +43,22 @@ pub(crate) fn make_test_view_state_from_path(
     size_threshold_fraction: f32,
 ) -> Result<ViewState, anyhow::Error> {
     let size_display_format = SizeDisplayFormat::Metric;
+    let env_service_mock = MockEnvServiceTrait::new();
     let mut view_command = ViewCommand::new(
         Some(vec![path.clone()]),
         Some(size_display_format.clone()),
         (size_threshold_fraction * 100f32) as u8,
-        false,
+        Box::new(env_service_mock),
     );
     let items = view_command.get_directory_items();
     let items = view_command.get_row_items(items, 0f32);
 
-    let mut view_state = ViewState::new(items, size_display_format, size_threshold_fraction);
+    let mut view_state = ViewState::new(
+        items,
+        size_display_format,
+        size_threshold_fraction,
+        &Skin::default(),
+    );
     view_state.visible_height = visible_height;
     view_state.visible_offset = visible_offset;
     view_state.table_width = 80;

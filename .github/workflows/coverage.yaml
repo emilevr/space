@@ -37,7 +37,11 @@ jobs:
             tmux new-session -d -s tests -x 200 -y 20
 
             # Send the command to run the tests with code coverage.
-            tmux send-keys -t tests 'buildit coverage --include-ignored ; tmux wait -S tests-finished' Enter
+            #   - We exclude src/main.rs as it is fully covered, but some of the non-test code is incorrectly
+            #     covered as well.
+            #   - We exlude src/logging.rs as it is fully covered but the percentage is calculated
+            #     incorrectly by grcov.
+            tmux send-keys -t tests 'buildit coverage --include-ignored --exclude-files src/main.rs src/logging.rs ; tmux wait -S tests-finished' Enter
 
             # Wait for the tests-finished signal.
             tmux wait-for tests-finished

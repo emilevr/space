@@ -52,7 +52,7 @@ pub struct VersionCommandArgs {
     pub pre_release_name: String,
 
     /// One or more glob patterns used to find Cargo.toml manifests, which will be updated to the calculated
-    /// version.
+    /// version.  Separate multiple globs using spaces.
     #[arg(
         short = 'm',
         long = "manifest-globs",

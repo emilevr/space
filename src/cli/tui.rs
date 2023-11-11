@@ -1,6 +1,7 @@
 use super::{
     input_event_source::InputEventSource,
     row_item::RowItemType,
+    skin::Skin,
     view_state::{
         get_excl_percentage_column_width, ViewState, APPARENT_SIZE_COLUMN_WIDTH,
         EXPAND_INDICATOR_COLUMN_WIDTH, INCL_PERCENTAGE_COLUMN_WIDTH,
@@ -16,7 +17,7 @@ use crossterm::{
 use ratatui::{
     layout::{Constraint, Layout},
     prelude::*,
-    style::{Color, Modifier, Style},
+    style::{Modifier, Style},
     widgets::{
         Block, Borders, Cell, Clear, Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Table, TableState, Widget, Wrap,
@@ -33,35 +34,6 @@ use std::{
 mod tui_test;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-#[cfg(target_os = "macos")]
-const KEY_HELP_KEY_FG_COLOR: Color = Color::Rgb(0, 0, 64);
-#[cfg(not(target_os = "macos"))]
-const KEY_HELP_KEY_FG_COLOR: Color = Color::Rgb(88, 144, 255);
-
-#[cfg(target_os = "macos")]
-const TABLE_HEADER_BG_COLOR: Color = Color::Rgb(64, 64, 64);
-#[cfg(not(target_os = "macos"))]
-const TABLE_HEADER_BG_COLOR: Color = Color::Rgb(64, 64, 192);
-
-#[cfg(target_os = "macos")]
-const TABLE_HEADER_FG_COLOR: Color = Color::Rgb(0, 0, 0);
-#[cfg(not(target_os = "macos"))]
-const TABLE_HEADER_FG_COLOR: Color = Color::White;
-
-const DANGER_BG_COLOR: Color = Color::Rgb(192, 64, 64);
-
-#[cfg(target_os = "macos")]
-const TITLE_FG_COLOR: Color = Color::Black;
-#[cfg(not(target_os = "macos"))]
-const TITLE_FG_COLOR: Color = Color::White;
-
-#[cfg(target_os = "macos")]
-const TITLE_BG_COLOR: Color = Color::Rgb(128, 128, 128);
-#[cfg(not(target_os = "macos"))]
-const TITLE_BG_COLOR: Color = Color::Rgb(64, 64, 64);
-
-const VALUE_FG_COLOR: Color = Color::Rgb(88, 144, 255);
 
 pub(crate) const HELP_KEY: char = '?';
 pub(crate) const QUIT_KEY_1: char = 'q';
@@ -97,6 +69,7 @@ pub(crate) fn render<W: Write, I: InputEventSource>(
     view_state: &mut ViewState,
     writer: &mut W,
     input_event_source: &mut I,
+    skin: &Skin,
 ) -> anyhow::Result<()> {
     enable_raw_mode()?;
 
@@ -104,7 +77,7 @@ pub(crate) fn render<W: Write, I: InputEventSource>(
     let backend = CrosstermBackend::new(writer);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = render_loop(&mut terminal, view_state, input_event_source);
+    let result = render_loop(&mut terminal, view_state, input_event_source, skin);
 
     disable_raw_mode()?;
     execute!(
@@ -141,9 +114,10 @@ fn render_loop<B: Backend, I: InputEventSource>(
     terminal: &mut Terminal<B>,
     view_state: &mut ViewState,
     input_event_source: &mut I,
+    skin: &Skin,
 ) -> anyhow::Result<()> {
     loop {
-        terminal.draw(|f| create_frame(f, view_state))?;
+        terminal.draw(|f| create_frame(f, view_state, skin))?;
 
         if let Event::Key(KeyEvent {
             code,
@@ -213,10 +187,14 @@ fn render_loop<B: Backend, I: InputEventSource>(
                     KeyCode::PageDown => view_state.next(view_state.visible_height),
                     KeyCode::Home => view_state.first(),
                     KeyCode::End => view_state.last(),
-                    #[rustfmt::skip]
-                    KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY) | KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY_ALT) => { view_state.collapse_selected_children() },
-                    #[rustfmt::skip]
-                    KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY) | KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY_ALT) => { view_state.expand_selected_children() },
+                    KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY)
+                    | KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY_ALT) => {
+                        view_state.collapse_selected_children()
+                    }
+                    KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY)
+                    | KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY_ALT) => {
+                        view_state.expand_selected_children()
+                    }
                     _ => {}
                 }
             }
@@ -224,7 +202,7 @@ fn render_loop<B: Backend, I: InputEventSource>(
     }
 }
 
-fn create_frame<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState) {
+fn create_frame<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState, skin: &Skin) {
     let view_height = f.size().height;
     let table_height = view_height - 1; // Subract one for the help header.
 
@@ -240,30 +218,28 @@ fn create_frame<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState) {
         .constraints([Constraint::Length(width - 1), Constraint::Length(1)].as_ref())
         .split(vertical_rects[1]);
 
-    let title_style = Style::default().fg(TITLE_FG_COLOR).bg(TITLE_BG_COLOR);
-
-    render_title_bar(f, view_state, &vertical_rects[0], title_style);
-    render_table(f, view_state, &horizontal_rects[0]);
-    render_vertical_scrollbar(f, view_state, &horizontal_rects[1], title_style);
+    render_title_bar(f, view_state, &vertical_rects[0], skin);
+    render_table(f, view_state, &horizontal_rects[0], skin);
+    render_vertical_scrollbar(f, view_state, &horizontal_rects[1], skin);
 
     if view_state.show_help {
-        render_help(f);
+        render_help(f, skin);
     } else if view_state.show_delete_dialog {
         if view_state.accepted_license_terms {
-            render_delete_dialog(f, view_state);
+            render_delete_dialog(f, view_state, skin);
         } else {
-            render_accept_license_terms_dialog(f);
+            render_accept_license_terms_dialog(f, skin);
         }
     }
 }
 
-fn render_title_bar<B: Backend>(
-    f: &mut Frame<B>,
-    data: &ViewState,
-    area: &Rect,
-    title_style: Style,
-) {
-    let version_style = title_style;
+fn render_title_bar<B: Backend>(f: &mut Frame<B>, data: &ViewState, area: &Rect, skin: &Skin) {
+    let title_style = Style::default()
+        .fg(skin.title_fg_color)
+        .bg(skin.title_bg_color);
+    let version_style = Style::default()
+        .fg(skin.version_fg_color)
+        .bg(skin.title_bg_color);
 
     let title = "Space";
     let version_display = format!("v{VERSION}");
@@ -274,7 +250,7 @@ fn render_title_bar<B: Backend>(
         - 3  // Subtract 3 for the column separators
         - 1; // Subtract 1 to account for table scrollbar.
 
-    let (key_help, available_width) = get_key_help(title_style, available_width);
+    let (key_help, available_width) = get_key_help(available_width, skin);
 
     let key_help_len = key_help.width();
     let title_cells = [
@@ -309,10 +285,14 @@ fn render_title_bar<B: Backend>(
 }
 
 /// Add only as many key help entries as we have space for. We add the more important ones first.
-fn get_key_help<'a>(title_style: Style, available_width: i32) -> (Line<'a>, i32) {
+fn get_key_help<'a>(available_width: i32, skin: &Skin) -> (Line<'a>, i32) {
     let mut available_width = available_width;
-    let key_style = title_style.fg(KEY_HELP_KEY_FG_COLOR);
-    let key_help_style = title_style;
+    let key_style = Style::default()
+        .bg(skin.title_bg_color)
+        .fg(skin.key_help_key_fg_color);
+    let key_help_style = Style::default()
+        .bg(skin.title_bg_color)
+        .fg(skin.title_fg_color);
 
     #[rustfmt::skip]
     let all_key_help = vec![
@@ -340,10 +320,15 @@ fn get_key_help<'a>(title_style: Style, available_width: i32) -> (Line<'a>, i32)
     (Line::from(key_help), available_width)
 }
 
-fn render_table<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState, area: &Rect) {
+fn render_table<B: Backend>(
+    f: &mut Frame<B>,
+    view_state: &mut ViewState,
+    area: &Rect,
+    skin: &Skin,
+) {
     let table_header_style = Style::default()
-        .bg(TABLE_HEADER_BG_COLOR)
-        .fg(TABLE_HEADER_FG_COLOR);
+        .bg(skin.table_header_bg_color)
+        .fg(skin.table_header_fg_color);
     let selected_style = Style::default().add_modifier(Modifier::REVERSED);
 
     let table_selected_index = view_state.table_selected_index;
@@ -379,7 +364,7 @@ fn render_vertical_scrollbar<B: Backend>(
     f: &mut Frame<B>,
     data: &mut ViewState,
     area: &Rect,
-    title_style: Style,
+    skin: &Skin,
 ) {
     // The content length must be the total number of rows minus the number of visible rows.
     let content_length = if data.displayable_item_count > data.visible_height {
@@ -402,13 +387,17 @@ fn render_vertical_scrollbar<B: Backend>(
                 begin: "▲",
                 end: "▼",
             })
-            .style(title_style),
+            .style(
+                Style::default()
+                    .bg(skin.title_bg_color)
+                    .fg(skin.title_fg_color),
+            ),
         *area,
         &mut vertical_scroll_state,
     );
 }
 
-fn render_help<B: Backend>(f: &mut Frame<B>) {
+fn render_help<B: Backend>(f: &mut Frame<B>, skin: &Skin) {
     let block = Block::default().title("Help").borders(Borders::ALL);
     let mut area = f.size();
     f.render_widget(Clear, area); // Clear out the background
@@ -417,9 +406,11 @@ fn render_help<B: Backend>(f: &mut Frame<B>) {
     contract_area(&mut area, 2, 2);
 
     let key_style = Style::default()
-        .fg(TITLE_FG_COLOR)
-        .bg(TABLE_HEADER_BG_COLOR);
-    let danger_key_style = Style::default().fg(TITLE_FG_COLOR).bg(DANGER_BG_COLOR);
+        .fg(skin.title_fg_color)
+        .bg(skin.table_header_bg_color);
+    let danger_key_style = Style::default()
+        .fg(skin.title_fg_color)
+        .bg(skin.key_help_danger_bg_color);
     let section_header_style = Style::default().add_modifier(Modifier::BOLD);
 
     let key_column_size: usize = 11;
@@ -723,9 +714,9 @@ macro_rules! measure_height {
     }};
 }
 
-fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState) {
+fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState, skin: &Skin) {
     if let Some(selected_item) = view_state.get_selected_item() {
-        let value_style = Style::default().fg(VALUE_FG_COLOR);
+        let value_style = skin.value_style();
         let selected_item_ref = selected_item.borrow();
         let is_dir = selected_item_ref.item_type == RowItemType::Directory;
 
@@ -764,7 +755,7 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
                     } else {
                         "".into()
                     }),
-                Style::default().fg(Color::Rgb(255, 165, 0)),
+                Style::default().fg(skin.delete_warning_text_fg_color),
             )),
             Line::default(),
             Line::from(vec![
@@ -788,7 +779,6 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
                     .borders(Borders::ALL)
                     .padding(Padding::uniform(1)),
             )
-            .style(Style::default().fg(Color::White))
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true });
 
@@ -799,8 +789,8 @@ fn render_delete_dialog<B: Backend>(f: &mut Frame<B>, view_state: &mut ViewState
     }
 }
 
-fn render_accept_license_terms_dialog<B: Backend>(f: &mut Frame<B>) {
-    let value_style = Style::default().fg(VALUE_FG_COLOR);
+fn render_accept_license_terms_dialog<B: Backend>(f: &mut Frame<B>, skin: &Skin) {
+    let value_style = skin.value_style();
     let bold_style = Style::default().add_modifier(Modifier::BOLD);
 
     #[rustfmt::skip]
@@ -850,7 +840,6 @@ r#"By accepting, you agree to be bound by the terms of the MIT License. You can 
                 .borders(Borders::ALL)
                 .padding(Padding::uniform(1)),
         )
-        .style(Style::default().fg(Color::White))
         .alignment(Alignment::Left)
         .wrap(Wrap { trim: true });
 

@@ -2,15 +2,15 @@
 
 use clap::{ColorChoice, Parser};
 use cli::cli_command::CliCommand;
+use cli::environment::EnvServiceTrait;
 use cli::view_command::ViewCommand;
 use log::error;
 use logging::configure_logger;
 use space_rs::SizeDisplayFormat;
+#[cfg(not(test))]
 use std::env;
 use std::io::Write;
 use std::path::PathBuf;
-
-mod cli;
 
 #[cfg(test)]
 #[path = "./main_test.rs"]
@@ -22,6 +22,7 @@ mod test_directory_utils;
 #[cfg(test)]
 mod test_utils;
 
+mod cli;
 mod logging;
 
 const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
@@ -88,11 +89,15 @@ struct CliArgs {
 
 #[cfg(not(test))]
 pub fn main() -> anyhow::Result<()> {
+    use cli::environment::DefaultEnvService;
+
     run(
         &env::args().collect::<Vec<_>>(),
         &mut std::io::stdout(),
         dirs::home_dir(),
+        Box::<DefaultEnvService>::default(),
     )?;
+
     Ok(())
 }
 
@@ -100,9 +105,10 @@ pub(crate) fn run<W: Write>(
     args: &[String],
     writer: &mut W,
     user_home_dir: Option<PathBuf>,
+    env_service: Box<dyn EnvServiceTrait>,
 ) -> anyhow::Result<()> {
-    configure_logger(user_home_dir, Some(|key| env::var(key)));
-    if let Err(e) = run_command(args, writer) {
+    configure_logger(user_home_dir, &env_service);
+    if let Err(e) = run_command(args, writer, env_service) {
         error!("{}", e);
         eprintln!("{}", e);
         Err(e)
@@ -111,9 +117,13 @@ pub(crate) fn run<W: Write>(
     }
 }
 
-fn run_command<W: Write>(args: &[String], writer: &mut W) -> anyhow::Result<()> {
+fn run_command<W: Write>(
+    args: &[String],
+    writer: &mut W,
+    env_service: Box<dyn EnvServiceTrait>,
+) -> anyhow::Result<()> {
     let args = parse_args(args)?;
-    prepare_command(args)?.run(writer)?;
+    prepare_command(args, env_service)?.run(writer)?;
     Ok(())
 }
 
@@ -121,12 +131,17 @@ fn parse_args(args: &[String]) -> Result<CliArgs, anyhow::Error> {
     Ok(CliArgs::parse_from(args))
 }
 
-fn prepare_command(args: CliArgs) -> anyhow::Result<ViewCommand> {
+fn prepare_command(
+    args: CliArgs,
+    env_service: Box<dyn EnvServiceTrait>,
+) -> anyhow::Result<ViewCommand> {
     let mut command = ViewCommand::new(
         args.target_paths,
         Some(args.size_format),
         args.size_threshold_percentage,
+        #[cfg(not(test))]
         args.non_interactive,
+        env_service,
     );
     command.prepare()?;
     Ok(command)

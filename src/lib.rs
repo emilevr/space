@@ -25,14 +25,13 @@
 //!
 //! [backlog]: https://github.com/users/emilevr/projects/1
 
-pub mod directory_item;
-pub mod size;
-
 #[cfg(test)]
 mod test_directory_utils;
 
+pub mod directory_item;
 pub use directory_item::DirectoryItem;
 pub use directory_item::DirectoryItemType;
 pub mod rapid_arena;
+pub mod size;
 pub use size::Size;
 pub use size::SizeDisplayFormat;

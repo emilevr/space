@@ -145,7 +145,7 @@ fn from_root_given_file_path_should_return_only_file_item() -> anyhow::Result<()
 fn build_given_symbolic_link_dir_should_not_follow_link() -> anyhow::Result<()> {
     // Arrange
     let temp_dir = create_test_directory_tree()?;
-    let file_paths = vec![temp_dir.join("1").join("1.10")];
+    let file_paths = vec![temp_dir.join("1").join("1.11")];
 
     // Act
     let items = DirectoryItem::build(file_paths);

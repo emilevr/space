@@ -1,6 +1,6 @@
 use anyhow::bail;
 use clap::{arg, ColorChoice, Parser};
-use cli::{cli_command::CliCommand, view_command::ViewCommand};
+use cli::{cli_command::CliCommand, environment::DefaultEnvService, view_command::ViewCommand};
 use criterion::Criterion;
 use space_rs::SizeDisplayFormat;
 use std::{
@@ -122,7 +122,9 @@ impl BenchmarkCommand {
                     Some(self.target_paths.clone()),
                     Some(self.size_display_format),
                     self.size_threshold_percentage,
+                    #[cfg(not(test))]
                     true,
+                    Box::<DefaultEnvService>::default(),
                 )
                 .prepare()
                 .unwrap()

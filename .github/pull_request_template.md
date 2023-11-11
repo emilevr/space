@@ -1,14 +1,14 @@
 ## Describe your changes
+> **TIP**: Use the `Preview` tab to more easily read these notes. Remember to delete all the notes before you submit the PR.
+> :construction_worker: Use bullet points to list the major changes or any change you feel is relevant.
+> :construction_worker: DELETE THIS NOTE
 -
 
 ## Issue ticket number(s) and link(s)
 > :bulb: List any linked issues here by using the keywords and format described [here](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)
-> :construction_worker: DELETE THIS NOTE
-
--
-
 > :construction_worker: Delete this whole section if this PR is not related to any open issues.
 > :construction_worker: DELETE THIS NOTE
+-
 
 ## PR requirements
 > :exclamation: The following requirements must be met otherwise this PR will not be accepted:

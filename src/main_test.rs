@@ -1,9 +1,11 @@
-use std::env;
+use std::env::{self, VarError};
 
 use crate::{
+    cli::environment::MockEnvServiceTrait,
+    logging::SPACE_LOG_LEVEL_ENV_VAR_NAME,
     parse_args, prepare_command, run,
     test_directory_utils::{create_test_directory_tree, delete_test_directory_tree},
-    test_utils::TestOut,
+    test_utils::{env_service_mock_without_env_vars, TestOut},
 };
 
 const BINARY_PATH: &str = "./space";
@@ -45,14 +47,18 @@ fn prepare_command_when_no_target_paths_specified_uses_current_dir() -> anyhow::
     // Arrange
     let args = vec![BINARY_PATH.to_string()];
     let args = parse_args(&args)?;
+    let mut env_service_mock = MockEnvServiceTrait::new();
+    env_service_mock
+        .expect_current_dir()
+        .returning(|| env::current_dir());
 
     // Act
-    let command = prepare_command(args)?;
+    let command = prepare_command(args, Box::new(env_service_mock))?;
 
     // Assert
     assert_eq!(
         Some(vec!(env::current_dir().unwrap())),
-        command.target_paths
+        *command.target_paths()
     );
 
     Ok(())
@@ -64,9 +70,19 @@ fn run_given_non_existent_path_fails() {
     let temp_dir = std::env::temp_dir().join(uuid::Uuid::new_v4().to_string());
     let log_dir = std::env::temp_dir().join(uuid::Uuid::new_v4().to_string());
     let args = vec![BINARY_PATH.to_string(), temp_dir.display().to_string()];
+    let mut env_service_mock = MockEnvServiceTrait::new();
+    env_service_mock
+        .expect_var()
+        .with(mockall::predicate::eq(SPACE_LOG_LEVEL_ENV_VAR_NAME))
+        .returning(|_| Err(VarError::NotPresent));
 
     // Act
-    let result = run(&args, &mut TestOut::new(), Some(log_dir));
+    let result = run(
+        &args,
+        &mut TestOut::new(),
+        Some(log_dir),
+        Box::new(env_service_mock),
+    );
 
     // Assert
     if let Err(err) = result {
@@ -88,9 +104,15 @@ fn run_given_valid_path_succeeds() -> anyhow::Result<()> {
     let file_path = temp_dir.join("1").join("1.2");
     let args = vec![BINARY_PATH.to_string(), file_path.display().to_string()];
     let mut test_out = TestOut::new();
+    let env_service_mock = env_service_mock_without_env_vars();
 
     // Act
-    let result = run(&args, &mut test_out, Some(log_dir));
+    let result = run(
+        &args,
+        &mut test_out,
+        Some(log_dir),
+        Box::new(env_service_mock),
+    );
 
     // Assert
     result.expect("run() is expected to succeed!");

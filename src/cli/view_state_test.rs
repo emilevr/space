@@ -51,7 +51,7 @@ fn set_size_threshold_fraction_given_selected_item_no_longer_visible_selects_fir
 ) -> anyhow::Result<()> {
     // Arrange
     let (mut view_state, temp_dir_path) = make_test_view_state(0f32)?;
-    select_item_by_name("1.10", &mut view_state)?;
+    select_item_by_name("1.12.1", &mut view_state)?;
 
     // Act
     view_state.set_size_threshold_fraction(0.01f32);
@@ -123,7 +123,7 @@ fn expand_selected_item_given_no_selected_item_should_succeed() {
 #[rstest]
 #[case("1.1", "1")]
 #[case("1.5.2", "1.5")]
-#[case("1.10", "1")]
+#[case("1.11", "1")]
 fn collapse_selected_item_given_leaf_item_collapses_and_selects_parent_item(
     #[case] selected_item_name: &str,
     #[case] parent_item_name: &str,
@@ -197,7 +197,7 @@ fn get_selected_item_given_no_selected_item_returns_none() {
 
 #[rstest]
 #[case(3, 0, 3)] // First invisible item.
-#[case(3, 23, 2)] // Near end - only last 2 items visible.
+#[case(3, 27, 2)] // Near end - only last 2 items visible.
 fn get_selected_item_given_non_visible_or_non_existant_selected_item_returns_none(
     #[case] visible_height: usize,
     #[case] visible_offset: usize,
@@ -308,9 +308,9 @@ fn ensure_visible_given_visible_offset_of_non_zero_should_move_visible_offset_co
 // First page, last item on page selected -> next item that was off page now visible and selected
 #[case(4, 0, 0f32, 3, 3, "1.3")]
 // First page, with page size larger than number of items, last item selected -> last item remains selected
-#[case(10, 0, 0.09f32, 8, 8, "1.6")]
+#[case(10, 0, 0.09f32, 7, 7, "1.5")]
 // Last page, last item selected -> last item remains selected
-#[case(4, 21, 0f32, 3, 3, "1.10")]
+#[case(4, 25, 0f32, 3, 3, "1.12.1")]
 // No visible items
 #[case(4, 0, 1.1f32, 0, 0, "")]
 fn next_selects_expected_item(
@@ -408,11 +408,11 @@ fn subtract_item_tree_size_subtracts_value_from_self_and_ancestors() -> anyhow::
     );
     // Check that ancestors have been updated
     assert_eq!(
-        160000,
+        170000,
         view_state.visible_row_items[1].borrow().size.get_value()
     );
     assert_eq!(
-        160000,
+        170000,
         view_state.visible_row_items[0].borrow().size.get_value()
     );
     // Spot check that siblings were not affected
@@ -431,11 +431,11 @@ fn subtract_item_tree_size_subtracts_value_from_self_and_ancestors() -> anyhow::
 }
 
 #[rstest]
-#[case("1.3", 21, 147000)] // Delete a directory with 3 sub-items
-#[case("1.4", 24, 148000)] // Delete a single file
-#[case("1.5", 14, 152000)] // Delete an empty directory
-#[case("1.5.3.5", 24, 170000)] // Delete an empty directory
-#[case("1.10", 24, 170000)] // Deletes symbolic link to dir, but not the tree it poins to
+#[case("1.3", 25, 157000)] // Delete a directory with 3 sub-items
+#[case("1.4", 28, 158000)] // Delete a single file
+#[case("1.5", 18, 162000)] // Delete a directory with 10 sub-items
+#[case("1.5.3.5", 28, 180000)] // Delete an empty directory
+#[case("1.11", 28, 180000)] // Deletes symbolic link to dir, but not the tree it points to
 fn delete_selected_item_deletes_only_the_selected_item_or_tree_and_updates_sizes(
     #[case] selected_item_name: &str,
     #[case] expected_final_item_count: usize,
@@ -540,8 +540,8 @@ fn last_selects_last_item(
 
 #[rstest]
 #[case("", 2)] // select first item -> only first item and its only child visible
-#[case("1", 12)] // select 1 -> first item, 1 and 1.1 - 1.10 visible
-#[case("1.5.3.5", 25)] // select 1.5.3.5 -> no change
+#[case("1", 14)] // select 1 -> first item, 1 and 1.1 - 1.10 visible
+#[case("1.5.3.5", TEST_DIRECTORY_TREE_ITEM_COUNT)] // select 1.5.3.5 -> no change
 fn collapse_selected_children_filters_correctly(
     #[case] selected_item_name: &str,
     #[case] expected_displayable_item_count: usize,
@@ -568,7 +568,7 @@ fn collapse_selected_children_filters_correctly(
 
 #[rstest]
 #[case("", 2)] // select first item + collapse its children + expand its children -> all displayable
-#[case("1", 12)] // select 1 + collapse its children + expand its children -> all displayable
+#[case("1", 14)] // select 1 + collapse its children + expand its children -> all displayable
 fn expand_selected_children(
     #[case] selected_item_name: &str,
     #[case] expected_displayable_item_count: usize,

@@ -39,9 +39,9 @@ pub struct CoverageCommandArgs {
     #[arg(long = "package")]
     pub package: Option<String>,
 
-    /// Optionally run only the ignored tests
-    #[arg(long = "ignored", default_value_t = false)]
-    pub ignored: bool,
+    /// One or more glob patterns of files to exclude from coverage. Separate multiple glob patterns using spaces.
+    #[arg(long = "exclude-files", value_parser, num_args = 1.., value_delimiter = ' ')]
+    pub exclude_file_globs: Option<Vec<String>>,
 
     /// Optionally include the ignored tests
     #[arg(long = "include-ignored", default_value_t = false)]
@@ -51,8 +51,8 @@ pub struct CoverageCommandArgs {
 pub struct CoverageCommand {
     output_types: Option<Vec<CoverageReportType>>,
     package: Option<String>,
-    ignored: bool,
     include_ignored: bool,
+    exclude_file_globs: Option<Vec<String>>,
 }
 
 impl CoverageCommand {
@@ -60,8 +60,8 @@ impl CoverageCommand {
         CoverageCommand {
             output_types: args.output_types,
             package: args.package,
-            ignored: args.ignored,
             include_ignored: args.include_ignored,
+            exclude_file_globs: args.exclude_file_globs,
         }
     }
 }
@@ -90,13 +90,9 @@ impl BuildItCommand for CoverageCommand {
             args.push(package);
         }
         // Now the test params, i.e. after a '--' in the params.
-        if self.include_ignored || self.ignored {
+        if self.include_ignored {
             args.push("--");
-            if self.ignored {
-                args.push("--ignored");
-            } else if self.include_ignored {
-                args.push("--include-ignored");
-            }
+            args.push("--include-ignored");
         }
         cmd("cargo", args)
             .env("RUSTFLAGS", "-Cinstrument-coverage")
@@ -114,18 +110,15 @@ impl BuildItCommand for CoverageCommand {
             _ => "html,lcov".to_string(),
         };
 
-        // Call grcov, which has to be available on the path.
-        cmd!(
-            "grcov",
+        let output_path_string = output_path.to_string_lossy().to_string();
+        let bin_path = format!("{}/debug/deps", target_coverage_dir);
+
+        #[rustfmt::skip]
+        let mut grcov_args = vec![
             ".",
-            "--binary-path",
-            format!("{}/debug/deps", target_coverage_dir),
-            "-s",
-            ".",
-            "-t",
-            output_types,
-            "--branch",
-            "--excl-line",
+            "--binary-path", bin_path.as_str(),
+            "-s", ".",
+            "-t", output_types.as_str(),
             // Exclude the following lines:
             //  ^\\s*(debug_)?assert(_eq|_ne)?!                                             => debug_assert and assert variants
             //  ^\\s*#\\[.*$                                                                => lines containing only an attribute
@@ -142,6 +135,7 @@ impl BuildItCommand for CoverageCommand {
             //  ^\\s*impl(<.*>)?\\s*[^ ]+\\s*\\{\\s*$                                       => lines containing only an impl declaration
             //  ^\\s*impl(<.*>)?\\s*[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$                       => lines containing only an impl for declaration
             //  ^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*const\\s+.*\\s*[(){}]*\\s*$   => lines containing only a const definition
+            "--excl-line",
             "^\\s*(debug_)?assert(_eq|_ne)?!\
                 |^\\s*#\\[.*$\
                 |^\\s*#!\\[.*$\
@@ -159,24 +153,25 @@ impl BuildItCommand for CoverageCommand {
                 |^\\s*impl(<.*>)?\\s*[^ ]+\\s+for\\s+[^ ]*\\s*\\{\\s*$\
                 |^\\s*(pub|pub\\s*\\(\\s*crate\\s*\\)\\s*)?\\s*const\\s+.*\\s*[(){}]*\\s*$",
             "--ignore-not-existing",
-            "--ignore",
-            "buildit/*",
-            "--ignore",
-            "src/tests/*",
-            "--ignore",
-            "src/benches/*",
-            "--ignore",
-            "**/*_test.rs",
-            "--ignore",
-            "**/test_*.rs",
-            "--ignore",
-            "**/*_test_*.rs",
-            "--ignore",
-            "**/.cargo/registry/*",
-            "-o",
-            &output_path,
-        )
-        .run()?;
+            "--keep-only", "src/*",
+            "--ignore", "src/tests/*",
+            "--ignore", "src/benches/*",
+            "--ignore", "**/*_test.rs",
+            "--ignore", "**/test_*.rs",
+            "--ignore", "**/*_test_*.rs",
+            "--ignore", "**/.cargo/*",
+            "-o", output_path_string.as_str(),
+        ];
+
+        if let Some(exclude_file_globs) = &self.exclude_file_globs {
+            exclude_file_globs.iter().for_each(|glob| {
+                grcov_args.push("--ignore");
+                grcov_args.push(glob);
+            });
+        }
+
+        // Call grcov, which has to be available on the path.
+        cmd("grcov", grcov_args).run()?;
         output_path.push("html");
         output_path.push("index.html");
         println!(

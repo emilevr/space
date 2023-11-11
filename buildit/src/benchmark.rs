@@ -13,7 +13,8 @@ use crate::command::BuildItCommand;
 
 #[derive(Args, Debug)]
 pub struct BenchmarkCommandArgs {
-    /// One or more optional benchmarks to run. If not specified then all benchmarks will be run.
+    /// One or more optional benchmarks to run. If not specified then all benchmarks will be run. Separate
+    /// multiple names using spaces.
     #[arg(long = "bench-names", value_parser, num_args = 1.., value_delimiter = ' ')]
     pub bench_names: Option<Vec<String>>,
 }
