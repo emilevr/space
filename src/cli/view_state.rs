@@ -238,9 +238,20 @@ impl ViewState {
         self.table_selected_index = min(self.visible_height - 1, self.displayable_item_count - 1);
     }
 
-    pub(crate) fn collapse_selected_children(&self) {
+    pub(crate) fn collapse_selected_children(&mut self) {
         if let Some(selected_item) = self.get_selected_item() {
-            selected_item.as_ref().borrow_mut().collapse_all_children();
+            let expanded_children_count = selected_item
+                .as_ref()
+                .borrow()
+                .children
+                .iter()
+                .filter(|item| item.borrow().expanded)
+                .count();
+            if expanded_children_count == 0 {
+                self.collapse_selected_item();
+            } else {
+                selected_item.as_ref().borrow_mut().collapse_all_children();
+            }
         }
     }
 

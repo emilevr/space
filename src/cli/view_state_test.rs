@@ -541,7 +541,8 @@ fn last_selects_last_item(
 #[rstest]
 #[case("", 2)] // select first item -> only first item and its only child visible
 #[case("1", 14)] // select 1 -> first item, 1 and 1.1 - 1.10 visible
-#[case("1.5.3.5", TEST_DIRECTORY_TREE_ITEM_COUNT)] // select 1.5.3.5 -> no change
+#[case("1.5.3", TEST_DIRECTORY_TREE_ITEM_COUNT - 5)] // select 1.5.3 -> collapsed up to 1.5.3
+#[case("1.5.3.5", TEST_DIRECTORY_TREE_ITEM_COUNT - 5)] // select 1.5.3.5 -> collapsed up to 1.5.3
 fn collapse_selected_children_filters_correctly(
     #[case] selected_item_name: &str,
     #[case] expected_displayable_item_count: usize,

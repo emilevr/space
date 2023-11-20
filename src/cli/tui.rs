@@ -508,8 +508,9 @@ fn render_help<B: Backend>(f: &mut Frame<B>, skin: &Skin) {
                 ))
                 .style(key_style),
                 Cell::from(""),
-                Cell::from("Collapse all children of the selected directory item"),
-            ]),
+                Cell::from("If all children are collapsed, then collapse the selected item\nIf one or more children are expanded, then collapse all children of the selected item"),
+            ])
+            .height(2),
             Row::new(vec![
                 Cell::from(format!("{EXPAND_SELECTED_CHILDREN_KEY:^key_column_size$}"))
                     .style(key_style),

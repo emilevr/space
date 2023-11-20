@@ -74,7 +74,7 @@ struct CliArgs {
     target_paths: Option<Vec<PathBuf>>,
 
     /// The size threshold as a percentage of the total. Only items with a relative size greater or equal
-    /// to this percentage will be included.
+    /// to this percentage will be displayed.
     #[arg(value_name = "PERCENTAGE", short = 's', long, default_value_t = DEFAULT_SIZE_THRESHOLD_PERCENTAGE, value_parser = clap::value_parser!(u8).range(0..=100))]
     size_threshold_percentage: u8,
 
