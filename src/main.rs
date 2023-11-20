@@ -42,7 +42,7 @@ Copyright © 2023 Emile van Reenen [https://github.com/emilevr]"#,
 r#"EXAMPLES:
     $ space
     $ space path/to/file/or/dir
-    $ space path/to/dir1 path/to/dir2
+    $ space path/to/dir1,'path/to/dir 2'
     $ space --size-threshold-percentage 5
     $ space --size-format binary
     $ space --non-interactive"#,
@@ -55,7 +55,7 @@ r#"EXAMPLES:
     $ space path/to/file/or/dir
 
     Analyze and display multiple directories:
-    $ space path/to/dir1 path/to/dir2
+    $ space path/to/dir1,'path/to/dir 2'
 
     Set the relative size display filter to >= 5%:
     $ space --size-threshold-percentage 5
@@ -69,8 +69,8 @@ r#"EXAMPLES:
 )]
 struct CliArgs {
     /// The path(s) to the target files or directories to view. If not supplied the current directory
-    /// will be used. Separate multiple paths using spaces.
-    #[arg(value_name = "TARGET PATH(S)", value_parser, num_args = 1.., value_delimiter = ' ')]
+    /// will be used. Separate multiple paths using commas.
+    #[arg(value_name = "TARGET PATH(S)", value_parser, num_args = 1.., value_delimiter = ',')]
     target_paths: Option<Vec<PathBuf>>,
 
     /// The size threshold as a percentage of the total. Only items with a relative size greater or equal

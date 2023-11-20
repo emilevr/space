@@ -54,8 +54,8 @@ r#"EXAMPLES:
 )]
 struct CliArgs {
     /// The path(s) to the target files or directories to view. If not supplied the current directory
-    /// will be used. Separate multiple paths using spaces.
-    #[arg(value_name = "TARGET PATH(S)", value_parser, num_args = 1.., value_delimiter = ' ')]
+    /// will be used. Separate multiple paths using commas.
+    #[arg(value_name = "TARGET PATH(S)", value_parser, num_args = 1.., value_delimiter = ',')]
     target_paths: Vec<PathBuf>,
 
     /// The size threshold as a percentage of the total. Only items with a relative size greater or equal
