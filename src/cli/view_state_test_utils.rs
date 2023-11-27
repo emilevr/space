@@ -1,7 +1,10 @@
 use super::{
     environment::MockEnvServiceTrait, row_item::RowItem, skin::Skin, view_state::ViewState,
 };
-use crate::{cli::view_command::ViewCommand, test_directory_utils::create_test_directory_tree};
+use crate::{
+    cli::view_command::ViewCommand, test_directory_utils::create_test_directory_tree,
+    test_utils::TestOut,
+};
 use space_rs::SizeDisplayFormat;
 use std::{cell::RefCell, path::PathBuf, rc::Rc};
 
@@ -70,14 +73,17 @@ pub(crate) fn make_test_view_state_from_path(
 pub(crate) fn assert_selected_item_name_eq(
     expected_selected_item_name: &str,
     view_state: &ViewState,
+    test_out: Option<&TestOut>,
 ) {
     let mut expected = expected_selected_item_name.to_string();
     if view_state.visible_offset == 0 && view_state.table_selected_index == 0 {
         // Verify that we expected the first item to be selected.
-        assert_eq!(
-            "", expected,
-            "Did not expect the first item to be selected."
-        );
+        if "" != expected {
+            if let Some(test_out) = test_out {
+                println!("{}", test_out);
+            }
+            assert!(false, "Did not expect the first item to be selected.");
+        }
         // The first item is selected, which has a randomly generated name. We use that in the check instead
         // of the specified value.
         expected = view_state.visible_row_items[0]
@@ -88,7 +94,16 @@ pub(crate) fn assert_selected_item_name_eq(
 
     let selected_item = view_state.get_selected_item().unwrap();
     let selected_item = selected_item.borrow();
-    assert_eq!(expected, selected_item.path_segment);
+    if expected != selected_item.path_segment {
+        if let Some(test_out) = test_out {
+            println!("{}", test_out);
+        }
+        assert!(
+            false,
+            "Expected selected item '{}' does not match actual '{}' (single quotes added)",
+            expected, selected_item.path_segment
+        );
+    }
 }
 
 pub(crate) fn select_item_by_name(name: &str, view_state: &mut ViewState) -> anyhow::Result<()> {
@@ -96,7 +111,7 @@ pub(crate) fn select_item_by_name(name: &str, view_state: &mut ViewState) -> any
     if name != "" {
         let row_index = get_row_index_by_name(name, &view_state).unwrap();
         view_state.select_item(row_index);
-        assert_selected_item_name_eq(name, &view_state);
+        assert_selected_item_name_eq(name, &view_state, None);
         return Ok(());
     } else if !view_state.item_tree.is_empty() {
         view_state.select_item(0);

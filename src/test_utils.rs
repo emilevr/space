@@ -11,11 +11,17 @@ use crate::cli::environment::MockEnvServiceTrait;
 // Custom type for capturing output
 pub(crate) struct TestOut {
     buffer: Vec<u8>,
+    width: u16,
 }
 
 impl TestOut {
     pub(crate) fn new() -> Self {
-        Self { buffer: Vec::new() }
+        Self {
+            buffer: Vec::new(),
+            width: crossterm::terminal::size()
+                .expect("Unable to get output width")
+                .0,
+        }
     }
 
     pub(crate) fn as_string(&self) -> String {
@@ -69,11 +75,29 @@ impl Write for TestOut {
 
 impl Display for TestOut {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            strip_ansi_escape_sequences(self.as_string().as_str())
-        )?;
+        let mut start_index: usize = 0;
+
+        loop {
+            let mut slice = self
+                .buffer
+                .get(start_index..(start_index + self.width as usize));
+
+            if slice.is_none() {
+                slice = self.buffer.get(start_index..);
+                if slice.is_none() {
+                    break;
+                }
+            }
+
+            if let Some(slice) = slice {
+                write!(f, "{}", String::from_utf8_lossy(&slice).to_string())?;
+            } else {
+                break;
+            }
+
+            start_index += self.width as usize;
+        }
+
         Ok(())
     }
 }

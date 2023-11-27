@@ -213,7 +213,7 @@ fn render_with_cancelled_delete_does_not_delete_item(
     )?;
 
     // Assert
-    assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    assert_selected_item_name_eq(expected_selected_item_name, &view_state, Some(&output));
     output.expect("This will free up at least")?;
     assert_eq!(
         TEST_DIRECTORY_TREE_ITEM_COUNT,
@@ -351,7 +351,7 @@ fn render_with_navigation_input_selects_correct_item(
     )?;
 
     // Assert
-    assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    assert_selected_item_name_eq(expected_selected_item_name, &view_state, Some(&output));
 
     delete_test_directory_tree(&temp_dir_path);
 
@@ -423,7 +423,7 @@ fn render_with_page_up_or_down_navigation_input_selects_correct_item(
     )?;
 
     // Assert
-    assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    assert_selected_item_name_eq(expected_selected_item_name, &view_state, Some(&output));
 
     delete_test_directory_tree(&temp_dir_path);
 
@@ -472,7 +472,7 @@ fn render_with_first_navigation_input_selects_first_item(
     )?;
 
     // Assert
-    assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    assert_selected_item_name_eq(expected_selected_item_name, &view_state, Some(&output));
 
     delete_test_directory_tree(&temp_dir_path);
 
@@ -521,7 +521,7 @@ fn render_with_last_navigation_input_selects_last_item(
     )?;
 
     // Assert
-    assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    assert_selected_item_name_eq(expected_selected_item_name, &view_state, Some(&output));
 
     delete_test_directory_tree(&temp_dir_path);
 

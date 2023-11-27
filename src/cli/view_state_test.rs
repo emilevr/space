@@ -39,7 +39,7 @@ fn set_size_threshold_fraction_given_selected_item_still_visible_reselects_item(
     view_state.set_size_threshold_fraction(0.01f32);
 
     // Assert
-    assert_selected_item_name_eq(item_name, &view_state);
+    assert_selected_item_name_eq(item_name, &view_state, None);
 
     delete_test_directory_tree(&temp_dir_path);
 
@@ -76,7 +76,7 @@ fn expand_selected_item_given_leaf_item_has_no_effect() -> anyhow::Result<()> {
     view_state.expand_selected_item();
 
     // Assert
-    assert_selected_item_name_eq(item_name, &view_state);
+    assert_selected_item_name_eq(item_name, &view_state, None);
     let selected_item = view_state.get_selected_item().unwrap();
     let selected_item = selected_item.borrow();
     assert!(!selected_item.expanded);
@@ -97,7 +97,7 @@ fn expand_selected_item_given_already_expanded_item_has_no_effect() -> anyhow::R
     view_state.expand_selected_item();
 
     // Assert
-    assert_selected_item_name_eq(item_name, &view_state);
+    assert_selected_item_name_eq(item_name, &view_state, None);
     let selected_item = view_state.get_selected_item().unwrap();
     let selected_item = selected_item.borrow();
     assert!(selected_item.has_children);
@@ -136,7 +136,7 @@ fn collapse_selected_item_given_leaf_item_collapses_and_selects_parent_item(
     view_state.collapse_selected_item();
 
     // Assert
-    assert_selected_item_name_eq(parent_item_name, &view_state);
+    assert_selected_item_name_eq(parent_item_name, &view_state, None);
     let selected_item = view_state.get_selected_item().unwrap();
     let selected_item = selected_item.borrow();
     assert!(!selected_item.expanded);
@@ -161,7 +161,7 @@ fn collapse_selected_item_given_parent_item_collapses_and_keeps_selection(
     view_state.collapse_selected_item();
 
     // Assert
-    assert_selected_item_name_eq(selected_item_name, &view_state);
+    assert_selected_item_name_eq(selected_item_name, &view_state, None);
     let selected_item = view_state.get_selected_item().unwrap();
     let selected_item = selected_item.borrow();
     assert!(!selected_item.expanded);
@@ -339,7 +339,7 @@ fn next_selects_expected_item(
         view_state.table_selected_index
     );
     if view_state.displayable_item_count > 0 {
-        assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+        assert_selected_item_name_eq(expected_selected_item_name, &view_state, None);
     }
 
     delete_test_directory_tree(&temp_dir_path);
@@ -372,7 +372,7 @@ fn previous_selects_expected_item(
         expected_table_selected_index,
         view_state.table_selected_index
     );
-    assert_selected_item_name_eq(expected_selected_item_name, &view_state);
+    assert_selected_item_name_eq(expected_selected_item_name, &view_state, None);
 
     delete_test_directory_tree(&temp_dir_path);
 
@@ -476,7 +476,7 @@ fn first_selects_first_item(
     let (mut view_state, temp_dir_path) =
         make_test_view_state_with_height(visible_height, visible_offset, 0f32)?;
     view_state.table_selected_index = table_selected_index;
-    assert_selected_item_name_eq(expected_preselected_item_name, &view_state);
+    assert_selected_item_name_eq(expected_preselected_item_name, &view_state, None);
 
     // Act
     view_state.first();
@@ -510,7 +510,7 @@ fn last_selects_last_item(
     )?;
     view_state.table_selected_index = table_selected_index;
     if view_state.displayable_item_count > 0 {
-        assert_selected_item_name_eq(expected_preselected_item_name, &view_state);
+        assert_selected_item_name_eq(expected_preselected_item_name, &view_state, None);
     }
 
     // Act
