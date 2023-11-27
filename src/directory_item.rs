@@ -205,7 +205,7 @@ impl DirectoryItem {
 
         // Then we sort.
         if child_count > 1 {
-            self.children.par_sort_by(|a, b| b.partial_cmp(a).unwrap());
+            self.children.par_sort_by(|a, b| a.cmp(b));
         }
 
         // Update our own count and size from our descendants' stats.
@@ -227,7 +227,12 @@ impl DirectoryItem {
 impl Ord for DirectoryItem {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> Ordering {
-        self.size_in_bytes.cmp(&other.size_in_bytes)
+        // We want the ordering to be descending by size, so we swap the operands.
+        if self.size_in_bytes == other.size_in_bytes {
+            self.path_segment.cmp(&other.path_segment)
+        } else {
+            other.size_in_bytes.cmp(&self.size_in_bytes)
+        }
     }
 }
 

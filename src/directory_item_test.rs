@@ -9,10 +9,10 @@ use std::{cmp::Ordering, path::PathBuf};
 use uuid::Uuid;
 
 #[rstest]
-#[case(123, 123, Ordering::Equal)]
-#[case(1, 2, Ordering::Less)]
-#[case(2, 1, Ordering::Greater)]
-fn cmp_with_given_size_in_bytes_returns_correct_ordering(
+#[case(123, 123, Ordering::Less)]
+#[case(1, 2, Ordering::Greater)]
+#[case(2, 1, Ordering::Less)]
+fn cmp_with_given_size_in_bytes_returns_descending_ordering(
     #[case] size_in_bytes_1: u64,
     #[case] size_in_bytes_2: u64,
     #[case] expected_ordering: Ordering,
@@ -47,10 +47,10 @@ fn cmp_with_given_size_in_bytes_returns_correct_ordering(
 }
 
 #[rstest]
-#[case(432, 432, Some(Ordering::Equal))]
-#[case(1, 7, Some(Ordering::Less))]
-#[case(99, 98, Some(Ordering::Greater))]
-fn partial_cmp_with_given_size_in_bytes_returns_correct_ordering(
+#[case(432, 432, Some(Ordering::Less))]
+#[case(1, 7, Some(Ordering::Greater))]
+#[case(99, 98, Some(Ordering::Less))]
+fn partial_cmp_with_given_size_in_bytes_returns_descending_ordering(
     #[case] size_in_bytes_1: u64,
     #[case] size_in_bytes_2: u64,
     #[case] expected_ordering: Option<Ordering>,
@@ -81,6 +81,10 @@ fn partial_cmp_with_given_size_in_bytes_returns_correct_ordering(
     let ordering = v1.partial_cmp(&v2);
 
     // Assert
+    println!(
+        "v1 size = {} bytes, v2 size = {} bytes",
+        v1.size_in_bytes, v2.size_in_bytes
+    );
     assert_eq!(expected_ordering, ordering);
 }
 
@@ -119,6 +123,10 @@ fn eq_with_given_size_in_bytes_returns_correct_result(
     let equal = v1.eq(&v2);
 
     // Assert
+    println!(
+        "v1 size = {} bytes, v2 size = {} bytes",
+        v1.size_in_bytes, v2.size_in_bytes
+    );
     assert_eq!(expected_result, equal);
 }
 
