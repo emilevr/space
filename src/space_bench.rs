@@ -6,6 +6,7 @@ use space_rs::SizeDisplayFormat;
 use std::{
     io::{self, Write},
     path::PathBuf,
+    sync::{atomic::AtomicBool, Arc},
     time::Duration,
 };
 
@@ -115,6 +116,7 @@ impl BenchmarkCommand {
             .sample_size(self.sample_size.into())
             .warm_up_time(Duration::from_secs(self.warmup_seconds.into()))
             .measurement_time(Duration::from_secs(self.measurement_seconds.into()));
+        let should_exit = Arc::new(AtomicBool::new(false));
 
         c.bench_function(&format!("{:?}", self.target_paths), |b| {
             b.iter(|| {
@@ -125,6 +127,7 @@ impl BenchmarkCommand {
                     #[cfg(not(test))]
                     true,
                     Box::<DefaultEnvService>::default(),
+                    should_exit.clone(),
                 )
                 .prepare()
                 .unwrap()

@@ -27,6 +27,10 @@ use ratatui::{
 use std::{
     cmp::{max, min},
     io::Write,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 #[cfg(test)]
@@ -70,6 +74,7 @@ pub(crate) fn render<W: Write, I: InputEventSource>(
     writer: &mut W,
     input_event_source: &mut I,
     skin: &Skin,
+    should_exit: Arc<AtomicBool>,
 ) -> anyhow::Result<()> {
     enable_raw_mode()?;
 
@@ -77,7 +82,13 @@ pub(crate) fn render<W: Write, I: InputEventSource>(
     let backend = CrosstermBackend::new(writer);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = render_loop(&mut terminal, view_state, input_event_source, skin);
+    let result = render_loop(
+        &mut terminal,
+        view_state,
+        input_event_source,
+        skin,
+        should_exit,
+    );
 
     disable_raw_mode()?;
     execute!(
@@ -115,6 +126,7 @@ fn render_loop<B: Backend, I: InputEventSource>(
     view_state: &mut ViewState,
     input_event_source: &mut I,
     skin: &Skin,
+    should_exit: Arc<AtomicBool>,
 ) -> anyhow::Result<()> {
     loop {
         terminal.draw(|f| create_frame(f, view_state, skin))?;
@@ -125,6 +137,10 @@ fn render_loop<B: Backend, I: InputEventSource>(
             ..
         }) = input_event_source.read_event()?
         {
+            if should_exit.load(Ordering::SeqCst) {
+                return Ok(());
+            }
+
             if view_state.show_help {
                 view_state.show_help = false;
             } else if view_state.show_delete_dialog {

@@ -18,19 +18,26 @@ use space_rs::{
     size::{Size, SizeDisplayFormat},
     DirectoryItem, DirectoryItemType,
 };
-use std::{cell::RefCell, env::VarError, rc::Rc};
+use std::{
+    cell::RefCell,
+    env::VarError,
+    rc::Rc,
+    sync::{atomic::AtomicBool, Arc},
+};
 use uuid::Uuid;
 
 #[test]
 fn single_target_path_that_does_not_exist_should_fail() -> anyhow::Result<()> {
     // Arrange
     let env_service_mock = MockEnvServiceTrait::new();
+    let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand {
         target_paths: Some(vec![std::env::temp_dir().join(Uuid::new_v4().to_string())]),
         size_display_format: None,
         size_threshold_percentage: 1,
         total_size_in_bytes: 0,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
 
     // Act
@@ -47,12 +54,14 @@ fn single_target_path_that_does_not_exist_should_fail() -> anyhow::Result<()> {
 fn add_row_item_given_item_of_size_below_threshold_does_not_add_item() {
     // Arrange
     let env_service_mock = MockEnvServiceTrait::new();
+    let should_exit = Arc::new(AtomicBool::new(false));
     let view_command = ViewCommand {
         target_paths: None,
         size_display_format: None,
         size_threshold_percentage: 1,
         total_size_in_bytes: 1000000,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
     let item = DirectoryItem {
         path_segment: "/some/path".to_string(),
@@ -79,13 +88,14 @@ fn analyze_space_given_no_target_paths_traces_current_dir() -> anyhow::Result<()
     env_service_mock
         .expect_current_dir()
         .returning(move || Ok(temp_dir_copy.clone()));
-
+    let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand {
         target_paths: None,
         size_display_format: None,
         size_threshold_percentage: 1,
         total_size_in_bytes: 0,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
 
     // Act
@@ -203,12 +213,14 @@ fn run_given_no_size_display_format_defaults_to_metric() -> anyhow::Result<()> {
     let mut output = TestOut::new();
     let temp_dir = create_test_directory_tree()?;
     let env_service_mock = env_service_mock_without_env_vars();
+    let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand {
         target_paths: Some(vec![temp_dir.clone()]),
         size_display_format: None,
         size_threshold_percentage: 1,
         total_size_in_bytes: 0,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
 
     // Act
@@ -238,12 +250,14 @@ fn run_with_size_display_format_uses_that_format(
     let mut output = TestOut::new();
     let temp_dir = create_test_directory_tree()?;
     let env_service_mock = env_service_mock_without_env_vars();
+    let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand {
         target_paths: Some(vec![temp_dir.clone()]),
         size_display_format: Some(size_display_format),
         size_threshold_percentage: 1,
         total_size_in_bytes: 0,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
 
     // Act
@@ -267,12 +281,14 @@ fn run_given_single_target_path_shows_expected_duration_prompt() -> anyhow::Resu
     let mut output = TestOut::new();
     let temp_dir = create_test_directory_tree()?;
     let env_service_mock = env_service_mock_without_env_vars();
+    let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand {
         target_paths: Some(vec![temp_dir.clone()]),
         size_display_format: None,
         size_threshold_percentage: 100,
         total_size_in_bytes: 0,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
 
     // Act
@@ -297,12 +313,14 @@ fn run_given_multiple_target_paths_shows_expected_duration_prompt() -> anyhow::R
     let temp_dir1 = create_test_directory_tree()?;
     let temp_dir2 = create_test_directory_tree()?;
     let env_service_mock = env_service_mock_without_env_vars();
+    let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand {
         target_paths: Some(vec![temp_dir1.clone(), temp_dir2.clone()]),
         size_display_format: None,
         size_threshold_percentage: 100,
         total_size_in_bytes: 0,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
 
     // Act
@@ -388,6 +406,7 @@ fn get_color_count_return_expected_color_count(
             .with(eq(crate::cli::view_command::TERM_ENV_VAR))
             .returning(move |_| Err(VarError::NotPresent));
     }
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     let view_command = ViewCommand {
         target_paths: None,
@@ -395,6 +414,7 @@ fn get_color_count_return_expected_color_count(
         size_threshold_percentage: 1,
         total_size_in_bytes: 0,
         env_service: Box::new(env_service_mock),
+        should_exit,
     };
 
     // Act

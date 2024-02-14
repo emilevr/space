@@ -12,7 +12,13 @@ use anyhow::{bail, Context};
 use crossterm::{style::Print, QueueableCommand};
 use ratatui::prelude::*;
 use space_rs::{DirectoryItem, SizeDisplayFormat};
-use std::{cell::RefCell, io::Write, path::PathBuf, rc::Rc};
+use std::{
+    cell::RefCell,
+    io::Write,
+    path::PathBuf,
+    rc::Rc,
+    sync::{atomic::AtomicBool, Arc},
+};
 use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
@@ -30,6 +36,7 @@ pub(crate) struct ViewCommand {
     non_interactive: bool,
     total_size_in_bytes: u64,
     env_service: Box<dyn EnvServiceTrait>,
+    should_exit: Arc<AtomicBool>,
 }
 
 impl CliCommand for ViewCommand {
@@ -100,6 +107,7 @@ impl CliCommand for ViewCommand {
                 writer,
                 &mut CrosstermInputEventSource::new(),
                 &skin,
+                self.should_exit.clone(),
             )?;
             writeln!(writer, "Done.")?;
             return Ok(());
@@ -119,6 +127,7 @@ impl ViewCommand {
         size_threshold_percentage: u8,
         #[cfg(not(test))] non_interactive: bool,
         env_service: Box<dyn EnvServiceTrait>,
+        should_exit: Arc<AtomicBool>,
     ) -> Self {
         ViewCommand {
             target_paths,
@@ -128,6 +137,7 @@ impl ViewCommand {
             non_interactive,
             total_size_in_bytes: 0,
             env_service,
+            should_exit,
         }
     }
 
