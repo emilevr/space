@@ -56,16 +56,30 @@ brew upgrade emilevr/space/space
 
 #### [Scoop](https://scoop.sh/) (Windows)
 
-A PR has been submitted to merge space into the extras bucket, but is still pending review. In the meantime, you can use the following command to install space via the Scoop manifest published by this repo:
+`space` is available in the `extras` bucket.
+
+:one: Add the bucket via the following command, if you haven't done so already:
 
 ```plaintext
-scoop install https://emilevr.github.io/space/scoop/space.json
+scoop bucket add extras
 ```
 
-In future, `space` may be upgraded via:
+:two: Install:
+
+```plaintext
+scoop install space
+```
+
+:three: In future, upgrade:
 
 ```plaintext
 scoop update space
+```
+
+Alternatively, use the following command to install space via the Scoop manifest published by this repo:
+
+```plaintext
+scoop install https://emilevr.github.io/space/scoop/space.json
 ```
 
 #### Bash
