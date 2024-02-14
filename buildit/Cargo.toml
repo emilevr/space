@@ -9,7 +9,7 @@ benchmark = ["indicatif", "reqwest", "zip"]
 
 [dependencies]
 anyhow = "^1.0.72"
-clap = { version = "^4.3.21", features = ["derive"] }
+clap = { version = "=4.4.6", features = ["derive"] }
 env_logger = "^0.10.0"
 git2 = "^0.18.1"
 globset = "^0.4.13"
