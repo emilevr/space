@@ -6,7 +6,12 @@ use crate::{
     test_utils::TestOut,
 };
 use space_rs::SizeDisplayFormat;
-use std::{cell::RefCell, path::PathBuf, rc::Rc};
+use std::{
+    cell::RefCell,
+    path::PathBuf,
+    rc::Rc,
+    sync::{atomic::AtomicBool, Arc},
+};
 
 pub(crate) const TEST_DIRECTORY_TREE_ITEM_COUNT: usize = 29;
 pub(crate) const TEST_DIRECTORY_TREE_TOTAL_SIZE: u64 = 180000;
@@ -47,11 +52,13 @@ pub(crate) fn make_test_view_state_from_path(
 ) -> Result<ViewState, anyhow::Error> {
     let size_display_format = SizeDisplayFormat::Metric;
     let env_service_mock = MockEnvServiceTrait::new();
+    let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand::new(
         Some(vec![path.clone()]),
         Some(size_display_format.clone()),
         (size_threshold_fraction * 100f32) as u8,
         Box::new(env_service_mock),
+        should_exit,
     );
     let items = view_command.get_directory_items();
     let items = view_command.get_row_items(items, 0f32);

@@ -10,7 +10,10 @@ use super::{
 #[cfg(not(test))]
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind},
+    event::{
+        DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind,
+        KeyModifiers,
+    },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
@@ -27,6 +30,7 @@ use ratatui::{
 use std::{
     cmp::{max, min},
     io::Write,
+    sync::{atomic::AtomicBool, Arc},
 };
 
 #[cfg(test)]
@@ -70,6 +74,7 @@ pub(crate) fn render<W: Write, I: InputEventSource>(
     writer: &mut W,
     input_event_source: &mut I,
     skin: &Skin,
+    should_exit: Arc<AtomicBool>,
 ) -> anyhow::Result<()> {
     enable_raw_mode()?;
 
@@ -77,7 +82,13 @@ pub(crate) fn render<W: Write, I: InputEventSource>(
     let backend = CrosstermBackend::new(writer);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = render_loop(&mut terminal, view_state, input_event_source, skin);
+    let result = render_loop(
+        &mut terminal,
+        view_state,
+        input_event_source,
+        skin,
+        should_exit,
+    );
 
     disable_raw_mode()?;
     execute!(
@@ -115,16 +126,28 @@ fn render_loop<B: Backend, I: InputEventSource>(
     view_state: &mut ViewState,
     input_event_source: &mut I,
     skin: &Skin,
+    should_exit: Arc<AtomicBool>,
 ) -> anyhow::Result<()> {
     loop {
         terminal.draw(|f| create_frame(f, view_state, skin))?;
 
+        // We have to check if cancellation was requested before entering the rendering loop, otherwise
+        // Ctrl/Cmd+C will have to pressed again.
+        if should_exit.load(std::sync::atomic::Ordering::Relaxed) {
+            anyhow::bail!("Cancelled.");
+        }
+
         if let Event::Key(KeyEvent {
             code,
             kind: KeyEventKind::Press,
+            modifiers,
             ..
         }) = input_event_source.read_event()?
         {
+            if code == KeyCode::Char('c') && modifiers == KeyModifiers::CONTROL {
+                anyhow::bail!("Cancelled.");
+            }
+
             if view_state.show_help {
                 view_state.show_help = false;
             } else if view_state.show_delete_dialog {

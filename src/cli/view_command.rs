@@ -8,11 +8,17 @@ use super::{
     tui,
     view_state::{self, ViewState},
 };
-use anyhow::{bail, Context};
+use anyhow::Context;
 use crossterm::{style::Print, QueueableCommand};
 use ratatui::prelude::*;
 use space_rs::{DirectoryItem, SizeDisplayFormat};
-use std::{cell::RefCell, io::Write, path::PathBuf, rc::Rc};
+use std::{
+    cell::RefCell,
+    io::Write,
+    path::PathBuf,
+    rc::Rc,
+    sync::{atomic::AtomicBool, Arc},
+};
 use unicode_segmentation::UnicodeSegmentation;
 
 #[cfg(test)]
@@ -30,6 +36,7 @@ pub(crate) struct ViewCommand {
     non_interactive: bool,
     total_size_in_bytes: u64,
     env_service: Box<dyn EnvServiceTrait>,
+    should_exit: Arc<AtomicBool>,
 }
 
 impl CliCommand for ViewCommand {
@@ -46,7 +53,7 @@ impl CliCommand for ViewCommand {
             target_paths.dedup();
             for target_path in &target_paths {
                 if !target_path.exists() {
-                    bail!("{} does not exist!", target_path.display());
+                    anyhow::bail!("{} does not exist!", target_path.display());
                 }
             }
             // Update args with cleaned target paths.
@@ -72,7 +79,7 @@ impl CliCommand for ViewCommand {
         }
         writeln!(
             writer,
-            "This could take a while depending on the size of the tree ..."
+            "This could take a while, depending on the size of the tree ...\nPress Ctrl/Cmd+C to cancel (or the appropriate override for your terminal)"
         )?;
 
         let items = self.get_directory_items();
@@ -100,13 +107,25 @@ impl CliCommand for ViewCommand {
                 writer,
                 &mut CrosstermInputEventSource::new(),
                 &skin,
+                self.should_exit.clone(),
             )?;
+
             writeln!(writer, "Done.")?;
+            writer.flush()?;
+
             return Ok(());
         }
 
+        // Non-interactive
         render_rows(view_state, size_threshold_fraction, writer, &skin)?;
+
         writer.flush()?;
+
+        if self.should_exit.load(std::sync::atomic::Ordering::Relaxed) {
+            anyhow::bail!("Cancelled.");
+        }
+
+        writeln!(writer, "Done.")?;
 
         Ok(())
     }
@@ -119,6 +138,7 @@ impl ViewCommand {
         size_threshold_percentage: u8,
         #[cfg(not(test))] non_interactive: bool,
         env_service: Box<dyn EnvServiceTrait>,
+        should_exit: Arc<AtomicBool>,
     ) -> Self {
         ViewCommand {
             target_paths,
@@ -128,6 +148,7 @@ impl ViewCommand {
             non_interactive,
             total_size_in_bytes: 0,
             env_service,
+            should_exit,
         }
     }
 
@@ -197,7 +218,7 @@ impl ViewCommand {
             sanitized_paths.push(current_dir);
         }
 
-        let items = DirectoryItem::build(sanitized_paths);
+        let items = DirectoryItem::build(sanitized_paths, &self.should_exit);
 
         // TODO: Do this inline
         self.total_size_in_bytes = items.iter().map(|t| t.size_in_bytes.get_value()).sum();

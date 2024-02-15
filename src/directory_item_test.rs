@@ -5,7 +5,11 @@ use crate::{
     Size,
 };
 use rstest::rstest;
-use std::{cmp::Ordering, path::PathBuf};
+use std::{
+    cmp::Ordering,
+    path::PathBuf,
+    sync::{atomic::AtomicBool, Arc},
+};
 use uuid::Uuid;
 
 #[rstest]
@@ -135,9 +139,10 @@ fn from_root_given_file_path_should_return_only_file_item() -> anyhow::Result<()
     // Arrange
     let temp_dir = create_test_directory_tree()?;
     let file_path = temp_dir.join("1").join("1.1");
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
-    let item = DirectoryItem::from_root(&file_path);
+    let item = DirectoryItem::from_root(&file_path, &should_exit);
 
     // Assert
     assert_eq!(file_path.display().to_string(), item.path_segment);
@@ -154,9 +159,10 @@ fn build_given_symbolic_link_dir_should_not_follow_link() -> anyhow::Result<()> 
     // Arrange
     let temp_dir = create_test_directory_tree()?;
     let file_paths = vec![temp_dir.join("1").join("1.11")];
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
-    let items = DirectoryItem::build(file_paths);
+    let items = DirectoryItem::build(file_paths, &should_exit);
 
     // Assert
     assert_eq!(1, items.len());
@@ -199,9 +205,10 @@ fn debug_succeeds() {
 fn from_root_given_non_existent_path_does_not_panic() {
     // Arrange
     let path = std::env::temp_dir().join(Uuid::new_v4().to_string());
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
-    let item = DirectoryItem::from_root(&path);
+    let item = DirectoryItem::from_root(&path, &should_exit);
 
     // Assert
     assert_eq!(path.display().to_string(), item.path_segment);
@@ -213,9 +220,10 @@ fn from_root_given_non_existent_path_does_not_panic() {
 fn get_child_items_given_non_existent_path_does_not_panic() {
     // Arrange
     let path = std::env::temp_dir().join(Uuid::new_v4().to_string());
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
-    let children = DirectoryItem::get_child_items(&path);
+    let children = DirectoryItem::get_child_items(&path, &should_exit);
 
     // Assert
     assert_eq!(1, children.len());

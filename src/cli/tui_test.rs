@@ -48,6 +48,7 @@ fn render_outputs_crate_version_number() -> anyhow::Result<()> {
         KeyCode::Char(QUIT_KEY_1),
         KeyModifiers::NONE,
     ))]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -55,6 +56,7 @@ fn render_outputs_crate_version_number() -> anyhow::Result<()> {
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -75,6 +77,7 @@ fn render_outputs_full_path_as_first_row_with_100_percent_size() -> anyhow::Resu
         KeyCode::Char(QUIT_KEY_1),
         KeyModifiers::NONE,
     ))]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -82,6 +85,7 @@ fn render_outputs_full_path_as_first_row_with_100_percent_size() -> anyhow::Resu
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -137,6 +141,7 @@ fn render_with_delete_input_without_license_terms_accepted_shows_license_dialog(
             )
             .collect();
     let mut input_event_source = TestInputEventSource::new(input_events);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -144,6 +149,7 @@ fn render_with_delete_input_without_license_terms_accepted_shows_license_dialog(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -203,6 +209,7 @@ fn render_with_cancelled_delete_does_not_delete_item(
             )
             .collect();
     let mut input_event_source = TestInputEventSource::new(input_events);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -210,6 +217,7 @@ fn render_with_cancelled_delete_does_not_delete_item(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -273,6 +281,7 @@ fn render_with_confirmed_delete_deletes_selected_item(
             )
             .collect();
     let mut input_event_source = TestInputEventSource::new(input_events);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -280,6 +289,7 @@ fn render_with_confirmed_delete_deletes_selected_item(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -341,6 +351,7 @@ fn render_with_navigation_input_selects_correct_item(
             )
             .collect();
     let mut input_event_source = TestInputEventSource::new(input_events);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -348,6 +359,7 @@ fn render_with_navigation_input_selects_correct_item(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -413,6 +425,7 @@ fn render_with_page_up_or_down_navigation_input_selects_correct_item(
             )
             .collect();
     let mut input_event_source = TestInputEventSource::new(input_events);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -420,6 +433,7 @@ fn render_with_page_up_or_down_navigation_input_selects_correct_item(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -462,6 +476,7 @@ fn render_with_first_navigation_input_selects_first_item(
             )
             .collect();
     let mut input_event_source = TestInputEventSource::new(input_events);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -469,6 +484,7 @@ fn render_with_first_navigation_input_selects_first_item(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -511,6 +527,7 @@ fn render_with_last_navigation_input_selects_last_item(
             )
             .collect();
     let mut input_event_source = TestInputEventSource::new(input_events);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -518,6 +535,7 @@ fn render_with_last_navigation_input_selects_last_item(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -539,6 +557,7 @@ fn render_with_help_key_input_outputs_help() -> anyhow::Result<()> {
         Event::Key(KeyEvent::new(KeyCode::Char(HELP_KEY), KeyModifiers::NONE)), // Toggle hide help (can be any key)
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -546,6 +565,7 @@ fn render_with_help_key_input_outputs_help() -> anyhow::Result<()> {
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -595,6 +615,7 @@ fn render_with_view_size_threshold_input_shows_percentage_on_top_line(
         )),
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -602,6 +623,7 @@ fn render_with_view_size_threshold_input_shows_percentage_on_top_line(
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -632,6 +654,7 @@ fn render_given_collapse_input_for_expanded_directory_item_collapses_it() -> any
         Event::Key(KeyEvent::new(KeyCode::Left, KeyModifiers::NONE)), // Collapses 1
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -639,6 +662,7 @@ fn render_given_collapse_input_for_expanded_directory_item_collapses_it() -> any
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -666,6 +690,7 @@ fn render_given_expand_input_for_collapsed_directory_item_expands_it() -> anyhow
         Event::Key(KeyEvent::new(KeyCode::Right, KeyModifiers::NONE)), // Expands 1
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -673,6 +698,7 @@ fn render_given_expand_input_for_collapsed_directory_item_expands_it() -> anyhow
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -702,6 +728,7 @@ fn render_given_collapse_children_input_for_directory_item_collapses_all_childre
         Event::Key(KeyEvent::new(KeyCode::Char(key), KeyModifiers::NONE)), // Collapses children
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -709,6 +736,7 @@ fn render_given_collapse_children_input_for_directory_item_collapses_all_childre
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -741,6 +769,7 @@ fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_c
         Event::Key(KeyEvent::new(KeyCode::Char(key), KeyModifiers::NONE)), // Expands children
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -748,6 +777,7 @@ fn render_given_expand_children_input_for_collapsed_directory_item_expands_all_c
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -778,6 +808,7 @@ fn render_given_expand_children_input_for_expanded_directory_item_expands_all_ch
         Event::Key(KeyEvent::new(KeyCode::Char(key), KeyModifiers::NONE)), // Expands all children
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -785,6 +816,7 @@ fn render_given_expand_children_input_for_expanded_directory_item_expands_all_ch
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert
@@ -819,6 +851,7 @@ fn render_with_accept_license_input_updates_view_state_and_writes_config_file() 
         Event::Key(KeyEvent::new(KeyCode::Esc, KeyModifiers::NONE)), // Cancel delete dialog
         Event::Key(KeyEvent::new(KeyCode::Char(QUIT_KEY_1), KeyModifiers::NONE)),
     ]);
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     render(
@@ -826,6 +859,7 @@ fn render_with_accept_license_input_updates_view_state_and_writes_config_file() 
         &mut output,
         &mut input_event_source,
         &Skin::default(),
+        should_exit,
     )?;
 
     // Assert

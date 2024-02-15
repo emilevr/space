@@ -11,6 +11,7 @@ use space_rs::SizeDisplayFormat;
 use std::env;
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::{atomic::AtomicBool, Arc};
 
 #[cfg(test)]
 #[path = "./main_test.rs"]
@@ -89,13 +90,24 @@ struct CliArgs {
 
 #[cfg(not(test))]
 pub fn main() -> anyhow::Result<()> {
+    use std::sync::atomic::Ordering;
+
     use cli::environment::DefaultEnvService;
+
+    let should_exit = Arc::new(AtomicBool::new(false));
+    let s = should_exit.clone();
+    ctrlc::set_handler(move || {
+        println!("Cancelling...");
+        s.store(true, Ordering::SeqCst);
+    })
+    .expect("Failed to set Ctrl-C handler");
 
     run(
         &env::args().collect::<Vec<_>>(),
         &mut std::io::stdout(),
         dirs::home_dir(),
         Box::<DefaultEnvService>::default(),
+        should_exit,
     )?;
 
     Ok(())
@@ -106,11 +118,11 @@ pub(crate) fn run<W: Write>(
     writer: &mut W,
     user_home_dir: Option<PathBuf>,
     env_service: Box<dyn EnvServiceTrait>,
+    should_exit: Arc<AtomicBool>,
 ) -> anyhow::Result<()> {
     configure_logger(user_home_dir, &env_service);
-    if let Err(e) = run_command(args, writer, env_service) {
+    if let Err(e) = run_command(args, writer, env_service, should_exit) {
         error!("{}", e);
-        eprintln!("{}", e);
         Err(e)
     } else {
         Ok(())
@@ -121,9 +133,10 @@ fn run_command<W: Write>(
     args: &[String],
     writer: &mut W,
     env_service: Box<dyn EnvServiceTrait>,
+    should_exit: Arc<AtomicBool>,
 ) -> anyhow::Result<()> {
     let args = parse_args(args)?;
-    prepare_command(args, env_service)?.run(writer)?;
+    prepare_command(args, env_service, should_exit)?.run(writer)?;
     Ok(())
 }
 
@@ -134,6 +147,7 @@ fn parse_args(args: &[String]) -> Result<CliArgs, anyhow::Error> {
 fn prepare_command(
     args: CliArgs,
     env_service: Box<dyn EnvServiceTrait>,
+    should_exit: Arc<AtomicBool>,
 ) -> anyhow::Result<ViewCommand> {
     let mut command = ViewCommand::new(
         args.target_paths,
@@ -142,6 +156,7 @@ fn prepare_command(
         #[cfg(not(test))]
         args.non_interactive,
         env_service,
+        should_exit,
     );
     command.prepare()?;
     Ok(command)

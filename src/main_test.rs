@@ -1,4 +1,7 @@
-use std::env::{self, VarError};
+use std::{
+    env::{self, VarError},
+    sync::{atomic::AtomicBool, Arc},
+};
 
 use crate::{
     cli::environment::MockEnvServiceTrait,
@@ -51,9 +54,10 @@ fn prepare_command_when_no_target_paths_specified_uses_current_dir() -> anyhow::
     env_service_mock
         .expect_current_dir()
         .returning(|| env::current_dir());
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
-    let command = prepare_command(args, Box::new(env_service_mock))?;
+    let command = prepare_command(args, Box::new(env_service_mock), should_exit)?;
 
     // Assert
     assert_eq!(
@@ -75,6 +79,7 @@ fn run_given_non_existent_path_fails() {
         .expect_var()
         .with(mockall::predicate::eq(SPACE_LOG_LEVEL_ENV_VAR_NAME))
         .returning(|_| Err(VarError::NotPresent));
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     let result = run(
@@ -82,6 +87,7 @@ fn run_given_non_existent_path_fails() {
         &mut TestOut::new(),
         Some(log_dir),
         Box::new(env_service_mock),
+        should_exit,
     );
 
     // Assert
@@ -105,6 +111,7 @@ fn run_given_valid_path_succeeds() -> anyhow::Result<()> {
     let args = vec![BINARY_PATH.to_string(), file_path.display().to_string()];
     let mut test_out = TestOut::new();
     let env_service_mock = env_service_mock_without_env_vars();
+    let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
     let result = run(
@@ -112,6 +119,7 @@ fn run_given_valid_path_succeeds() -> anyhow::Result<()> {
         &mut test_out,
         Some(log_dir),
         Box::new(env_service_mock),
+        should_exit,
     );
 
     // Assert

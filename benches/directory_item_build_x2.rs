@@ -1,6 +1,9 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use space_rs::DirectoryItem;
-use std::path::Path;
+use std::{
+    path::Path,
+    sync::{atomic::AtomicBool, Arc},
+};
 
 const DIRECTORY_PATH: &str = "./tmp.sample";
 
@@ -16,11 +19,13 @@ pub fn directory_item_build_x2(c: &mut Criterion) {
         .build_global()
         .unwrap();
 
+    let should_exit = Arc::new(AtomicBool::new(false));
+
     c.bench_function(
         &format!("DirectoryItem::build() x2 on {}", path.display()),
         |b| {
             b.iter(|| {
-                black_box(DirectoryItem::build(vec![path.clone()]));
+                black_box(DirectoryItem::build(vec![path.clone()], &should_exit));
             })
         },
     );
