@@ -22,7 +22,10 @@ use std::{
     cell::RefCell,
     env::VarError,
     rc::Rc,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 use uuid::Uuid;
 
@@ -422,4 +425,36 @@ fn get_color_count_return_expected_color_count(
 
     // Assert
     assert_eq!(expected_color_count, color_count);
+}
+
+#[test]
+// Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does
+// not work on build agents for some operating systems. It will be included with those on the build agent
+// using an appropriate terminal multiplexer.
+#[ignore]
+fn run_with_should_exit_equal_to_true_exits() -> anyhow::Result<()> {
+    // Arrange
+    let mut output = TestOut::new();
+    let temp_dir = create_test_directory_tree()?;
+    let env_service_mock = env_service_mock_without_env_vars();
+    let should_exit = Arc::new(AtomicBool::new(false));
+    let mut view_command = ViewCommand {
+        target_paths: Some(vec![temp_dir.clone()]),
+        size_display_format: None,
+        size_threshold_percentage: 100,
+        total_size_in_bytes: 0,
+        env_service: Box::new(env_service_mock),
+        should_exit: should_exit.clone(),
+    };
+
+    // Act
+    should_exit.store(true, Ordering::SeqCst);
+    let result = view_command.run(&mut output);
+
+    // Assert
+    assert!(result.is_err()); // Should have cancelled.
+
+    delete_test_directory_tree(&temp_dir);
+
+    Ok(())
 }

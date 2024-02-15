@@ -9,6 +9,7 @@ use std::{
     cmp::Ordering,
     fs,
     path::{Path, PathBuf},
+    sync::{atomic::AtomicBool, Arc},
 };
 
 #[cfg(test)]
@@ -48,7 +49,7 @@ pub struct DirectoryItem {
 impl DirectoryItem {
     /// Builds one or more DirectoryItem trees.
     #[inline(always)]
-    pub fn build(mut paths: Vec<PathBuf>) -> Vec<DirectoryItem> {
+    pub fn build(mut paths: Vec<PathBuf>, should_exit: &Arc<AtomicBool>) -> Vec<DirectoryItem> {
         if !paths.is_empty() {
             paths.sort();
             paths.dedup();
@@ -56,21 +57,21 @@ impl DirectoryItem {
 
         let mut items = vec![];
         for path in paths {
-            items.push(Self::from_root(&path));
+            items.push(Self::from_root(&path, should_exit));
         }
 
         items
     }
 
     #[inline(always)]
-    fn from_root(path: &PathBuf) -> DirectoryItem {
+    fn from_root(path: &PathBuf, should_exit: &Arc<AtomicBool>) -> DirectoryItem {
         let mut item = if let Ok(metadata) = fs::symlink_metadata(path) {
             if metadata.is_file() {
                 Self::from_file_size(path, metadata.len())
             } else if metadata.is_symlink() {
                 Self::from_link(path)
             } else {
-                Self::from_directory(path)
+                Self::from_directory(path, should_exit)
             }
         } else {
             Self::from_failure(path)
@@ -117,18 +118,22 @@ impl DirectoryItem {
     }
 
     #[inline(always)]
-    fn from_directory(path: &Path) -> DirectoryItem {
+    fn from_directory(path: &Path, should_exit: &Arc<AtomicBool>) -> DirectoryItem {
         DirectoryItem {
             path_segment: get_file_name_from_path(path),
             item_type: DirectoryItemType::Directory,
             size_in_bytes: Size::default(),
             descendant_count: 0,
-            children: Self::get_child_items(path),
+            children: if should_exit.load(std::sync::atomic::Ordering::Relaxed) {
+                vec![]
+            } else {
+                Self::get_child_items(path, should_exit)
+            },
         }
     }
 
     #[inline(always)]
-    fn get_child_items(path: &Path) -> Vec<DirectoryItem> {
+    fn get_child_items(path: &Path, should_exit: &Arc<AtomicBool>) -> Vec<DirectoryItem> {
         let entries: Vec<_> = match fs::read_dir(path) {
             Ok(entries) => entries,
             Err(_) => return vec![Self::from_failure(path)], // TODO: report error
@@ -155,7 +160,7 @@ impl DirectoryItem {
                 } else if path.is_symlink() {
                     vec![Self::from_link(path)]
                 } else {
-                    vec![Self::from_directory(path)]
+                    vec![Self::from_directory(path, should_exit)]
                 }
             }
             _ => entries
@@ -171,7 +176,7 @@ impl DirectoryItem {
                     } else if path.is_symlink() {
                         Self::from_link(path)
                     } else {
-                        Self::from_directory(path)
+                        Self::from_directory(path, should_exit)
                     }
                 })
                 .collect(),

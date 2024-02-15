@@ -97,6 +97,7 @@ pub fn main() -> anyhow::Result<()> {
     let should_exit = Arc::new(AtomicBool::new(false));
     let s = should_exit.clone();
     ctrlc::set_handler(move || {
+        println!("Cancelling...");
         s.store(true, Ordering::SeqCst);
     })
     .expect("Failed to set Ctrl-C handler");
@@ -122,7 +123,6 @@ pub(crate) fn run<W: Write>(
     configure_logger(user_home_dir, &env_service);
     if let Err(e) = run_command(args, writer, env_service, should_exit) {
         error!("{}", e);
-        eprintln!("{}", e);
         Err(e)
     } else {
         Ok(())

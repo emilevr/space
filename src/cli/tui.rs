@@ -10,7 +10,10 @@ use super::{
 #[cfg(not(test))]
 use crossterm::terminal::{EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind},
+    event::{
+        DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyEventKind,
+        KeyModifiers,
+    },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
@@ -27,10 +30,7 @@ use ratatui::{
 use std::{
     cmp::{max, min},
     io::Write,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
+    sync::{atomic::AtomicBool, Arc},
 };
 
 #[cfg(test)]
@@ -131,14 +131,21 @@ fn render_loop<B: Backend, I: InputEventSource>(
     loop {
         terminal.draw(|f| create_frame(f, view_state, skin))?;
 
+        // We have to check if cancellation was requested before entering the rendering loop, otherwise
+        // Ctrl/Cmd+C will have to pressed again.
+        if should_exit.load(std::sync::atomic::Ordering::Relaxed) {
+            anyhow::bail!("Cancelled.");
+        }
+
         if let Event::Key(KeyEvent {
             code,
             kind: KeyEventKind::Press,
+            modifiers,
             ..
         }) = input_event_source.read_event()?
         {
-            if should_exit.load(Ordering::SeqCst) {
-                return Ok(());
+            if code == KeyCode::Char('c') && modifiers == KeyModifiers::CONTROL {
+                anyhow::bail!("Cancelled.");
             }
 
             if view_state.show_help {

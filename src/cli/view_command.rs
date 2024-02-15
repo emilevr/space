@@ -8,7 +8,7 @@ use super::{
     tui,
     view_state::{self, ViewState},
 };
-use anyhow::{bail, Context};
+use anyhow::Context;
 use crossterm::{style::Print, QueueableCommand};
 use ratatui::prelude::*;
 use space_rs::{DirectoryItem, SizeDisplayFormat};
@@ -53,7 +53,7 @@ impl CliCommand for ViewCommand {
             target_paths.dedup();
             for target_path in &target_paths {
                 if !target_path.exists() {
-                    bail!("{} does not exist!", target_path.display());
+                    anyhow::bail!("{} does not exist!", target_path.display());
                 }
             }
             // Update args with cleaned target paths.
@@ -79,7 +79,7 @@ impl CliCommand for ViewCommand {
         }
         writeln!(
             writer,
-            "This could take a while depending on the size of the tree ..."
+            "This could take a while, depending on the size of the tree ...\nPress Ctrl/Cmd+C to cancel (or the appropriate override for your terminal)"
         )?;
 
         let items = self.get_directory_items();
@@ -109,12 +109,23 @@ impl CliCommand for ViewCommand {
                 &skin,
                 self.should_exit.clone(),
             )?;
+
             writeln!(writer, "Done.")?;
+            writer.flush()?;
+
             return Ok(());
         }
 
+        // Non-interactive
         render_rows(view_state, size_threshold_fraction, writer, &skin)?;
+
         writer.flush()?;
+
+        if self.should_exit.load(std::sync::atomic::Ordering::Relaxed) {
+            anyhow::bail!("Cancelled.");
+        }
+
+        writeln!(writer, "Done.")?;
 
         Ok(())
     }
@@ -207,7 +218,7 @@ impl ViewCommand {
             sanitized_paths.push(current_dir);
         }
 
-        let items = DirectoryItem::build(sanitized_paths);
+        let items = DirectoryItem::build(sanitized_paths, &self.should_exit);
 
         // TODO: Do this inline
         self.total_size_in_bytes = items.iter().map(|t| t.size_in_bytes.get_value()).sum();
