@@ -309,21 +309,13 @@ fn report_memory_usage(
             Size::new(usage.virtual_mem as u64).to_string(SizeDisplayFormat::Binary)
         );
 
-        let physical_mem_delta = if usage.physical_mem > start_physical_mem {
-            usage.physical_mem - start_physical_mem
-        } else {
-            0
-        };
+        let physical_mem_delta = usage.physical_mem.saturating_sub(start_physical_mem);
         println!(
             "Physical memory delta    = {}",
             Size::new(physical_mem_delta as u64).to_string(SizeDisplayFormat::Binary)
         );
 
-        let virtual_mem_delta = if usage.virtual_mem > start_virtual_mem {
-            usage.virtual_mem - start_virtual_mem
-        } else {
-            0
-        };
+        let virtual_mem_delta = usage.virtual_mem.saturating_sub(start_virtual_mem);
         println!(
             " Virtual memory delta    = {}",
             Size::new(virtual_mem_delta as u64).to_string(SizeDisplayFormat::Binary)

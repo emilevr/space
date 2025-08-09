@@ -78,7 +78,6 @@ trait PipelineService {
     fn host_is_build_agent(&self) -> bool;
     fn set_env_var(&self, key: &str, value: &str) -> anyhow::Result<()>;
     fn set_pipeline_var(&self, name: &str, value: &str) -> anyhow::Result<()>;
-    fn set_pipeline_version(&self, version: &Version) -> anyhow::Result<()>;
 }
 
 struct GitHubActions {}
@@ -484,11 +483,6 @@ impl PipelineService for GitHubActions {
         true
     }
 
-    fn set_pipeline_version(&self, _: &Version) -> anyhow::Result<()> {
-        // Not supported by GitHub Actions
-        Ok(())
-    }
-
     fn set_env_var(&self, key: &str, value: &str) -> anyhow::Result<()> {
         append_to_github_pipeline_file("GITHUB_ENV", key, value)?;
         append_to_github_pipeline_file("GITHUB_OUTPUT", key, value)?;
@@ -538,11 +532,6 @@ impl PipelineService for LocalPipelineService {
 
     fn host_is_build_agent(&self) -> bool {
         false
-    }
-
-    fn set_pipeline_version(&self, _: &Version) -> anyhow::Result<()> {
-        // Nothing to do.
-        Ok(())
     }
 
     fn set_env_var(&self, key: &str, value: &str) -> anyhow::Result<()> {

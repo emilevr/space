@@ -138,13 +138,7 @@ impl DirectoryItem {
             Ok(entries) => entries,
             Err(_) => return vec![Self::from_failure(path)], // TODO: report error
         }
-        .filter_map(|result| match result {
-            Ok(entry) => Some(entry),
-            Err(_) => {
-                // TODO: report the error
-                None
-            }
-        })
+        .filter_map(|result| result.ok())
         .collect();
 
         match entries.len() {

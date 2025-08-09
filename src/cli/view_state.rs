@@ -103,7 +103,7 @@ impl ViewState {
         view_state
     }
 
-    pub(crate) fn update_visible_rows(&mut self) -> Vec<Row> {
+    pub(crate) fn update_visible_rows(&mut self) -> Vec<Row<'_>> {
         let mut rows = vec![];
         self.visible_row_items.clear();
 

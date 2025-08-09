@@ -8,18 +8,17 @@ default = ["benchmark"]
 benchmark = ["indicatif", "reqwest", "zip"]
 
 [dependencies]
-anyhow = "^1.0.72"
-clap = { version = "=4.4.6", features = ["derive"] }
-env_logger = "^0.10.0"
-git2 = "^0.18.1"
-globset = "^0.4.13"
-indicatif = { version = "^0.17.6", optional = true }
-log = "^0.4.20"
-pathdiff = "^0.2.1"
-rayon = "^1.8.0"
-reqwest = { version = "^0.11.18", features = ["blocking"], optional = true }
-semver = "^1.0.20"
-time = "^0.3.29"
-toml_edit = { version = "^0.20.2", features = ["serde"] }
-xtaskops = { version = "^0.4.2", default-features = false }
-zip = { version = "^0.6.6", optional = true }
+anyhow = "1.0.72"
+clap = { version = "4.4.6", features = ["derive"] }
+env_logger = "0.10.0"
+git2 = "0.18.1"
+globset = "0.4.13"
+indicatif = { version = "0.17.6", optional = true }
+log = "0.4.20"
+pathdiff = "0.2.1"
+rayon = "1.8.0"
+reqwest = { version = "0.12.22", features = ["blocking"], optional = true }
+semver = "1.0.20"
+toml_edit = { version = "0.20.2", features = ["serde"] }
+xtaskops = { version = "0.4.2", default-features = false }
+zip = { version = "0.6.6", optional = true }
