@@ -196,9 +196,9 @@ jobs:
 
       - name: Upload Pages artifact
         if: ${{ env.IS_PRE_RELEASE == 'false' }}
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
 
       - name: Deploy to GitHub Pages
         if: ${{ env.IS_PRE_RELEASE == 'false' }}
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
