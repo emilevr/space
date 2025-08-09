@@ -603,10 +603,10 @@ fn expand_selected_children(
 #[test]
 fn read_and_write_config_file_succeeds() -> anyhow::Result<()> {
     // Arrange
-    let mut view_state = ViewState::default();
-    view_state.accepted_license_terms = true;
-    view_state.config_file_path =
-        Some(std::env::temp_dir().join(format!("space_test_{}", uuid::Uuid::new_v4())));
+    let mut view_state = ViewState {
+        accepted_license_terms: true,
+        config_file_path: Some(std::env::temp_dir().join(format!("space_test_{}", uuid::Uuid::new_v4()))), ..Default::default()
+    };
 
     // Act
     view_state.write_config_file()?; // Write true
@@ -622,10 +622,10 @@ fn read_and_write_config_file_succeeds() -> anyhow::Result<()> {
 #[test]
 fn accept_license_terms_updates_view_state_and_writes_config_file() -> anyhow::Result<()> {
     // Arrange
-    let mut view_state = ViewState::default();
-    view_state.accepted_license_terms = false;
-    view_state.config_file_path =
-        Some(std::env::temp_dir().join(format!("space_test_{}", uuid::Uuid::new_v4())));
+    let mut view_state = ViewState {
+        accepted_license_terms: false,
+        config_file_path: Some(std::env::temp_dir().join(format!("space_test_{}", uuid::Uuid::new_v4()))), ..Default::default()
+    };
 
     // Act
     view_state.accept_license_terms();

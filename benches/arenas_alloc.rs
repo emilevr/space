@@ -78,6 +78,7 @@ fn benchmark_std_alloc(
         let mut items = vec![];
 
         b.iter(|| {
+            #[allow(clippy::unit_arg)]
             black_box({
                 let mut parent = StdItem {
                     path_segment: "parent".into(),
@@ -127,6 +128,7 @@ fn benchmark_bumpalo(
         let mut item_count: usize = 0;
 
         b.iter(|| {
+            #[allow(clippy::unit_arg)]
             black_box({
                 let parent = arena.alloc(BumpaloItem {
                     path_segment: arena.alloc_str("parent"),
@@ -180,6 +182,7 @@ fn benchmark_id_arena(
         let mut arena = Arena::<IdArenaItem>::new();
 
         b.iter(|| {
+            #[allow(clippy::unit_arg)]
             black_box({
                 let parent = arena.alloc(IdArenaItem {
                     parent: None,
@@ -242,6 +245,7 @@ fn benchmark_rapid_arena(
         }
 
         b.iter(|| {
+            #[allow(clippy::unit_arg)]
             black_box({
                 let mut parent = arena.alloc(RapIdArenaItem {
                     parent: None,
@@ -327,7 +331,7 @@ fn report_memory_usage(
     } else {
         println!("Couldn't get the current memory usage!");
     }
-    println!("");
+    println!();
 }
 
 criterion_group!(benches, bench_arenas_alloc);

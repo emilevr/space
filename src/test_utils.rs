@@ -90,7 +90,7 @@ impl Display for TestOut {
             }
 
             if let Some(slice) = slice {
-                write!(f, "{}", String::from_utf8_lossy(&slice).to_string())?;
+                write!(f, "{}", String::from_utf8_lossy(slice))?;
             } else {
                 break;
             }

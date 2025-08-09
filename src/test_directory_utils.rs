@@ -49,7 +49,7 @@ pub(crate) fn create_test_directory_tree() -> Result<PathBuf, anyhow::Error> {
 pub(crate) fn create_test_file(path: PathBuf, len: usize) -> anyhow::Result<()> {
     let mut f_1_2 = fs::File::create(path)?;
     let bytes: Vec<u8> = vec![0; len];
-    f_1_2.write_all(&bytes.as_slice())?;
+    f_1_2.write_all(bytes.as_slice())?;
     Ok(())
 }
 

@@ -4,8 +4,7 @@ use ratatui::style::{Modifier, Style};
 #[test]
 fn value_style_with_no_fg_does_not_set_fg() {
     // Arrange
-    let mut skin = Skin::default();
-    skin.value_fg_color = None;
+    let skin = Skin { value_fg_color: None, ..Default::default() };
 
     // Act
     let style = skin.value_style();
@@ -46,8 +45,7 @@ fn default_skin_value_style_does_not_reverse() {
 #[test]
 fn value_style_with_reverse_applies_reverse() {
     // Arrange
-    let mut skin = Skin::default();
-    skin.value_style_reversed = true;
+    let skin = Skin { value_style_reversed: true, ..Default::default() };
 
     // Act
     let style = skin.value_style();

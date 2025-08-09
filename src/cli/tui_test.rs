@@ -30,7 +30,7 @@ impl TestInputEventSource {
 
 impl InputEventSource for TestInputEventSource {
     fn read_event(&mut self) -> std::io::Result<crossterm::event::Event> {
-        if self.events.len() > 0 {
+        if !self.events.is_empty() {
             Ok(self.events.pop_front().unwrap())
         } else {
             Ok(Event::Resize(80, 40))
@@ -96,7 +96,7 @@ fn render_outputs_full_path_as_first_row_with_100_percent_size() -> anyhow::Resu
         .borrow()
         .path_segment
         .as_str()
-        .replace("\\", "\\\\");
+        .replace('\\', "\\\\");
     output.matches(Regex::new(
         format!("^.*{}.*100%.*$", regex_safe_path).as_str(),
     )?)?;

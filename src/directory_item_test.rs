@@ -196,7 +196,7 @@ fn debug_succeeds() {
 
     // Assert
     assert!(output.contains("/1"));
-    assert!(output.contains("2"));
+    assert!(output.contains('2'));
     assert!(output.contains("777"));
     assert!(output.contains("778"));
 }

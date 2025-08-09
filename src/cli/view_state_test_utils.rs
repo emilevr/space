@@ -8,7 +8,7 @@ use crate::{
 use space_rs::SizeDisplayFormat;
 use std::{
     cell::RefCell,
-    path::PathBuf,
+    path::{PathBuf, Path},
     rc::Rc,
     sync::{atomic::AtomicBool, Arc},
 };
@@ -45,7 +45,7 @@ pub(crate) fn make_test_view_state_with_height(
 }
 
 pub(crate) fn make_test_view_state_from_path(
-    path: &PathBuf,
+    path: &Path,
     visible_height: usize,
     visible_offset: usize,
     size_threshold_fraction: f32,
@@ -54,8 +54,8 @@ pub(crate) fn make_test_view_state_from_path(
     let env_service_mock = MockEnvServiceTrait::new();
     let should_exit = Arc::new(AtomicBool::new(false));
     let mut view_command = ViewCommand::new(
-        Some(vec![path.clone()]),
-        Some(size_display_format.clone()),
+        Some(vec![path.to_path_buf()]),
+        Some(size_display_format),
         (size_threshold_fraction * 100f32) as u8,
         Box::new(env_service_mock),
         should_exit,
@@ -85,11 +85,11 @@ pub(crate) fn assert_selected_item_name_eq(
     let mut expected = expected_selected_item_name.to_string();
     if view_state.visible_offset == 0 && view_state.table_selected_index == 0 {
         // Verify that we expected the first item to be selected.
-        if "" != expected {
+        if !expected.is_empty() {
             if let Some(test_out) = test_out {
                 println!("{}", test_out);
             }
-            assert!(false, "Did not expect the first item to be selected.");
+            unreachable!("Did not expect the first item to be selected.");
         }
         // The first item is selected, which has a randomly generated name. We use that in the check instead
         // of the specified value.
@@ -105,8 +105,7 @@ pub(crate) fn assert_selected_item_name_eq(
         if let Some(test_out) = test_out {
             println!("{}", test_out);
         }
-        assert!(
-            false,
+        unreachable!(
             "Expected selected item '{}' does not match actual '{}' (single quotes added)",
             expected, selected_item.path_segment
         );
@@ -115,10 +114,10 @@ pub(crate) fn assert_selected_item_name_eq(
 
 pub(crate) fn select_item_by_name(name: &str, view_state: &mut ViewState) -> anyhow::Result<()> {
     // If not the first item, specified with empty string, then select the item by name.
-    if name != "" {
-        let row_index = get_row_index_by_name(name, &view_state).unwrap();
+    if !name.is_empty() {
+        let row_index = get_row_index_by_name(name, view_state).unwrap();
         view_state.select_item(row_index);
-        assert_selected_item_name_eq(name, &view_state, None);
+        assert_selected_item_name_eq(name, view_state, None);
         return Ok(());
     } else if !view_state.item_tree.is_empty() {
         view_state.select_item(0);

@@ -40,7 +40,7 @@ fn parse_args_given_non_interactive_returns_correct_args() -> anyhow::Result<()>
     let cli_args = parse_args(&args)?;
 
     // Assert
-    assert_eq!(true, cli_args.non_interactive);
+    assert!(cli_args.non_interactive);
 
     Ok(())
 }
@@ -53,7 +53,7 @@ fn prepare_command_when_no_target_paths_specified_uses_current_dir() -> anyhow::
     let mut env_service_mock = MockEnvServiceTrait::new();
     env_service_mock
         .expect_current_dir()
-        .returning(|| env::current_dir());
+        .returning(env::current_dir);
     let should_exit = Arc::new(AtomicBool::new(false));
 
     // Act
@@ -94,7 +94,7 @@ fn run_given_non_existent_path_fails() {
     if let Err(err) = result {
         assert!(err.to_string().contains("does not exist"));
     } else {
-        assert!(false, "Expected the result to be an error.");
+        unreachable!("Expected the result to be an error.");
     }
 }
 

@@ -97,6 +97,7 @@ fn cloned_id_returns_expected_item() {
     });
 
     // Act
+    #[allow(clippy::clone_on_copy)]
     let cloned_id = id.clone();
 
     // Assert
@@ -175,9 +176,9 @@ fn deref_given_multiple_buckets_returns_each_item() {
     let count = (bucket_size as f32 * 111f32) as usize;
     let ids = alloc_items(&mut arena, count);
 
-    for i in 0..count {
+    for (i, id) in ids.iter().enumerate().take(count) {
         // Act
-        let entry = ids[i].deref();
+        let entry = id.deref();
 
         // Assert
         assert_eq!(i, entry.some_value);
@@ -257,6 +258,7 @@ fn deref_multi_threaded_test() {
                 for i in 0..item_count * 503 {
                     let id = &ids[i % item_count];
                     let item = id.deref();
+                    #[allow(clippy::unit_arg)]
                     black_box({
                         let _ = item.some_value + 1;
                     })
