@@ -110,7 +110,7 @@ jobs:
           fetch-depth: 1000
 
       - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Create release
         shell: pwsh
@@ -170,7 +170,7 @@ jobs:
     steps:
       - name: Download all workflow run artifacts
         if: ${{ env.IS_PRE_RELEASE == 'false' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Package Pages artifacts
         if: ${{ env.IS_PRE_RELEASE == 'false' }}
