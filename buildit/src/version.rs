@@ -315,11 +315,7 @@ fn get_commits_desc_by_date(
     Ok(revwalk
         .filter_map(|id| {
             let id = id.unwrap();
-            if let Ok(commit) = repo.find_commit(id) {
-                Some(commit)
-            } else {
-                None
-            }
+            repo.find_commit(id).ok()
         })
         .take(max_count)
         .collect())

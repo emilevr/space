@@ -153,7 +153,9 @@ impl<T> Copy for RapId<T> {}
 
 impl<T> Clone for RapId<T> {
     #[inline]
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl<T> Deref for RapId<T> {
