@@ -2,7 +2,7 @@ name: Build & Release
 on:
   push:
     tags:
-      - '*.*.*'
+      - "*.*.*"
   workflow_dispatch:
 jobs:
   lint:
@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/benchmark.yaml
 
   build-and-test:
-    name: '${{ matrix.target }}'
+    name: "${{ matrix.target }}"
     needs:
       - benchmark
       - coverage
@@ -77,16 +77,18 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Upload distribution artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.target }}
+          overwrite: true
           path: ./artifacts/dist
 
       - name: Upload Scoop artifacts
         if: ${{ matrix.runs-on == 'windows-latest' && env.IS_PRE_RELEASE == 'false' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: scoop-manifest
+          overwrite: true
           path: ./artifacts/scoop
 
   create-release:
@@ -157,8 +159,8 @@ jobs:
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
-      pages: write      # to deploy to Pages
-      id-token: write   # to verify the deployment originates from an appropriate source
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
 
     # Deploy to the github-pages environment
     environment:

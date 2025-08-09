@@ -24,43 +24,44 @@ jobs:
 
       - name: Download grcov for code coverage measurement and reporting
         run: |
-            mkdir -p "${HOME}/.local/bin"
-            curl -sL https://github.com/mozilla/grcov/releases/download/v0.8.18/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf - -C "${HOME}/.local/bin"
-            echo "$HOME/.local/bin" >> $GITHUB_PATH
+          mkdir -p "${HOME}/.local/bin"
+          curl -sL https://github.com/mozilla/grcov/releases/download/v0.8.18/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf - -C "${HOME}/.local/bin"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Run all tests and code coverage
         run: |
-            # Do not exit on first non-zero return code, as we want to do cleanup at the end.
-            set +e
+          # Do not exit on first non-zero return code, as we want to do cleanup at the end.
+          set +e
 
-            # Start a tmux session named 'tests'.
-            tmux new-session -d -s tests -x 200 -y 20
+          # Start a tmux session named 'tests'.
+          tmux new-session -d -s tests -x 200 -y 20
 
-            # Send the command to run the tests with code coverage.
-            #   - We exclude src/main.rs as it is fully covered, but some of the non-test code is incorrectly
-            #     covered as well.
-            #   - We exlude src/logging.rs as it is fully covered but the percentage is calculated
-            #     incorrectly by grcov.
-            tmux send-keys -t tests 'buildit coverage --include-ignored --exclude-files src/main.rs src/logging.rs ; tmux wait -S tests-finished' Enter
+          # Send the command to run the tests with code coverage.
+          #   - We exclude src/main.rs as it is fully covered, but some of the non-test code is incorrectly
+          #     covered as well.
+          #   - We exlude src/logging.rs as it is fully covered but the percentage is calculated
+          #     incorrectly by grcov.
+          tmux send-keys -t tests 'buildit coverage --include-ignored --exclude-files src/main.rs src/logging.rs ; tmux wait -S tests-finished' Enter
 
-            # Wait for the tests-finished signal.
-            tmux wait-for tests-finished
+          # Wait for the tests-finished signal.
+          tmux wait-for tests-finished
 
-            # Show the tmux session output including up to the last 1000 lines scrolled out of view.
-            tmux capture-pane -p -t tests -S -1000
+          # Show the tmux session output including up to the last 1000 lines scrolled out of view.
+          tmux capture-pane -p -t tests -S -1000
 
-            # Check for all tests succeeded.
-            tmux capture-pane -p -t tests | grep 'Testing and Code Coverage completed successfully'
-            EXITCODE=$?
+          # Check for all tests succeeded.
+          tmux capture-pane -p -t tests | grep 'Testing and Code Coverage completed successfully'
+          EXITCODE=$?
 
-            # Exit the tmux session.
-            tmux kill-session -t tests
+          # Exit the tmux session.
+          tmux kill-session -t tests
 
-            # Now exit with the saved exit code.
-            exit $EXITCODE
+          # Now exit with the saved exit code.
+          exit $EXITCODE
 
       - name: Upload code coverage badge
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-badge
+          overwrite: true
           path: ./coverage/html/badges/flat.svg

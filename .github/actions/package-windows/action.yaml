@@ -2,7 +2,7 @@ name: Package for distribution (Windows)
 description: Creates distribution artifacts for Windows
 inputs:
   target:
-      description: The target of the binaries to package.
+    description: The target of the binaries to package.
 runs:
   using: composite
   steps:
@@ -27,7 +27,8 @@ runs:
 
     - name: Upload Scoop artifacts
       if: ${{ env.IS_PRE_RELEASE == 'false' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pages-${{ inputs.target }}
+        overwrite: true
         path: ./artifacts/scoop
