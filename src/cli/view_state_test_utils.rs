@@ -8,7 +8,7 @@ use crate::{
 use space_rs::SizeDisplayFormat;
 use std::{
     cell::RefCell,
-    path::{PathBuf, Path},
+    path::{Path, PathBuf},
     rc::Rc,
     sync::{atomic::AtomicBool, Arc},
 };
