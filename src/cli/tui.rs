@@ -64,6 +64,8 @@ pub(crate) const SELECT_PREV_KEY_SYMBOL: char = '↑';
 pub(crate) const SELECT_NEXT_KEY_SYMBOL: char = '↓';
 pub(crate) const COLLAPSE_KEY_SYMBOL: char = '←';
 pub(crate) const EXPAND_KEY_SYMBOL: char = '→';
+pub(crate) const COLLAPSE_CHILDREN_KEY_SYMBOL: char = '-';
+pub(crate) const EXPAND_CHILDREN_KEY_SYMBOL: char = '+';
 pub(crate) const SELECT_PREV_PAGE_KEY_SYMBOL: &str = "Page Up";
 pub(crate) const SELECT_NEXT_PAGE_KEY_SYMBOL: &str = "Page Down";
 pub(crate) const SELECT_FIRST_KEY_SYMBOL: &str = "Home";
@@ -324,6 +326,7 @@ fn get_key_help<'a>(available_width: i32, skin: &Skin) -> (Line<'a>, i32) {
         Span::styled(format!(" {DELETE_KEY}"), key_style), Span::styled(" Delete ", key_help_style),
         Span::styled(format!(" {SELECT_PREV_KEY_SYMBOL}{SELECT_NEXT_KEY_SYMBOL}"), key_style), Span::styled(" Selection ", key_help_style),
         Span::styled(format!(" {COLLAPSE_KEY_SYMBOL}{EXPAND_KEY_SYMBOL}"), key_style), Span::styled(" Collapse/Expand ", key_help_style),
+        Span::styled(format!(" {COLLAPSE_CHILDREN_KEY_SYMBOL}{EXPAND_CHILDREN_KEY_SYMBOL}"), key_style), Span::styled(" Collapse/Expand Children", key_help_style),
     ];
     let mut key_help = vec![];
     for i in (0..all_key_help.len()).step_by(2) {
