@@ -7,11 +7,11 @@ runs:
       if: ${{ runner.os == 'ubuntu-latest' }}
       shell: bash
       run: |
-          sudo apt-get update
-          sudo apt-get install -y tmux
+        sudo apt-get update
+        sudo apt-get install -y tmux
 
     - name: Install tmux (Mac)
-      if: ${{ runner.os == 'macos-latest' }}
+      if: ${{ runner.os == 'macOS' }}
       shell: bash
       run: |
-          brew install tmux
+        brew install tmux
