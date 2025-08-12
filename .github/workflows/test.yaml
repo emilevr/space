@@ -2,21 +2,32 @@ name: Test
 on:
   push:
     branches-ignore:
-      - ' '
+      - " "
     tags-ignore:
-      - '*.*.*'
+      - "*.*.*"
 jobs:
   test:
-    name: 'Test on ${{ matrix.runs-on }}'
+    name: "Test on ${{ matrix.runs-on }}"
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
       matrix:
         runs-on:
-          - macos-latest
+          - macos-13 # This is the last x86_64 runner
+          - macos-latest # This is now ARM64 only
           - ubuntu-latest
           - windows-latest
     steps:
+      - name: Output OS and Architecture
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "Runner OS: ${{ runner.os }}, Architecture: ${{ runner.arch }}"
+
+          UNAME_OS="$(uname -s)"
+          UNAME_ARCH="$(uname -m)"
+          echo "uname OS: ${UNAME_OS}, Architecture: ${UNAME_ARCH}"
+
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/detect-and-install-rust-toolchain

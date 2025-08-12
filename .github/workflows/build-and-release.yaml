@@ -30,9 +30,9 @@ jobs:
         include:
           - runs-on: ubuntu-latest
             target: x86_64-unknown-linux-musl
-          - runs-on: macos-latest
+          - runs-on: macos-13 # This is the last x86_64 runner
             target: x86_64-apple-darwin
-          - runs-on: macos-latest
+          - runs-on: macos-latest # This is now ARM64 only
             target: aarch64-apple-darwin
           - runs-on: windows-latest
             target: x86_64-pc-windows-msvc
