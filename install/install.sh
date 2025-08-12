@@ -1,8 +1,14 @@
 #!/bin/bash
 
-UNAME_OUTPUT="$(uname -s)"
-case "${UNAME_OUTPUT}" in
-    Darwin*)    ARCHIVE_FILENAME=space-x86_64-apple-darwin.tar.gz;;
+UNAME_OS="$(uname -s)"
+UNAME_ARCH="$(uname -m)"
+
+case "${UNAME_OS}" in
+    Darwin*)    
+        case "${UNAME_ARCH}" in
+            arm64)  ARCHIVE_FILENAME=space-aarch64-apple-darwin.tar.gz;;
+            *)      ARCHIVE_FILENAME=space-x86_64-apple-darwin.tar.gz;;
+        esac;;
     *)          ARCHIVE_FILENAME=space-x86_64-unknown-linux-musl.tar.gz;;
 esac
 
