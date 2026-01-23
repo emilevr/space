@@ -1,5 +1,5 @@
 use anyhow::bail;
-use clap::{arg, ColorChoice, Parser};
+use clap::{ColorChoice, Parser};
 use cli::{cli_command::CliCommand, environment::DefaultEnvService, view_command::ViewCommand};
 use criterion::Criterion;
 use space_rs::SizeDisplayFormat;
