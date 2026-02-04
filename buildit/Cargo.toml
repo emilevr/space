@@ -11,7 +11,7 @@ benchmark = ["indicatif", "reqwest", "zip"]
 anyhow = "1.0.72"
 clap = { version = "4.4.6", features = ["derive"] }
 env_logger = "0.10.0"
-git2 = "0.18.1"
+git2 = "0.20.4"
 globset = "0.4.13"
 indicatif = { version = "0.17.6", optional = true }
 log = "0.4.20"
