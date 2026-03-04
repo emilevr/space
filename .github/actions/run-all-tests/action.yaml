@@ -11,38 +11,38 @@ runs:
     - uses: ./.github/actions/install-tmux
 
     - name: All tests
-      if: ${{ runner.os == 'ubuntu-latest' || runner.os == 'macos-latest' }}
+      if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
       shell: bash
       run: |
-          # Do not exit on first non-zero return code, as we want to do cleanup at the end.
-          set +e
+        # Do not exit on first non-zero return code, as we want to do cleanup at the end.
+        set +e
 
-          # Start a tmux session named 'tests'.
-          tmux new-session -d -s tests -x 200 -y 20
+        # Start a tmux session named 'tests'.
+        tmux new-session -d -s tests -x 200 -y 20
 
-          # Send the command to run the tests with code coverage.
-          tmux send-keys -t tests 'cargo test --all-features --release -- --include-ignored ; tmux wait -S tests-finished' Enter
+        # Send the command to run the tests with code coverage.
+        tmux send-keys -t tests 'cargo test --all-features --release -- --include-ignored ; tmux wait -S tests-finished' Enter
 
-          # Wait for the tests-finished signal.
-          tmux wait-for tests-finished
+        # Wait for the tests-finished signal.
+        tmux wait-for tests-finished
 
-          # Show the tmux session output including up to the last 1000 lines scrolled out of view.
-          tmux capture-pane -p -t tests -S -1000
+        # Show the tmux session output including up to the last 1000 lines scrolled out of view.
+        tmux capture-pane -p -t tests -S -1000
 
-          # Check for all tests succeeded.
-          tmux capture-pane -p -t tests | grep 'test result: FAILED'
-          # Note: We don't want to see the failed string above
-          if [ $? -eq 0 ]
-          then
-            echo "Detected failed tests!"
-            EXITCODE=1
-          else
-            echo "Did not detect any failed tests."
-            EXITCODE=0
-          fi
+        # Check for all tests succeeded.
+        tmux capture-pane -p -t tests | grep 'test result: FAILED'
+        # Note: We don't want to see the failed string above
+        if [ $? -eq 0 ]
+        then
+          echo "Detected failed tests!"
+          EXITCODE=1
+        else
+          echo "Did not detect any failed tests."
+          EXITCODE=0
+        fi
 
-          # Exit the tmux session.
-          tmux kill-session -t tests
+        # Exit the tmux session.
+        tmux kill-session -t tests
 
-          # Now exit with the saved exit code.
-          exit $EXITCODE
+        # Now exit with the saved exit code.
+        exit $EXITCODE
