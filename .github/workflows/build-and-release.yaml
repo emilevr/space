@@ -69,7 +69,7 @@ jobs:
           target: ${{ matrix.target }}
 
       - uses: ./.github/actions/package-macos
-        if: ${{ matrix.runs-on == 'macos-latest' }}
+        if: ${{ runner.os == 'macOS' }}
         with:
           target: ${{ matrix.target }}
 
