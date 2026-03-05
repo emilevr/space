@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         runs-on:
-          - macos-13 # This is the last x86_64 runner
+          - macos-15-intel # This is the last x86_64 runner
           - macos-latest # This is now ARM64 only
           - ubuntu-latest
           - windows-latest
