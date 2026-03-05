@@ -16,7 +16,7 @@ pub fn directory_item_build(c: &mut Criterion) {
         |b| {
             b.iter(|| {
                 black_box(DirectoryItem::build(vec![path.clone()], &should_exit));
-            })
+            });
         },
     );
 }

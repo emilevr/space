@@ -172,34 +172,34 @@ fn render_loop<B: Backend, I: InputEventSource>(
             } else {
                 match code {
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_0_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0f32)
+                        view_state.set_size_threshold_fraction(0f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_10_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.01f32)
+                        view_state.set_size_threshold_fraction(0.01f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_20_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.02f32)
+                        view_state.set_size_threshold_fraction(0.02f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_30_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.03f32)
+                        view_state.set_size_threshold_fraction(0.03f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_40_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.04f32)
+                        view_state.set_size_threshold_fraction(0.04f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_50_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.05f32)
+                        view_state.set_size_threshold_fraction(0.05f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_60_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.06f32)
+                        view_state.set_size_threshold_fraction(0.06f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_70_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.07f32)
+                        view_state.set_size_threshold_fraction(0.07f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_80_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.08f32)
+                        view_state.set_size_threshold_fraction(0.08f32);
                     }
                     KeyCode::Char(VIEW_SIZE_THRESHOLD_90_PERCENT_KEY) => {
-                        view_state.set_size_threshold_fraction(0.09f32)
+                        view_state.set_size_threshold_fraction(0.09f32);
                     }
                     KeyCode::Char(HELP_KEY) => view_state.show_help = true,
                     KeyCode::Char(DELETE_KEY) => view_state.show_delete_dialog = true,
@@ -214,11 +214,11 @@ fn render_loop<B: Backend, I: InputEventSource>(
                     KeyCode::End => view_state.last(),
                     KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY)
                     | KeyCode::Char(COLLAPSE_SELECTED_CHILDREN_KEY_ALT) => {
-                        view_state.collapse_selected_children()
+                        view_state.collapse_selected_children();
                     }
                     KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY)
                     | KeyCode::Char(EXPAND_SELECTED_CHILDREN_KEY_ALT) => {
-                        view_state.expand_selected_children()
+                        view_state.expand_selected_children();
                     }
                     _ => {}
                 }

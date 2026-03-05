@@ -1,6 +1,7 @@
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(unreachable_pub)]
+#![warn(clippy::semicolon_if_nothing_returned)]
 
 //! Space may be the final frontier, but it sure is annoying when you run out. 🖖
 //!
