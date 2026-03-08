@@ -103,7 +103,7 @@ impl<T> RapIdArena<T> {
             for item in bucket {
                 data.push(RapId {
                     p: ptr::NonNull::from(item),
-                })
+                });
             }
         }
         RapIdArenaIterator::<T> { data, index: 0 }

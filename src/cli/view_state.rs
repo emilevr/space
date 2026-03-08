@@ -377,7 +377,7 @@ impl ViewState {
         for item in &self.item_tree {
             count += get_item_tree_count(item);
         }
-        self.total_items_in_tree = count
+        self.total_items_in_tree = count;
     }
 
     pub(crate) fn accept_license_terms(&mut self) {

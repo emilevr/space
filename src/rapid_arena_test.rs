@@ -261,7 +261,7 @@ fn deref_multi_threaded_test() {
                     #[allow(clippy::unit_arg)]
                     black_box({
                         let _ = item.some_value + 1;
-                    })
+                    });
                 }
             });
         }
@@ -296,7 +296,7 @@ fn deref_mut_multi_threaded_test() {
                     thread::sleep(Duration::from_millis(1));
 
                     assert_eq!(some_value, item.some_value);
-                    assert_eq!(some_string, item.some_string)
+                    assert_eq!(some_string, item.some_string);
                 }
             });
         }
