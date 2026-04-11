@@ -18,9 +18,7 @@ impl TestOut {
     pub(crate) fn new() -> Self {
         Self {
             buffer: Vec::new(),
-            width: crossterm::terminal::size()
-                .expect("Unable to get output width")
-                .0,
+            width: crossterm::terminal::size().map(|(w, _)| w).unwrap_or(120),
         }
     }
 

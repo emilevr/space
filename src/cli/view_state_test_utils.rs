@@ -57,6 +57,7 @@ pub(crate) fn make_test_view_state_from_path(
         Some(vec![path.to_path_buf()]),
         Some(size_display_format),
         (size_threshold_fraction * 100f32) as u8,
+        None,
         Box::new(env_service_mock),
         should_exit,
     );
@@ -67,6 +68,7 @@ pub(crate) fn make_test_view_state_from_path(
         items,
         size_display_format,
         size_threshold_fraction,
+        None,
         &Skin::default(),
     );
     view_state.visible_height = visible_height;

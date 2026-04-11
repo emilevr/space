@@ -22,7 +22,7 @@ mod test_utils;
 
 mod cli;
 
-const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 1;
+const DEFAULT_SIZE_THRESHOLD_PERCENTAGE: u8 = 0;
 
 #[derive(Clone, Debug, Parser)]
 #[clap(
@@ -126,6 +126,7 @@ impl BenchmarkCommand {
                     self.size_threshold_percentage,
                     #[cfg(not(test))]
                     true,
+                    None,
                     Box::<DefaultEnvService>::default(),
                     should_exit.clone(),
                 )

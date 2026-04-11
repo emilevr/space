@@ -4,7 +4,7 @@ UNAME_OS="$(uname -s)"
 UNAME_ARCH="$(uname -m)"
 
 case "${UNAME_OS}" in
-    Darwin*)    
+    Darwin*)
         case "${UNAME_ARCH}" in
             arm64)  ARCHIVE_FILENAME=space-aarch64-apple-darwin.tar.gz;;
             *)      ARCHIVE_FILENAME=space-x86_64-apple-darwin.tar.gz;;
