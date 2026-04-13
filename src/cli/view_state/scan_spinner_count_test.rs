@@ -126,6 +126,71 @@ fn derive_scanning_state_clears_ancestor_when_grandchild_completes() {
     );
 }
 
+// ─── Sibling short-circuit regression ────────────────────────────────────────
+
+#[test]
+fn derive_scanning_state_visits_all_siblings_not_just_first_scanning() {
+    // Regression: derive used .any() which short-circuits after the first
+    // scanning sibling, skipping derive for later siblings whose own children
+    // might be scanning.
+    let mut view_state = ViewState::default();
+    view_state.add_scanned_item(make_empty_dir("/root"));
+    view_state.add_scanned_child(make_empty_dir("dir_a")); // is_scanning=true
+    view_state.add_scanned_child(make_empty_dir("dir_b")); // is_scanning=true
+
+    // Simulate dir_b receiving its batch (clears is_scanning) but having a
+    // scanning grandchild.
+    view_state
+        .add_scanned_descendant_batch(&["dir_b".to_string()], vec![make_empty_dir("subdir_b")]);
+    // After batch: dir_b.is_scanning=false, subdir_b.is_scanning=true.
+
+    view_state.derive_scanning_state();
+
+    let root = view_state.item_tree[0].borrow();
+    let dir_b = root
+        .children
+        .iter()
+        .find(|c| c.borrow().path_segment == "dir_b")
+        .unwrap();
+    assert!(
+        dir_b.borrow().is_scanning,
+        "dir_b should be is_scanning=true because subdir_b is still scanning"
+    );
+}
+
+#[test]
+fn derive_scanning_state_clears_parent_when_all_descendants_complete() {
+    // Regression: derive only set is_scanning=true, never false, so a parent
+    // marked scanning by a prior derive tick would stay scanning forever even
+    // after all descendants completed.
+    let mut view_state = ViewState::default();
+    view_state.add_scanned_item(make_empty_dir("/root"));
+    view_state.add_scanned_child(make_empty_dir("dir_a"));
+    view_state.add_scanned_grandchild("dir_a", make_empty_dir("subdir"));
+
+    // First derive: dir_a and root get is_scanning=true from subdir.
+    view_state.derive_scanning_state();
+    assert!(view_state.item_tree[0].borrow().is_scanning);
+
+    // Complete subdir and dir_a.
+    view_state.mark_descendant_scan_complete(&["dir_a".to_string(), "subdir".to_string()]);
+    view_state.mark_child_scan_complete("dir_a");
+
+    // Second derive should clear root and dir_a.
+    view_state.derive_scanning_state();
+
+    let root = view_state.item_tree[0].borrow();
+    let dir_a = &root.children[0].borrow();
+    assert!(
+        !dir_a.is_scanning,
+        "dir_a should be is_scanning=false after all its descendants completed"
+    );
+    assert!(
+        !root.is_scanning,
+        "Root should be is_scanning=false after all descendants completed"
+    );
+}
+
 // ─── sort_root_children safety-net clearing ───────────────────────────────────
 
 #[test]

@@ -445,15 +445,25 @@ fn collect_expansion_frontier(
 }
 
 /// Recursively derives `is_scanning` on non-leaf nodes: a node is scanning
-/// if it has `is_scanning` set directly (leaf) OR any child is scanning.
+/// if it has `is_scanning` set directly (leaf with no children yet) OR any
+/// child is scanning.
 fn derive_scanning_recursive(item: &Rc<RefCell<RowItem>>) -> bool {
-    let children_scanning = {
-        let item_ref = item.borrow();
-        item_ref.children.iter().any(derive_scanning_recursive)
-    };
-    let mut item_ref = item.borrow_mut();
-    if children_scanning {
-        item_ref.is_scanning = true;
+    let item_ref = item.borrow();
+    if item_ref.children.is_empty() {
+        // Leaf or directory whose batch hasn't arrived yet —
+        // its is_scanning flag is authoritative (set by scan messages).
+        return item_ref.is_scanning;
     }
-    item_ref.is_scanning
+
+    // Must visit ALL children (no short-circuit) so every subtree gets
+    // its is_scanning re-derived.
+    let any_child_scanning = item_ref
+        .children
+        .iter()
+        .fold(false, |acc, child| derive_scanning_recursive(child) || acc);
+    drop(item_ref);
+
+    let mut item_ref = item.borrow_mut();
+    item_ref.is_scanning = any_child_scanning;
+    any_child_scanning
 }
