@@ -97,7 +97,7 @@ fn benchmark_std_alloc(
                 });
 
                 items.push(parent);
-            })
+            });
         });
 
         if sample_number == sample_size {
@@ -150,7 +150,7 @@ fn benchmark_bumpalo(
 
                 parent.children.push(child);
                 item_count += 1;
-            })
+            });
         });
 
         if sample_number == sample_size {
@@ -203,7 +203,7 @@ fn benchmark_id_arena(
                 });
 
                 arena.get_mut(parent).unwrap().children.push(child);
-            })
+            });
         });
 
         if sample_number == sample_size {
@@ -266,7 +266,7 @@ fn benchmark_rapid_arena(
                 });
 
                 parent.deref_mut().children.push(child);
-            })
+            });
         });
 
         if sample_number == sample_size {

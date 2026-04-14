@@ -133,7 +133,7 @@ impl BenchmarkCommand {
                 .unwrap()
                 .run(self)
                 .unwrap();
-            })
+            });
         });
         Ok(())
     }
