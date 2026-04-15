@@ -16,10 +16,14 @@ pub(crate) struct Skin {
     pub(crate) delete_warning_text_fg_color: Color,
     pub(crate) key_help_danger_bg_color: Color,
     pub(crate) key_help_key_fg_color: Color,
+    pub(crate) size_bar_fg_color_even: Color,
+    pub(crate) size_bar_fg_color_odd: Color,
+    pub(crate) size_bar_bg_color: Color,
     pub(crate) item_type_directory_symbol: char,
     pub(crate) item_type_file_symbol: char,
     pub(crate) item_type_symbolic_link_symbol: char,
     pub(crate) item_type_unknown_symbol: char,
+    pub(crate) item_type_access_denied_symbol: char,
 }
 
 impl Default for Skin {
@@ -36,10 +40,14 @@ impl Default for Skin {
             delete_warning_text_fg_color: Color::Rgb(255, 165, 0),
             key_help_danger_bg_color: Color::Rgb(192, 64, 64),
             key_help_key_fg_color: Color::Rgb(192, 192, 192),
+            size_bar_fg_color_even: Color::Rgb(88, 144, 255),
+            size_bar_fg_color_odd: Color::Rgb(56, 100, 192),
+            size_bar_bg_color: Color::Reset,
             item_type_directory_symbol: '📁',
             item_type_file_symbol: '📄',
             item_type_symbolic_link_symbol: '🔗',
             item_type_unknown_symbol: '❓',
+            item_type_access_denied_symbol: '🚫',
         }
     }
 }

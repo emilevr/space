@@ -29,6 +29,7 @@
 mod test_directory_utils;
 
 pub mod directory_item;
+pub use directory_item::is_reparse_point;
 pub use directory_item::DirectoryItem;
 pub use directory_item::DirectoryItemType;
 pub mod rapid_arena;

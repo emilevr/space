@@ -1,6 +1,6 @@
 use super::input_event_source::InputEventSource;
 use crossterm::event::{self, Event};
-use std::io;
+use std::{io, time::Duration};
 
 pub struct CrosstermInputEventSource {}
 
@@ -11,7 +11,11 @@ impl CrosstermInputEventSource {
 }
 
 impl InputEventSource for CrosstermInputEventSource {
-    fn read_event(&mut self) -> io::Result<Event> {
-        event::read()
+    fn poll_event(&mut self, timeout: Duration) -> io::Result<Option<Event>> {
+        if event::poll(timeout)? {
+            event::read().map(Some)
+        } else {
+            Ok(None)
+        }
     }
 }

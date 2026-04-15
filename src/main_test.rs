@@ -14,6 +14,17 @@ use crate::{
 const BINARY_PATH: &str = "./space";
 
 #[test]
+fn parse_args_default_size_threshold_percentage_is_none() -> anyhow::Result<()> {
+    let args = vec![BINARY_PATH.to_string()];
+    let cli_args = parse_args(&args)?;
+    assert_eq!(
+        None, cli_args.size_threshold_percentage,
+        "Default size threshold should be None (resolved later based on interactive mode)"
+    );
+    Ok(())
+}
+
+#[test]
 fn parse_args_without_args_returns_args_with_no_target_paths() -> anyhow::Result<()> {
     // Arrange
     let args = vec![BINARY_PATH.to_string()];
@@ -96,6 +107,83 @@ fn run_given_non_existent_path_fails() {
     } else {
         unreachable!("Expected the result to be an error.");
     }
+}
+
+// ─── --filter-regex arg tests ────────────────────────────────────────────────
+
+#[test]
+fn parse_args_filter_regex_is_none_by_default() -> anyhow::Result<()> {
+    let args = vec![BINARY_PATH.to_string()];
+    let cli_args = parse_args(&args)?;
+    assert_eq!(None, cli_args.filter_regex);
+    Ok(())
+}
+
+#[test]
+fn parse_args_filter_regex_short_flag() -> anyhow::Result<()> {
+    let args = vec![
+        BINARY_PATH.to_string(),
+        "-r".to_string(),
+        "test".to_string(),
+    ];
+    let cli_args = parse_args(&args)?;
+    assert_eq!(Some("test".to_string()), cli_args.filter_regex);
+    Ok(())
+}
+
+#[test]
+fn parse_args_filter_regex_long_flag() -> anyhow::Result<()> {
+    let args = vec![
+        BINARY_PATH.to_string(),
+        "--filter-regex".to_string(),
+        "src.*rs".to_string(),
+    ];
+    let cli_args = parse_args(&args)?;
+    assert_eq!(Some("src.*rs".to_string()), cli_args.filter_regex);
+    Ok(())
+}
+
+#[test]
+fn prepare_command_with_invalid_regex_returns_error() {
+    let args = vec![
+        BINARY_PATH.to_string(),
+        "--filter-regex".to_string(),
+        "[invalid".to_string(),
+    ];
+    let cli_args = parse_args(&args).unwrap();
+    let mut env_service_mock = MockEnvServiceTrait::new();
+    env_service_mock
+        .expect_current_dir()
+        .returning(env::current_dir);
+    let should_exit = Arc::new(AtomicBool::new(false));
+    let result = prepare_command(cli_args, Box::new(env_service_mock), should_exit);
+    assert!(result.is_err(), "Expected an error for invalid regex");
+    let msg = format!("{}", result.err().unwrap());
+    assert!(
+        msg.contains("filter-regex") || msg.contains("[invalid"),
+        "Error message should mention the bad pattern, got: {msg}"
+    );
+}
+
+#[test]
+fn prepare_command_with_valid_regex_succeeds() -> anyhow::Result<()> {
+    let args = vec![
+        BINARY_PATH.to_string(),
+        "--filter-regex".to_string(),
+        "src.*\\.rs".to_string(),
+    ];
+    let cli_args = parse_args(&args)?;
+    let mut env_service_mock = MockEnvServiceTrait::new();
+    env_service_mock
+        .expect_current_dir()
+        .returning(env::current_dir);
+    let should_exit = Arc::new(AtomicBool::new(false));
+    let result = prepare_command(cli_args, Box::new(env_service_mock), should_exit);
+    assert!(
+        result.is_ok(),
+        "A valid regex pattern should not cause an error"
+    );
+    Ok(())
 }
 
 // Ignore this test by default as it needs to be run in a real terminal, similar to the TUI tests, which does

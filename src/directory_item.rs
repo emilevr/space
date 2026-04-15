@@ -18,6 +18,35 @@ mod directory_item_test;
 
 const FILE_NAME_ERROR_VALUE: &str = "!error!";
 
+/// Returns `true` if `path` is a Windows junction point (a reparse point that is not a regular
+/// symbolic link). On non-Windows platforms, always returns `false`.
+#[cfg(windows)]
+pub fn is_reparse_point(path: &Path) -> bool {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata_is_reparse_point(&metadata),
+        Err(_) => false,
+    }
+}
+
+/// Returns `true` if `path` is a Windows junction point (a reparse point that is not a regular
+/// symbolic link). On non-Windows platforms, always returns `false`.
+#[cfg(not(windows))]
+pub fn is_reparse_point(_path: &Path) -> bool {
+    false
+}
+
+#[cfg(windows)]
+fn metadata_is_reparse_point(metadata: &fs::Metadata) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
+    (metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT) != 0 && !metadata.is_symlink()
+}
+
+#[cfg(not(windows))]
+fn metadata_is_reparse_point(_metadata: &fs::Metadata) -> bool {
+    false
+}
+
 /// The supported directory item types.
 #[derive(Debug, Eq, PartialEq)]
 pub enum DirectoryItemType {
@@ -63,12 +92,34 @@ impl DirectoryItem {
         items
     }
 
+    /// Builds a subtree from a path, keeping the filename-only `path_segment`.
+    /// Unlike `from_root`, this does not override `path_segment` to the full path.
     #[inline(always)]
-    fn from_root(path: &PathBuf, should_exit: &Arc<AtomicBool>) -> DirectoryItem {
+    pub fn build_subtree(path: &Path, should_exit: &Arc<AtomicBool>) -> DirectoryItem {
         let mut item = if let Ok(metadata) = fs::symlink_metadata(path) {
             if metadata.is_file() {
                 Self::from_file_size(path, metadata.len())
-            } else if metadata.is_symlink() {
+            } else if metadata.is_symlink() || metadata_is_reparse_point(&metadata) {
+                Self::from_link(path)
+            } else {
+                Self::from_directory(path, should_exit)
+            }
+        } else {
+            Self::from_failure(path)
+        };
+
+        item.update_stats_from_descendant();
+
+        item
+    }
+
+    /// Builds a single DirectoryItem tree from a root path.
+    #[inline(always)]
+    pub fn from_root(path: &PathBuf, should_exit: &Arc<AtomicBool>) -> DirectoryItem {
+        let mut item = if let Ok(metadata) = fs::symlink_metadata(path) {
+            if metadata.is_file() {
+                Self::from_file_size(path, metadata.len())
+            } else if metadata.is_symlink() || metadata_is_reparse_point(&metadata) {
                 Self::from_link(path)
             } else {
                 Self::from_directory(path, should_exit)
@@ -145,32 +196,34 @@ impl DirectoryItem {
             0 => vec![],
             1 => {
                 let path = &entries[0].path();
-                if path.is_file() {
-                    let size_in_bytes = match path.symlink_metadata() {
-                        Ok(metadata) => metadata.len(),
-                        _ => 0,
-                    };
-                    vec![Self::from_file_size(path, size_in_bytes)]
-                } else if path.is_symlink() {
-                    vec![Self::from_link(path)]
-                } else {
-                    vec![Self::from_directory(path, should_exit)]
+                match fs::symlink_metadata(path) {
+                    Ok(metadata) if metadata.is_file() => {
+                        vec![Self::from_file_size(path, metadata.len())]
+                    }
+                    Ok(metadata)
+                        if metadata.is_symlink() || metadata_is_reparse_point(&metadata) =>
+                    {
+                        vec![Self::from_link(path)]
+                    }
+                    Ok(_) => vec![Self::from_directory(path, should_exit)],
+                    Err(_) => vec![Self::from_failure(path)],
                 }
             }
             _ => entries
                 .par_iter()
                 .map(|entry| {
                     let path = &entry.path();
-                    if path.is_file() {
-                        let size_in_bytes = match path.symlink_metadata() {
-                            Ok(metadata) => metadata.len(),
-                            _ => 0,
-                        };
-                        Self::from_file_size(path, size_in_bytes)
-                    } else if path.is_symlink() {
-                        Self::from_link(path)
-                    } else {
-                        Self::from_directory(path, should_exit)
+                    match fs::symlink_metadata(path) {
+                        Ok(metadata) if metadata.is_file() => {
+                            Self::from_file_size(path, metadata.len())
+                        }
+                        Ok(metadata)
+                            if metadata.is_symlink() || metadata_is_reparse_point(&metadata) =>
+                        {
+                            Self::from_link(path)
+                        }
+                        Ok(_) => Self::from_directory(path, should_exit),
+                        Err(_) => Self::from_failure(path),
                     }
                 })
                 .collect(),

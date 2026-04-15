@@ -10,6 +10,10 @@ use std::{
 #[path = "./row_item_test.rs"]
 mod row_item_test;
 
+#[cfg(test)]
+#[path = "./row_item_prefix_test.rs"]
+mod row_item_prefix_test;
+
 #[derive(PartialEq)]
 pub(crate) enum RowItemType {
     Directory,
@@ -25,11 +29,18 @@ pub(crate) struct RowItem {
     pub tree_prefix: String,
     pub item_type: RowItemType,
     pub incl_fraction: f32,
+    pub peer_fraction: f32,
     pub path_segment: String,
     pub children: Vec<Rc<RefCell<RowItem>>>,
     pub parent: Option<Weak<RefCell<RowItem>>>,
     pub descendant_count: usize,
     pub row_index: usize,
+    pub depth: usize,
+    pub max_child_size: u64,
+    pub is_scanning: bool,
+    pub scanning_child_count: usize,
+    pub access_denied: bool,
+    pub regex_visible: bool,
 }
 
 impl RowItem {
@@ -50,7 +61,7 @@ impl RowItem {
         let current = Rc::new(RefCell::new(RowItem {
             size: dir_item.size_in_bytes,
             has_children,
-            expanded: has_children,
+            expanded: false,
             tree_prefix: String::default(),
             item_type: match dir_item.item_type {
                 DirectoryItemType::Directory => RowItemType::Directory,
@@ -59,11 +70,18 @@ impl RowItem {
                 DirectoryItemType::Unknown => RowItemType::Unknown,
             },
             incl_fraction: dir_item.get_fraction(total_size_in_bytes),
+            peer_fraction: 0.0,
             path_segment: dir_item.path_segment.clone(),
             children: vec![],
             parent,
             descendant_count: dir_item.descendant_count,
+            depth: 0,
             row_index: current_row_index,
+            max_child_size: 0,
+            is_scanning: false,
+            scanning_child_count: 0,
+            access_denied: false,
+            regex_visible: true,
         }));
 
         if has_children {
@@ -120,6 +138,36 @@ impl RowItem {
         }
     }
 
+    /// Updates tree prefixes for only the inserted child and, if needed,
+    /// the previous last child whose is-last status changed.
+    pub fn update_inserted_child_prefix(
+        &mut self,
+        child_index: usize,
+        parent_prefix_for_children: &str,
+    ) {
+        let child_count = self.children.len();
+        let is_last = child_index == child_count - 1;
+
+        // Update the newly inserted child's prefix.
+        let mut child_prefix = parent_prefix_for_children.to_string();
+        if !is_last {
+            child_prefix.push('├');
+        }
+        self.children[child_index]
+            .borrow_mut()
+            .update_tree_prefix(&child_prefix, is_last);
+
+        // If the new child is last and there was a previous last child, update it
+        // since it's no longer last (its └─ prefix should become ├─).
+        if is_last && child_index > 0 {
+            let mut prev_prefix = parent_prefix_for_children.to_string();
+            prev_prefix.push('├');
+            self.children[child_index - 1]
+                .borrow_mut()
+                .update_tree_prefix(&prev_prefix, false);
+        }
+    }
+
     pub fn collapse_all_children(&mut self) {
         if self.has_children {
             for child in &self.children {
@@ -146,6 +194,17 @@ impl RowItem {
                 self.expanded = true;
                 self.collapse_all_children();
             }
+        }
+    }
+
+    pub fn update_fraction(&mut self, total_size_in_bytes: u64) {
+        self.incl_fraction = if total_size_in_bytes == 0 {
+            0f32
+        } else {
+            self.size.get_value() as f32 / total_size_in_bytes as f32
+        };
+        for child in &self.children {
+            child.borrow_mut().update_fraction(total_size_in_bytes);
         }
     }
 
