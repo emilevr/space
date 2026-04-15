@@ -2,9 +2,11 @@ name: Test
 on:
   push:
     branches-ignore:
-      - " "
+      - ' '
     tags-ignore:
-      - "*.*.*"
+      - '*.*.*'
+    paths-ignore:
+      - '**/*.md'
 jobs:
   test:
     name: "Test on ${{ matrix.runs-on }}"

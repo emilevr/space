@@ -2,7 +2,7 @@
 
 [![Lint](https://github.com/emilevr/space/actions/workflows/lint.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/lint.yaml)
 [![Test](https://github.com/emilevr/space/actions/workflows/test.yaml/badge.svg)](https://github.com/emilevr/space/actions/test.yaml)
-[![Code Coverage](https://emilevr.github.io/space/coverage/badges/flat.svg)](https://crates.io/crates/space)
+[![Code Coverage](https://emilevr.github.io/space/coverage/badges/flat.svg)](https://github.com/emilevr/space)
 [![Benchmark](https://github.com/emilevr/space/actions/workflows/benchmark.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/benchmark.yaml)
 [![Release](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml/badge.svg)](https://github.com/emilevr/space/actions/workflows/build-and-release.yaml)
 
@@ -21,7 +21,7 @@ Two operating modes are supported:
 - Analyzes and displays the _apparent size_ of files in one or more directory trees.
 - Enables visual exploration of disk space usage.
 - Files or directories may be deleted to free up disk space.
-- All files are included and may be visually filtered based on relative size.
+- All files are included and may be visually filtered based on relative size and/or a regex matching the full file path.
 - This is the default mode.
   ![TUI on Windows](docs/cli/tui-windows.png)
 
@@ -111,11 +111,7 @@ Download and extract the relevant file for your platform and operating system fr
 > languages. So why make another one? Well, this kind of project is a great way to learn a new language and a
 > bunch of related stuff, like building and distributing applications for many platforms. It's also fun to write,
 > with some challenges around performance that provide an opportunity to give Rust's "Fearless Concurrency" a
-> spin. The implementation is straight forward and hasn't been optimized, yet it performs pretty well. Some
-> future features will make much greater use of concurrency.
->
-> :information_source: Optimization and benchmarks against similar tools are on the
-> [backlog](https://github.com/users/emilevr/projects/1).
+> spin. The implementation is straight forward and hasn't been optimized much, yet it performs pretty well.
 
 ## Getting started with this repo
 

@@ -5,6 +5,8 @@ on:
       - ' '
     tags-ignore:
       - '*.*.*'
+    paths-ignore:
+      - '**/*.md'
   workflow_call:
 jobs:
   test:
